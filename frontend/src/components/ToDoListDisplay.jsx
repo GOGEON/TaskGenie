@@ -1,0 +1,166 @@
+import React, { useState } from 'react';
+import { useDragLayer } from 'react-dnd';
+import ToDoItem from './ToDoItem';
+import ProgressBar from './ProgressBar';
+import SkeletonToDoItem from './SkeletonToDoItem';
+
+/* [개선] 가중치 기반 진행률 계산 - 계층 구조를 고려한 정확한 진행률 측정 */
+/* 이전: 단순 카운트 방식 (완료된 항목 수 / 전체 항목 수 * 100) */
+/* 현재: 재귀적 가중치 방식 - 각 레벨의 모든 항목이 동등한 비중을 가짐 */
+/* 예: 부모 1개(자식 2개) + 부모 1개(자식 없음) → 각 최상위 항목이 50% 비중 */
+const calculateRecursiveProgress = (items) => {
+  if (!items || items.length === 0) {
+    return 100;
+  }
+
+  let totalProgress = 0;
+  const weightPerItem = 100 / items.length;
+
+  items.forEach(item => {
+    if (item.children && item.children.length > 0) {
+      // 자식의 진행률을 재귀적으로 계산하여 반영
+      totalProgress += (calculateRecursiveProgress(item.children) / 100) * weightPerItem;
+    } else if (item.is_completed) {
+      totalProgress += weightPerItem;
+    }
+  });
+
+  return totalProgress;
+};
+
+/* [추가] 재귀적으로 모든 항목 카운트 - 통계 표시용 */
+export const countAllItems = (items) => {
+  if (!items || items.length === 0) return 0;
+  return items.reduce((total, item) => {
+    return total + 1 + countAllItems(item.children);
+  }, 0);
+};
+
+/* [추가] 재귀적으로 완료된 항목 카운트 - 통계 표시용 */
+export const countCompletedItems = (items) => {
+  if (!items || items.length === 0) return 0;
+  return items.reduce((total, item) => {
+    const isCompleted = item.is_completed ? 1 : 0;
+    return total + isCompleted + countCompletedItems(item.children);
+  }, 0);
+};
+
+function ToDoListDisplay({
+  todoList,
+  moveItem,
+  onDropItem,
+  onToggleItemComplete,
+  onGenerateSubtasks,
+  onOpenContextMenu,
+  onEditItem,
+  onDeleteItem,
+  onUpdatePriority, /* [추가] 우선순위 업데이트 핸들러 */
+  isGenerating,
+  generatingItemId,
+  onUpdateKeyword, /* [추가] 프로젝트 키워드 수정 핸들러 */
+}) {
+  /* [추가] 키워드 인라인 수정 기능 상태 관리 */
+  const [isEditingKeyword, setIsEditingKeyword] = useState(false);
+  const [editedKeyword, setEditedKeyword] = useState(todoList.keyword);
+
+  const { isDragging } = useDragLayer((monitor) => ({
+    isDragging: monitor.isDragging(),
+  }));
+
+  /* [추가] 키워드 수정 모드 진입 */
+  const handleKeywordClick = () => {
+    setIsEditingKeyword(true);
+    setEditedKeyword(todoList.keyword);
+  };
+
+  /* [추가] 키워드 수정 저장 - 변경사항이 있을 때만 API 호출 */
+  const handleKeywordSave = () => {
+    if (editedKeyword.trim() && editedKeyword !== todoList.keyword) {
+      onUpdateKeyword(editedKeyword.trim());
+    }
+    setIsEditingKeyword(false);
+  };
+
+  /* [추가] 키워드 수정 취소 - 원래 값으로 복원 */
+  const handleKeywordCancel = () => {
+    setEditedKeyword(todoList.keyword);
+    setIsEditingKeyword(false);
+  };
+
+  /* [추가] 키워드 입력 시 Enter/Escape 키 처리 */
+  const handleKeywordKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleKeywordSave();
+    } else if (e.key === 'Escape') {
+      handleKeywordCancel();
+    }
+  };
+
+  if (!todoList || todoList.items.length === 0) {
+    return <p className="text-center text-gray-500 p-4 sm:p-6 text-sm sm:text-base">아직 생성된 할 일 목록이 없습니다. 위에서 키워드를 입력하세요!</p>;
+  }
+
+  /* [개선] 가중치 기반 진행률 계산 */
+  const progress = calculateRecursiveProgress(todoList.items);
+
+  return (
+    <>
+      <div className="bg-white rounded-lg p-3 sm:p-4 md:p-6 text-left w-full">
+        {/* [수정] 프로젝트 제목 드롭다운 아이콘 제거 (이전: 제목 옆에 ▼ 아이콘 표시) */}
+        {/* [추가] 클릭 시 인라인 수정 가능한 제목 입력 필드 */}
+        <div className="flex justify-between items-center">
+          {isEditingKeyword ? (
+            <input
+              type="text"
+              value={editedKeyword}
+              onChange={(e) => setEditedKeyword(e.target.value)}
+              onKeyDown={handleKeywordKeyDown}
+              onBlur={handleKeywordSave}
+              autoFocus
+              style={{ fontWeight: 700 }}
+              className="flex-1 text-2xl sm:text-3xl border-2 border-gray-400 focus:outline-none focus:border-gray-600 px-2 py-1 rounded transition-all"
+            />
+          ) : (
+            <h2 
+              style={{ fontWeight: 700 }}
+              className="text-2xl sm:text-3xl truncate cursor-pointer hover:border hover:border-gray-300 px-2 py-1 rounded transition-all"
+              onClick={handleKeywordClick}
+              title="클릭하여 수정"
+            >
+              {todoList.keyword}
+            </h2>
+          )}
+        </div>
+
+        <>
+          <div className="mt-3 sm:mt-4 mb-3 sm:mb-4">
+            <ProgressBar progress={progress} />
+          </div>
+          <ul className="list-none p-0">
+            {todoList.items.map((item, index) => (
+              <ToDoItem
+                key={item.id}
+                index={index}
+                item={item}
+                parentId={null}
+                moveItem={moveItem}
+                onDropItem={onDropItem}
+                onToggleItemComplete={onToggleItemComplete}
+                onGenerateSubtasks={onGenerateSubtasks}
+                onOpenContextMenu={onOpenContextMenu}
+                onEditItem={onEditItem}
+                onDeleteItem={onDeleteItem}
+                onUpdatePriority={onUpdatePriority}
+                isGenerating={isGenerating}
+                generatingItemId={generatingItemId}
+              />
+            ))}
+          </ul>
+        </>
+        {/* [삭제] 하단 '목록 삭제' 버튼 제거 (이전: 리스트 하단에 명시적 삭제 버튼) */}
+      </div>
+    </>
+  );
+}
+
+export default ToDoListDisplay;
