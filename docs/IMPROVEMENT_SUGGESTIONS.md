@@ -1,8 +1,54 @@
 # AI To-Do List 개선 제안서
 
 **작성일**: 2025년 10월 27일  
+**최종 업데이트**: 2025년 1월 6일  
 **프로젝트**: TaskGenie (AI Task Generator)  
-**브랜치**: 001-ai-task-generator
+**브랜치**: main
+
+---
+
+## 📢 최근 업데이트 (2025.01.06)
+
+### ✅ 완료된 주요 개선사항
+
+1. **🔄 Firestore 마이그레이션 완료**
+   - SQLite → Google Cloud Firestore로 완전 전환
+   - 클라우드 네이티브 아키텍처로 업그레이드
+   - 실시간 동기화 및 무제한 확장성 확보
+   - 자세한 내용: [`docs/FIRESTORE_MIGRATION.md`](./FIRESTORE_MIGRATION.md)
+
+2. **🤖 Gemini API 모델 업데이트**
+   - `gemini-pro` → `gemini-1.5-flash-latest`로 업데이트
+   - 최신 AI 모델 자동 사용 (항상 최신 버전 유지)
+
+3. **🎨 UI 일관성 개선**
+   - 모든 모달 배경 스타일 통일 (`rgba(16, 24, 40, 0.1)`)
+   - `EditModal`, `KeywordInputModal` 등 일관된 디자인 적용
+
+4. **🔒 보안 강화**
+   - `.gitignore`에 Firestore 서비스 계정 키 추가
+   - 배포 스크립트 및 임시 파일 제외 설정
+   - GitHub Secret Scanning 통과
+
+### 🔄 아키텍처 변경 영향
+
+**Phase 4: 협업 기능의 우선순위 상향 조정**
+- Firestore의 실시간 기능을 활용한 협업 기능 구현이 더욱 용이해짐
+- WebSocket 대신 Firestore의 실시간 리스너 활용 가능
+- 예상 구현 시간 단축: 20시간 → 10-12시간
+
+**데이터베이스 마이그레이션 불필요**
+- 기존 SQL 마이그레이션 파일은 레거시로 유지
+- Firestore는 스키마리스로 마이그레이션 불필요
+- 컬렉션 구조는 코드 레벨에서 관리
+
+**새로운 기술 스택**
+```json
+{
+  "firebase-admin": "^7.1.0",           // Firestore 서버 SDK
+  "google-cloud-firestore": "^2.21.0"  // Firestore 클라이언트
+}
+```
 
 ---
 
@@ -173,51 +219,73 @@ class ToDoItemTag(Base):
 
 ---
 
-### 4. 협업 기능 ⭐⭐
+### 4. 협업 기능 ⭐⭐⭐
 
-**중요도**: 중간  
-**난이도**: 매우 높음  
-**예상 시간**: 20+ 시간
+**중요도**: 높음 (Firestore 실시간 기능 활용)  
+**난이도**: 중간 (Firestore 덕분에 단순화됨)  
+**예상 시간**: 10-12시간
+
+> **🔄 변경사항**: Firestore 마이그레이션으로 WebSocket 대신 Firestore 실시간 리스너 활용 가능. 구현 난이도 및 시간 대폭 감소.
 
 **기능**:
-- 👥 프로젝트 공유 (링크 생성)
-- ✏️ 멀티 사용자 실시간 편집 (WebSocket)
-- 💬 댓글/메모 기능
+- 👥 프로젝트 공유 (Firestore 공유 문서)
+- ✏️ 멀티 사용자 실시간 편집 (Firestore onSnapshot)
+- 💬 댓글/메모 기능 (서브컬렉션)
 - 👤 담당자 할당
-- 🔔 활동 로그 (누가 무엇을 변경했는지)
+- 🔔 활동 로그 (Firestore 타임스탬프 자동 관리)
 - 권한 관리 (뷰어/편집자/관리자)
 
-**데이터 모델**:
-```python
-class ProjectShare(Base):
-    __tablename__ = 'project_shares'
-    id = Column(Integer, primary_key=True)
-    todo_list_id = Column(Integer, ForeignKey('todo_lists.id'))
-    shared_with_user_id = Column(Integer, ForeignKey('users.id'))
-    permission = Column(String)  # 'view' | 'edit' | 'admin'
-    share_link = Column(String, unique=True)
+**Firestore 데이터 모델**:
+```javascript
+// project_shares 컬렉션
+{
+  id: "auto_generated_id",
+  todo_list_id: "list_id",
+  shared_with_user_id: "user_id",
+  permission: "view" | "edit" | "admin",
+  share_link: "unique_link",
+  created_at: Timestamp
+}
 
-class Comment(Base):
-    __tablename__ = 'comments'
-    id = Column(Integer, primary_key=True)
-    todo_item_id = Column(Integer, ForeignKey('todo_items.id'))
-    user_id = Column(Integer, ForeignKey('users.id'))
-    content = Column(Text)
-    created_at = Column(DateTime)
+// comments 서브컬렉션 (todo_items/{itemId}/comments)
+{
+  id: "auto_generated_id",
+  user_id: "user_id",
+  user_name: "홍길동",
+  content: "댓글 내용",
+  created_at: Timestamp
+}
 ```
 
-**기술 스택**:
+**실시간 동기화 예시**:
+```javascript
+// Firestore 실시간 리스너
+const unsubscribe = onSnapshot(
+  doc(db, 'todo_items', itemId),
+  (doc) => {
+    // 다른 사용자가 수정 시 자동 업데이트
+    setTodoItem(doc.data());
+  }
+);
+```
+
+**기술 스택 변경**:
 ```json
 {
-  "socket.io": "^4.0.0",          // WebSocket
-  "socket.io-client": "^4.0.0"   // 클라이언트
+  // WebSocket 불필요
+  // "socket.io": "^4.0.0" ❌ 제거
+  // "socket.io-client": "^4.0.0" ❌ 제거
+  
+  // Firestore 실시간 리스너 활용 ✅
+  "firebase": "^11.0.0"  // 프론트엔드 SDK
 }
 ```
 
 **구현 파일**:
-- `backend/src/models/share.py` 신규
+- `backend/src/services/sharing_service_firestore.py` 신규
 - `backend/src/api/sharing.py` 신규
-- `backend/src/websocket.py` 신규
+- ~~`backend/src/websocket.py`~~ 불필요 (Firestore 사용)
+- `frontend/src/services/firestoreRealtimeService.js` 신규
 - `frontend/src/components/ShareModal.jsx` 신규
 - `frontend/src/components/CommentSection.jsx` 신규
 
@@ -346,13 +414,22 @@ prompt = f"""
 **난이도**: 낮음  
 **예상 시간**: 3-4시간
 
+> **🔄 변경사항**: Firestore는 자동으로 데이터를 백업하므로 서버 백업 기능은 불필요. 사용자 데이터 내보내기 기능에 집중.
+
 **기능**:
 - 📥 JSON 형식으로 내보내기
 - 📊 CSV 형식으로 내보내기 (엑셀 호환)
 - 📋 프로젝트 템플릿 저장
-- 💾 자동 백업 (로컬스토리지 + 서버)
+- ~~💾 자동 백업 (로컬스토리지 + 서버)~~ → Firestore에서 자동 처리
 - 📋 프로젝트 복제 기능
 - 📤 가져오기 (JSON 업로드)
+
+**Firestore 백업 (관리자용)**:
+```bash
+# Firebase Console에서 자동 백업 설정
+# 또는 gcloud 명령어로 수동 백업
+gcloud firestore export gs://[BUCKET_NAME]
+```
 
 **파일 형식**:
 ```json
@@ -630,21 +707,8 @@ const filteredProjects = projects.filter(p =>
 
 ---
 
-### Phase 2: 사용자 경험 향상 (1-2주)
-**목표**: 사용 편의성과 시각적 피드백 개선
-
-1. ⭐⭐ 통계 대시보드
-2. ⭐⭐ 태그 시스템
-3. ⭐ 키보드 단축키
-4. ⭐ 진행률 표시 개선
-5. ⭐ 데이터 백업/내보내기
-
-**예상 시간**: 40-50시간
-
----
-
-### Phase 3: AI 차별화 (1주)
-**목표**: AI 기능을 활용한 경쟁력 확보
+### Phase 2: AI 차별화 (1주) 🔥 우선순위 상향
+**목표**: AI 기능을 활용한 경쟁력 확보 (Gemini 1.5 Flash 활용)
 
 1. ⭐⭐⭐ 자연어 입력 파싱
 2. ⭐⭐⭐ 우선순위 자동 제안
@@ -656,16 +720,31 @@ const filteredProjects = projects.filter(p =>
 
 ---
 
-### Phase 4: 협업 및 고급 기능 (2-3주)
-**목표**: 팀 협업과 프로 사용자를 위한 기능
+### Phase 3: 협업 및 실시간 기능 (1-2주) 🆕 Firestore 활용
+**목표**: Firestore 실시간 기능으로 협업 도구로 진화
 
-1. ⭐⭐ 프로젝트 공유
-2. ⭐⭐ 댓글/메모 기능
-3. ⭐⭐ 알림 시스템
-4. ⭐ 모바일 UX 개선
-5. ⭐ 캘린더 뷰
+1. ⭐⭐⭐ 프로젝트 실시간 공유 (Firestore onSnapshot)
+2. ⭐⭐⭐ 멀티 사용자 동시 편집
+3. ⭐⭐ 댓글/메모 기능 (서브컬렉션)
+4. ⭐⭐ 알림 시스템 (Cloud Functions 활용)
+5. ⭐ 활동 로그 (Firestore 타임스탬프)
 
-**예상 시간**: 80-100시간
+**예상 시간**: 40-50시간 (기존 80-100시간에서 단축)
+
+> **주요 변경**: WebSocket 불필요, Firestore 실시간 리스너로 대체
+
+---
+
+### Phase 4: 사용자 경험 향상 (1-2주)
+**목표**: 사용 편의성과 시각적 피드백 개선
+
+1. ⭐⭐ 통계 대시보드
+2. ⭐⭐ 태그 시스템 (Firestore 배열 필드 활용)
+3. ⭐ 키보드 단축키
+4. ⭐ 진행률 표시 개선
+5. ⭐ 데이터 백업/내보내기
+
+**예상 시간**: 40-50시간
 
 ---
 
@@ -725,31 +804,90 @@ const filteredProjects = projects.filter(p =>
   "recharts": "^2.0.0",               // 차트
   "react-datepicker": "^7.0.0",       // 날짜 선택
   "react-hotkeys-hook": "^4.0.0",     // 단축키
-  "socket.io": "^4.0.0",              // 실시간 협업
+  // "socket.io": "^4.0.0",           // ❌ Firestore 실시간 리스너로 대체
+  "firebase": "^11.0.0",              // ✅ Firestore 프론트엔드 SDK
   "react-swipeable": "^7.0.0",        // 스와이프
   "date-fns": "^4.0.0"                // 날짜 유틸
 }
 ```
 
+**백엔드**:
+```json
+{
+  "firebase-admin": "^7.1.0",         // ✅ 이미 설치됨
+  "google-cloud-firestore": "^2.21.0" // ✅ 이미 설치됨
+}
+```
+
 ### 데이터베이스 마이그레이션
 
-필요한 마이그레이션 파일:
-- `add_priority_to_todo.sql`
-- `add_dates_to_todo.sql`
-- `add_tags_system.sql`
-- `add_sharing_tables.sql`
-- `add_comments_table.sql`
+~~필요한 마이그레이션 파일:~~
+- ~~`add_priority_to_todo.sql`~~
+- ~~`add_dates_to_todo.sql`~~
+- ~~`add_tags_system.sql`~~
+- ~~`add_sharing_tables.sql`~~
+- ~~`add_comments_table.sql`~~
+
+> **🔄 변경사항**: Firestore는 스키마리스 NoSQL 데이터베이스이므로 마이그레이션 파일 불필요. 
+> 필드 추가는 코드 레벨에서 처리하며, 기존 문서에 자동으로 적용됩니다.
+
+**Firestore 필드 추가 예시**:
+```javascript
+// 새 필드는 코드에서 바로 추가 가능
+await updateDoc(doc(db, 'todo_items', itemId), {
+  priority: 'high',        // 새 필드
+  due_date: Timestamp.now(), // 새 필드
+  tags: ['긴급', '중요']    // 배열 필드
+});
+```
 
 ### 성능 최적화 고려
 
-- 대규모 프로젝트 지원을 위한 **페이지네이션**
+- 대규모 프로젝트 지원을 위한 **페이지네이션** (Firestore 쿼리 커서 활용)
 - 재귀 계산 최적화 (메모이제이션)
 - **가상 스크롤링** (react-window)
 - 이미지/아이콘 **레이지 로딩**
+- **Firestore 쿼리 최적화** (복합 인덱스 활용)
+- **오프라인 지원** (Firestore 오프라인 지속성)
+
+**Firestore 성능 최적화 팁**:
+```javascript
+// 1. 쿼리 제한으로 과도한 읽기 방지
+const q = query(collection(db, 'todo_items'), limit(50));
+
+// 2. 페이지네이션 (커서 기반)
+const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+const next = query(
+  collection(db, 'todo_items'),
+  startAfter(lastVisible),
+  limit(50)
+);
+
+// 3. 오프라인 지속성 활성화
+enableIndexedDbPersistence(db);
+```
 
 ---
 
-**문서 버전**: 1.0  
-**최종 수정**: 2025년 10월 27일  
+## 🔄 Firestore 마이그레이션 완료 체크리스트
+
+- [x] Firestore 데이터베이스 생성 (Native Mode)
+- [x] 서비스 계정 키 설정
+- [x] 백엔드 Firestore 서비스 레이어 구현
+- [x] API 엔드포인트 Firestore 연동
+- [x] 복합 인덱스 생성
+- [x] 로컬 테스트 완료
+- [x] 문서화 (`FIRESTORE_MIGRATION.md`)
+- [x] `.gitignore` 보안 설정
+- [ ] 프론트엔드 실시간 리스너 구현
+- [ ] Cloud Run 배포
+- [ ] Cloud Functions 설정 (알림용)
+- [ ] 프로덕션 테스트
+
+---
+
+**문서 버전**: 2.0  
+**최초 작성**: 2025년 10월 27일  
+**최종 수정**: 2025년 1월 6일  
 **작성자**: GitHub Copilot
 
