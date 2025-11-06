@@ -143,6 +143,28 @@ yarn-error.log*
 .specify/
 
 # ===========================
+# Firebase / Firestore
+# ===========================
+firestore-key.json
+backend/firestore-key.json
+firebase-debug.log
+.firebase/
+.firebaserc
+
+# ===========================
+# Deployment Scripts
+# ===========================
+deploy.ps1
+redeploy.ps1
+*.ps1
+
+# ===========================
+# Temporary / Log files
+# ===========================
+temp_log.txt
+temp_*.txt
+
+# ===========================
 # Migrations (optional - uncomment if needed)
 # ===========================
 # migrations/
