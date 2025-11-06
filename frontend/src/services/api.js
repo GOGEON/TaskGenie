@@ -2,7 +2,7 @@ import axios from 'axios';
 import { loadToken, removeToken } from './localStorageService';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
 });
 
 api.interceptors.request.use(
