@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { saveToken } from '../services/localStorageService';
-import { signInWithGoogle, signInWithGithub, handleRedirectResult } from '../services/socialAuthService';
-import { FaGoogle, FaGithub } from 'react-icons/fa';
+import { signInWithGoogle, signInWithNaver, signInWithKakao, handleRedirectResult } from '../services/socialAuthService';
+import { FaGoogle } from 'react-icons/fa';
+import { SiNaver, SiKakaotalk } from 'react-icons/si';
 import toast from 'react-hot-toast';
 
 function AuthPage({ onLoginSuccess }) {
@@ -62,20 +63,25 @@ function AuthPage({ onLoginSuccess }) {
     
     try {
       let result;
-      // 모바일 감지 (간단한 방법)
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
       if (provider === 'google') {
+        // 모바일 감지 (간단한 방법)
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         result = await signInWithGoogle(isMobile);
-      } else if (provider === 'github') {
-        result = await signInWithGithub(isMobile);
+        
+        if (result) {
+          toast.success('Google 로그인 성공!');
+          onLoginSuccess(result.access_token);
+        }
+      } else if (provider === 'naver') {
+        // 네이버는 항상 리디렉션 방식
+        await signInWithNaver();
+        // 리디렉션되므로 여기는 실행되지 않음
+      } else if (provider === 'kakao') {
+        // 카카오는 항상 리디렉션 방식
+        await signInWithKakao();
+        // 리디렉션되므로 여기는 실행되지 않음
       }
-      
-      if (result) {
-        toast.success(`${provider === 'google' ? 'Google' : 'GitHub'} 로그인 성공!`);
-        onLoginSuccess(result.access_token);
-      }
-      // isMobile이고 리디렉션된 경우 result는 null (useEffect에서 처리)
     } catch (err) {
       console.error('소셜 로그인 오류:', err);
       const errorMessage = err.code === 'auth/popup-closed-by-user' 
@@ -160,12 +166,21 @@ function AuthPage({ onLoginSuccess }) {
           </button>
 
           <button
-            onClick={() => handleSocialLogin('github')}
+            onClick={() => handleSocialLogin('naver')}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3 sm:py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-h-[44px] sm:min-h-0 touch-manipulation transition-all hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-3 py-3 sm:py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-[#03C75A] hover:bg-[#02b350] active:bg-[#019f45] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 min-h-[44px] sm:min-h-0 touch-manipulation transition-all hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FaGithub className="text-xl text-gray-800" />
-            <span>GitHub로 {isRegister ? '가입' : '로그인'}</span>
+            <SiNaver className="text-xl" />
+            <span>네이버로 {isRegister ? '가입' : '로그인'}</span>
+          </button>
+
+          <button
+            onClick={() => handleSocialLogin('kakao')}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 py-3 sm:py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm sm:text-base font-medium text-[#3C1E1E] bg-[#FEE500] hover:bg-[#FDD835] active:bg-[#FBC02D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 min-h-[44px] sm:min-h-0 touch-manipulation transition-all hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <SiKakaotalk className="text-xl" />
+            <span>카카오로 {isRegister ? '가입' : '로그인'}</span>
           </button>
         </div>
 

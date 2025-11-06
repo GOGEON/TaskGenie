@@ -21,6 +21,26 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
 
+# Social Login Schema
+class SocialLoginRequest(BaseModel):
+    """소셜 로그인 요청"""
+    provider: str  # 'google' or 'naver' or 'kakao'
+    id_token: str
+    email: str
+    display_name: Optional[str] = None
+    photo_url: Optional[str] = None
+
+class NaverCallbackRequest(BaseModel):
+    """네이버 OAuth 콜백 요청"""
+    code: str
+    state: str
+    redirect_uri: str
+
+class KakaoCallbackRequest(BaseModel):
+    """카카오 OAuth 콜백 요청"""
+    code: str
+    redirect_uri: str
+
 class ToDoItemBase(BaseModel):
     description: str
     is_completed: bool = False

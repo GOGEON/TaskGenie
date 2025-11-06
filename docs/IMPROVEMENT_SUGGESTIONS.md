@@ -18,7 +18,7 @@
    - 자세한 내용: [`docs/FIRESTORE_MIGRATION.md`](./FIRESTORE_MIGRATION.md)
 
 2. **🤖 Gemini API 모델 업데이트**
-   - `gemini-pro` → `gemini-1.5-flash-latest`로 업데이트
+   - `gemini-pro` → `gemini-flash-latest`로 업데이트
    - 최신 AI 모델 자동 사용 (항상 최신 버전 유지)
 
 3. **🎨 UI 일관성 개선**

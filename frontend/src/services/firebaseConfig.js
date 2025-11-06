@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 // Firebase 설정 (환경 변수로 관리 권장)
 const firebaseConfig = {
@@ -17,8 +17,7 @@ const app = initializeApp(firebaseConfig);
 // Authentication 초기화
 export const auth = getAuth(app);
 
-// Provider 설정
+// Google Provider
 export const googleProvider = new GoogleAuthProvider();
-export const githubProvider = new GithubAuthProvider();
 
 export default app;

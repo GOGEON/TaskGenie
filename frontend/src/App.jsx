@@ -5,6 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 
 import AuthPage from './pages/AuthPage';
 import HomePage from './pages/HomePage';
+import SocialCallbackPage from './pages/SocialCallbackPage';
 import MainLayout from './components/MainLayout';
 /* [추가] 최초 방문 사용자를 위한 온보딩 가이드 컴포넌트 추가 */
 import OnboardingGuide from './components/OnboardingGuide';
@@ -149,6 +150,14 @@ function App() {
           <Route 
             path="/auth" 
             element={token ? <Navigate to="/" /> : <AuthPage onLoginSuccess={handleLoginSuccess} />}
+          />
+          <Route 
+            path="/auth/naver/callback" 
+            element={<SocialCallbackPage onLoginSuccess={handleLoginSuccess} />}
+          />
+          <Route 
+            path="/auth/kakao/callback" 
+            element={<SocialCallbackPage onLoginSuccess={handleLoginSuccess} />}
           />
           <Route 
             path="/*" 
