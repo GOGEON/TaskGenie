@@ -33,6 +33,12 @@ test.db
 .env.production
 
 # ===========================
+# Firebase Service Account
+# ===========================
+firestore-key.json
+*-key.json
+
+# ===========================
 # Python Distribution
 # ===========================
 build/
