@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { handleNaverCallback, handleKakaoCallback } from '../services/socialAuthService';
 import toast from 'react-hot-toast';
@@ -7,10 +7,17 @@ function SocialCallbackPage({ onLoginSuccess }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const pathname = window.location.pathname;
+  const hasProcessed = useRef(false); // 중복 실행 방지
 
   useEffect(() => {
+    // 이미 처리했으면 스킵
+    if (hasProcessed.current) {
+      return;
+    }
+
     const handleCallback = async () => {
       try {
+        hasProcessed.current = true; // 처리 시작 표시
         let result;
 
         if (pathname.includes('/auth/naver/callback')) {
@@ -48,7 +55,7 @@ function SocialCallbackPage({ onLoginSuccess }) {
     };
 
     handleCallback();
-  }, [pathname, searchParams, navigate, onLoginSuccess]);
+  }, []); // 의존성 배열 비우기 - 한 번만 실행
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

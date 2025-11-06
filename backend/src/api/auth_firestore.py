@@ -121,8 +121,9 @@ def social_login(social_login_req: SocialLoginRequest):
         firebase_uid = decoded_token['uid']
         
         # 사용자 정보 생성 또는 조회
-        # 소셜 로그인 사용자는 email을 username으로 사용
-        username = social_login_req.email.split('@')[0]  # 이메일 앞부분을 username으로
+        # Google 로그인 사용자는 'google_' prefix 추가
+        email_prefix = social_login_req.email.split('@')[0]
+        username = f"google_{email_prefix}"
         
         # 기존 사용자 확인
         existing_user = auth_service.get_user_by_username(username)
@@ -205,7 +206,13 @@ def naver_callback(callback_req: NaverCallbackRequest):
         name = user_info.get("name") or user_info.get("nickname")
         
         # 3. 사용자 생성 또는 조회
-        username = email.split('@')[0] if email else f"naver_{user_info.get('id')}"
+        # 네이버 로그인 사용자는 'naver_' prefix 추가
+        if email:
+            email_prefix = email.split('@')[0]
+            username = f"naver_{email_prefix}"
+        else:
+            username = f"naver_{user_info.get('id')}"
+        
         existing_user = auth_service.get_user_by_username(username)
         
         if not existing_user:
@@ -281,8 +288,20 @@ def kakao_callback(callback_req: KakaoCallbackRequest):
         profile = kakao_account.get("profile", {})
         nickname = profile.get("nickname")
         
+        if not nickname:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Kakao nickname is required"
+            )
+        
         # 3. 사용자 생성 또는 조회
-        username = email.split('@')[0] if email else f"kakao_{profile_data.get('id')}"
+        # 카카오 로그인 사용자는 'kakao_' prefix 추가
+        if email:
+            email_prefix = email.split('@')[0]
+            username = f"kakao_{email_prefix}"
+        else:
+            username = f"kakao_{profile_data.get('id')}"
+        
         existing_user = auth_service.get_user_by_username(username)
         
         if not existing_user:
@@ -290,9 +309,12 @@ def kakao_callback(callback_req: KakaoCallbackRequest):
             random_password = secrets.token_urlsafe(32)
             hashed_password = auth_service.get_password_hash(random_password)
             
+            # 이메일이 없으면 가상 이메일 생성
+            user_email = email if email else f"{username}@kakao.social"
+            
             auth_service.create_user(
                 username=username,
-                email=email or f"{username}@kakao.social",
+                email=user_email,
                 hashed_password=hashed_password
             )
         

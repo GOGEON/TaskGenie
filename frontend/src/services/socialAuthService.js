@@ -11,17 +11,41 @@ import { saveToken } from './localStorageService';
 const API_BASE_URL = 'http://localhost:8000';
 
 /**
- * Google 로그인
- * @param {boolean} useRedirect - 모바일에서는 true 권장
+ * Google 로그인 (팝업 방식)
+ * 로컬 개발 환경에서는 팝업이 안정적 (CORS 경고는 무시 가능)
  */
-export const signInWithGoogle = async (useRedirect = false) => {
+export const signInWithGoogle = async () => {
   try {
-    let result;
-    if (useRedirect) {
-      await signInWithRedirect(auth, googleProvider);
-      return null; // 리디렉션 후 처리는 handleRedirectResult에서
-    } else {
-      result = await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    const idToken = await user.getIdToken();
+    
+    // 백엔드에 소셜 로그인 정보 전송
+    const response = await axios.post(`${API_BASE_URL}/auth/social-login`, {
+      provider: 'google',
+      id_token: idToken,
+      email: user.email,
+      display_name: user.displayName,
+      photo_url: user.photoURL
+    });
+    
+    saveToken(response.data.access_token);
+    return response.data;
+  } catch (error) {
+    console.error('Google 로그인 오류:', error);
+    throw error;
+  }
+};
+
+/**
+ * Google 리다이렉트 결과 처리
+ */
+export const handleGoogleRedirectResult = async () => {
+  try {
+    const result = await getRedirectResult(auth);
+    
+    if (!result) {
+      return null; // 리다이렉트가 아닌 경우
     }
     
     const user = result.user;
@@ -39,7 +63,7 @@ export const signInWithGoogle = async (useRedirect = false) => {
     saveToken(response.data.access_token);
     return response.data;
   } catch (error) {
-    console.error('Google 로그인 오류:', error);
+    console.error('Google 리다이렉트 처리 오류:', error);
     throw error;
   }
 };
@@ -73,11 +97,10 @@ export const handleNaverCallback = async (code, state) => {
   try {
     const savedState = sessionStorage.getItem('naver_oauth_state');
     
-    if (state !== savedState) {
+    // state 검증 (한 번만 검증하고, 검증 후에는 상태값 유지)
+    if (savedState && state !== savedState) {
       throw new Error('Invalid state parameter');
     }
-    
-    sessionStorage.removeItem('naver_oauth_state');
     
     // 백엔드에서 액세스 토큰 교환 및 사용자 정보 조회
     const response = await axios.post(`${API_BASE_URL}/auth/naver-callback`, {
@@ -85,6 +108,9 @@ export const handleNaverCallback = async (code, state) => {
       state,
       redirect_uri: window.location.origin + '/auth/naver/callback'
     });
+    
+    // 성공적으로 처리된 후에만 상태값 삭제
+    sessionStorage.removeItem('naver_oauth_state');
     
     saveToken(response.data.access_token);
     return response.data;
