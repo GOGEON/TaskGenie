@@ -22,7 +22,10 @@ function EditModal({ item, onSave, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+    <div 
+      className="fixed inset-0 flex items-center justify-center z-60 p-4"
+      style={{ backgroundColor: 'rgba(16, 24, 40, 0.1)' }}
+    >
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-md mx-4 animate-scaleIn">
         <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">항목 수정</h3>
         <textarea

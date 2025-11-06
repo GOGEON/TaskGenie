@@ -1,16 +1,28 @@
 import logging
+import os
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from .database import Base, engine
-from .api import auth, todos
 
-load_dotenv(dotenv_path="backend/.env")
+# .env 파일에서 환경 변수 로드
+load_dotenv()
 
-# Create all tables in the database
-Base.metadata.create_all(bind=engine)
+# Firestore 사용 여부 확인
+USE_FIRESTORE = os.getenv("USE_FIRESTORE", "false").lower() == "true"
+
+if USE_FIRESTORE:
+    # Firestore 초기화
+    from .firestore_db import initialize_firestore
+    initialize_firestore()
+    from .api import auth_firestore as auth
+    from .api import todos_firestore as todos
+else:
+    # SQLite 초기화
+    from .database import Base, engine
+    Base.metadata.create_all(bind=engine)
+    from .api import auth, todos
 
 app = FastAPI()
 

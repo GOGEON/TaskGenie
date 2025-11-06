@@ -2,6 +2,10 @@ from typing import List
 import google.generativeai as genai
 import os
 import re
+from dotenv import load_dotenv
+
+# .env 파일에서 환경 변수 로드
+load_dotenv()
 
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 
@@ -13,7 +17,7 @@ def generate_todo_items_from_keyword(keyword: str) -> List[dict]:
     Returns a list of dictionaries, where each dictionary can have a 'children' key.
     """
     try:
-        model = genai.GenerativeModel('gemini-2.5-pro')
+        model = genai.GenerativeModel('gemini-flash-latest')
         prompt = f"""Generate a hierarchical list of to-do items for the keyword '{keyword}'.
 
 IMPORTANT RULES:
@@ -82,7 +86,7 @@ def generate_sub_tasks_from_main_task(
         context_path: List of parent task descriptions leading to this task
     """
     try:
-        model = genai.GenerativeModel('gemini-2.5-pro')
+        model = genai.GenerativeModel('gemini-flash-latest')
         
         # 맥락 정보 구성
         context_info = ""

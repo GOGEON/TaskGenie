@@ -21,7 +21,8 @@ Google Gemini API를 활용하여 키워드로 구조화된 할 일 목록을 �
 ## 🛠 기술 스택
 
 **Frontend**: React 19.1, Vite, Tailwind CSS, react-dnd, axios  
-**Backend**: FastAPI, SQLAlchemy, SQLite, JWT, Google Gemini API  
+**Backend**: FastAPI, Firebase Admin SDK, Google Cloud Firestore, JWT, Google Gemini API  
+**Database**: Firestore (NoSQL Cloud Database)  
 **Testing**: Vitest, pytest
 
 ## � 프로젝트 구조
@@ -55,6 +56,7 @@ webTP/
 - Node.js 18+
 - Python 3.12+
 - Google Gemini API Key
+- Google Cloud Platform 계정 (Firestore 사용)
 
 ### 설치 및 실행
 
@@ -77,15 +79,23 @@ pip install -r requirements.txt
 ```env
 GOOGLE_API_KEY=your-google-gemini-api-key
 SECRET_KEY=your-secret-key-minimum-32-characters
+USE_FIRESTORE=true
+FIRESTORE_KEY_PATH=firestore-key.json
 ```
 
-**4. 프론트엔드 설정**
+**4. Firestore 설정**
+- [Firebase Console](https://console.firebase.google.com)에서 프로젝트 생성
+- Firestore 데이터베이스 생성 (Native Mode, Seoul 리전)
+- 서비스 계정 키 생성 후 `backend/firestore-key.json`에 저장
+- 상세 가이드: [docs/FIRESTORE_MIGRATION.md](./docs/FIRESTORE_MIGRATION.md)
+
+**5. 프론트엔드 설정**
 ```bash
 cd frontend
 npm install
 ```
 
-**5. 실행**
+**6. 실행**
 ```bash
 # 터미널 1: 백엔드 (포트 8000)
 cd backend
@@ -126,6 +136,20 @@ pytest
 - `PUT /todos/items/{item_id}` - 항목 수정
 - `DELETE /todos/items/{item_id}` - 항목 삭제
 - `POST /todos/items/{item_id}/generate-subtasks` - 하위 작업 생성
+
+## 📖 추가 문서
+
+- **[아키텍처](./docs/architecture.md)** - 시스템 구조 설명
+- **[Firestore 마이그레이션](./docs/FIRESTORE_MIGRATION.md)** - SQLite → Firestore 마이그레이션 가이드
+- **[코드 변경사항](./docs/CODE_CHANGES_SUMMARY.md)** - 상세 코드 변경 내역
+- **[개선 제안](./docs/IMPROVEMENT_SUGGESTIONS.md)** - 향후 개선 계획
+
+## 🌟 주요 변경사항 (2025.01.06)
+
+- ✅ **SQLite → Firestore 마이그레이션** - 클라우드 네이티브 아키텍처로 전환
+- ✅ **확장성 개선** - 무제한 동시 접속 지원
+- ✅ **자동 스케일링** - Google Cloud 인프라 활용
+- ✅ **실시간 동기화 준비** - Firestore 실시간 기능 활용 가능
 
 ## � 라이선스
 
