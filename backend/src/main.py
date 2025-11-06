@@ -27,8 +27,12 @@ else:
 app = FastAPI()
 
 # CORS Middleware
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 origins = [
     "http://localhost:5173",
+    "http://localhost:5174",
+    frontend_url,
+    "https://taskgenieapp.vercel.app",
 ]
 
 app.add_middleware(
