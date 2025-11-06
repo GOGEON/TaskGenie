@@ -9,8 +9,4 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './setupTests.js',
   },
-  define: {
-    // React DevTools 경고 메시지 숨김
-    __REACT_DEVTOOLS_GLOBAL_HOOK__: '({ isDisabled: true })'
-  }
 })
