@@ -48,7 +48,6 @@ const ToDoItem = ({
   const wasChildrenVisibleBeforeDrag = useRef(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showSuccessPulse, setShowSuccessPulse] = useState(false);
 
   const hasChildren = item.children && item.children.length > 0;
 
@@ -125,12 +124,6 @@ const ToDoItem = ({
     e.stopPropagation();
     setIsAnimating(true);
     
-    /* [추가] 완료 시 성공 펄스 효과 - 시각적 피드백 강화 */
-    if (!item.is_completed) {
-      setShowSuccessPulse(true);
-      setTimeout(() => setShowSuccessPulse(false), 600);
-    }
-    
     setTimeout(() => setIsAnimating(false), 600);
     onToggleItemComplete(item.id, !item.is_completed);
   };
@@ -175,7 +168,6 @@ const ToDoItem = ({
           group bg-white touch-manipulation item-fade-in
           ${isAnimating ? 'completing' : ''} 
           ${isDeleting ? 'item-slide-out' : ''}
-          ${showSuccessPulse && item.is_completed ? 'success-pulse' : ''}
         `}
       >
         <div className="flex items-center flex-grow min-w-0">
