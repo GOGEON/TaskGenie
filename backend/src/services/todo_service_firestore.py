@@ -10,6 +10,52 @@ from ..firestore_db import get_firestore_db
 from ..schemas import ToDoItemUpdate, ToDoListUpdate
 from ..services.ai_service import generate_todo_items_from_keyword, generate_sub_tasks_from_main_task
 
+def _build_item_tree(all_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    모든 아이템 목록을 받아 메모리에서 트리 구조를 구축합니다.
+    """
+    items_by_id = {}
+    # Firestore 타임스탬프를 datetime 객체로 변환하고 children 리스트를 초기화합니다.
+    for item in all_items:
+        for key, value in item.items():
+            if isinstance(value, firestore.SERVER_TIMESTAMP.__class__):
+                item[key] = datetime.utcnow() # 근사치로 변환
+            elif isinstance(value, datetime):
+                pass # 이미 datetime 객체
+        item['children'] = []
+        items_by_id[item['id']] = item
+
+    root_items = []
+    for item in all_items:
+        parent_id = item.get('parent_id')
+        if parent_id:
+            parent = items_by_id.get(parent_id)
+            if parent:
+                parent['children'].append(item)
+        else:
+            root_items.append(item)
+
+    # 각 레벨에서 order 키를 기준으로 정렬합니다.
+    for item in all_items:
+        item['children'].sort(key=lambda x: x.get('order', 0))
+    root_items.sort(key=lambda x: x.get('order', 0))
+
+    return root_items
+
+def _fetch_and_build_tree_for_list(list_id: str) -> List[Dict[str, Any]]:
+    """
+    특정 리스트의 모든 아이템을 한 번에 가져와 트리 구조를 만듭니다.
+    """
+    db = get_firestore_db()
+    items_ref = db.collection('todo_items').where('todo_list_id', '==', list_id).stream()
+    
+    all_items = []
+    for item_doc in items_ref:
+        item_data = item_doc.to_dict()
+        item_data['id'] = item_doc.id
+        all_items.append(item_data)
+        
+    return _build_item_tree(all_items)
 
 def _create_items_recursively(db: firestore.Client, items_data: List[Dict[str, Any]], todo_list_id: str, parent_id: str = None):
     """
@@ -69,7 +115,6 @@ def create_subtasks_for_item(user: Any, parent_item_id: str) -> Dict[str, Any]:
     """
     db = get_firestore_db()
     
-    # 부모 아이템 가져오기
     parent_doc = db.collection('todo_items').document(parent_item_id).get()
     if not parent_doc.exists:
         return None
@@ -77,30 +122,27 @@ def create_subtasks_for_item(user: Any, parent_item_id: str) -> Dict[str, Any]:
     parent_item = parent_doc.to_dict()
     parent_item['id'] = parent_doc.id
     
-    # Todo 리스트 확인
     list_doc = db.collection('todo_lists').document(parent_item['todo_list_id']).get()
     if not list_doc.exists or list_doc.to_dict().get('user_id') != user.id:
         return None
     
     todo_list = list_doc.to_dict()
     
-    # 맥락 경로 수집
     context_path = []
     current_item = parent_item
     
     while current_item:
         context_path.insert(0, current_item['description'])
         if current_item.get('parent_id'):
-            parent_doc = db.collection('todo_items').document(current_item['parent_id']).get()
-            if parent_doc.exists:
-                current_item = parent_doc.to_dict()
-                current_item['id'] = parent_doc.id
+            parent_doc_ref = db.collection('todo_items').document(current_item['parent_id']).get()
+            if parent_doc_ref.exists:
+                current_item = parent_doc_ref.to_dict()
+                current_item['id'] = parent_doc_ref.id
             else:
                 break
         else:
             break
     
-    # AI로 하위 작업 생성
     sub_task_descriptions = generate_sub_tasks_from_main_task(
         main_task_description=parent_item['description'],
         project_keyword=todo_list['keyword'],
@@ -129,56 +171,23 @@ def create_subtasks_for_item(user: Any, parent_item_id: str) -> Dict[str, Any]:
 
 def get_todo_lists_by_user(user: Any) -> List[Dict[str, Any]]:
     """
-    사용자의 모든 Todo 리스트 가져오기
+    사용자의 모든 Todo 리스트 가져오기 (최적화된 방식)
     """
     db = get_firestore_db()
-    lists_ref = db.collection('todo_lists').where('user_id', '==', user.id)
+    lists_ref = db.collection('todo_lists').where('user_id', '==', user.id).stream()
     
-    lists = []
-    for doc in lists_ref.stream():
+    all_lists = []
+    for doc in lists_ref:
         list_data = doc.to_dict()
         list_data['id'] = doc.id
-        
-        # 최상위 아이템 가져오기
-        items = _get_items_for_list(doc.id, None)
-        list_data['items'] = items
-        
-        lists.append(list_data)
+        list_data['items'] = _fetch_and_build_tree_for_list(doc.id)
+        all_lists.append(list_data)
     
-    return lists
-
-
-def _get_items_for_list(list_id: str, parent_id: str = None) -> List[Dict[str, Any]]:
-    """
-    특정 리스트의 아이템 가져오기 (재귀적)
-    """
-    db = get_firestore_db()
-    
-    query = db.collection('todo_items').where('todo_list_id', '==', list_id)
-    
-    if parent_id is None:
-        query = query.where('parent_id', '==', None)
-    else:
-        query = query.where('parent_id', '==', parent_id)
-    
-    query = query.order_by('order')
-    
-    items = []
-    for doc in query.stream():
-        item_data = doc.to_dict()
-        item_data['id'] = doc.id
-        
-        # 자식 아이템 재귀적으로 가져오기
-        item_data['children'] = _get_items_for_list(list_id, doc.id)
-        
-        items.append(item_data)
-    
-    return items
-
+    return all_lists
 
 def get_todo_list_by_id(list_id: str, user: Any) -> Dict[str, Any]:
     """
-    특정 Todo 리스트 가져오기
+    특정 Todo 리스트 가져오기 (최적화된 방식)
     """
     db = get_firestore_db()
     doc = db.collection('todo_lists').document(list_id).get()
@@ -191,14 +200,14 @@ def get_todo_list_by_id(list_id: str, user: Any) -> Dict[str, Any]:
         return None
     
     list_data['id'] = doc.id
-    list_data['items'] = _get_items_for_list(list_id, None)
+    list_data['items'] = _fetch_and_build_tree_for_list(list_id)
     
     return list_data
 
 
 def get_todo_item_by_id(item_id: str) -> Dict[str, Any]:
     """
-    특정 Todo 아이템 가져오기
+    특정 Todo 아이템과 그 자식들을 가져오기 (최적화된 방식)
     """
     db = get_firestore_db()
     doc = db.collection('todo_items').document(item_id).get()
@@ -209,11 +218,21 @@ def get_todo_item_by_id(item_id: str) -> Dict[str, Any]:
     item_data = doc.to_dict()
     item_data['id'] = doc.id
     
-    # 자식 아이템 가져오기
-    list_id = item_data['todo_list_id']
-    item_data['children'] = _get_items_for_list(list_id, item_id)
+    # 전체 리스트의 트리를 빌드하여 해당 아이템을 찾습니다.
+    # 이 방식은 특정 아이템 조회 시에는 비효율적일 수 있으나, 구조의 일관성을 유지합니다.
+    full_tree = _fetch_and_build_tree_for_list(item_data['todo_list_id'])
     
-    return item_data
+    def find_item_in_tree(items, target_id):
+        for item in items:
+            if item['id'] == target_id:
+                return item
+            found = find_item_in_tree(item['children'], target_id)
+            if found:
+                return found
+        return None
+
+    found_item = find_item_in_tree(full_tree, item_id)
+    return found_item or item_data # 트리에 문제가 있을 경우 원본 데이터 반환
 
 
 def update_todo_list(list_id: str, user: Any, list_update: ToDoListUpdate) -> Dict[str, Any]:
@@ -252,7 +271,6 @@ def update_todo_item(item_id: str, user: Any, item_update: ToDoItemUpdate) -> Di
     
     item_data = item_doc.to_dict()
     
-    # 리스트 소유권 확인
     list_doc = db.collection('todo_lists').document(item_data['todo_list_id']).get()
     if not list_doc.exists or list_doc.to_dict().get('user_id') != user.id:
         return None
@@ -277,30 +295,35 @@ def delete_todo_item(item_id: str, user: Any) -> bool:
     
     item_data = item_doc.to_dict()
     
-    # 리스트 소유권 확인
     list_doc = db.collection('todo_lists').document(item_data['todo_list_id']).get()
     if not list_doc.exists or list_doc.to_dict().get('user_id') != user.id:
         return False
     
-    # 자식 아이템 먼저 삭제
-    _delete_children_recursively(item_id)
+    # 모든 자식 아이템을 재귀적으로 삭제
+    all_items_in_list = _fetch_and_build_tree_for_list(item_data['todo_list_id'])
     
-    # 본인 삭제
-    db.collection('todo_items').document(item_id).delete()
+    items_to_delete = []
+    
+    def find_and_collect_children(items, target_id):
+        for item in items:
+            if item['id'] == target_id:
+                items_to_delete.append(item['id'])
+                for child in item['children']:
+                    collect_all_children(child)
+                return
+            find_and_collect_children(item['children'], target_id)
+
+    def collect_all_children(item):
+        items_to_delete.append(item['id'])
+        for child in item['children']:
+            collect_all_children(child)
+
+    find_and_collect_children(all_items_in_list, item_id)
+
+    for i_id in items_to_delete:
+        db.collection('todo_items').document(i_id).delete()
     
     return True
-
-
-def _delete_children_recursively(parent_id: str):
-    """
-    자식 아이템 재귀적 삭제
-    """
-    db = get_firestore_db()
-    children = db.collection('todo_items').where('parent_id', '==', parent_id).stream()
-    
-    for child in children:
-        _delete_children_recursively(child.id)
-        child.reference.delete()
 
 
 def delete_todo_list(list_id: str, user: Any) -> bool:
@@ -318,8 +341,8 @@ def delete_todo_list(list_id: str, user: Any) -> bool:
         return False
     
     # 모든 아이템 삭제
-    items = db.collection('todo_items').where('todo_list_id', '==', list_id).stream()
-    for item in items:
+    items_ref = db.collection('todo_items').where('todo_list_id', '==', list_id).stream()
+    for item in items_ref:
         item.reference.delete()
     
     # 리스트 삭제
