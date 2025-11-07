@@ -46,7 +46,6 @@ const ToDoItem = ({
   const ref = useRef(null);
   const [isChildrenVisible, setIsChildrenVisible] = useState(true);
   const wasChildrenVisibleBeforeDrag = useRef(false);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const hasChildren = item.children && item.children.length > 0;
@@ -119,12 +118,9 @@ const ToDoItem = ({
     onOpenContextMenu(x, y, item.id, item.priority || 'none', item.due_date);
   };
 
-  /* [개선] 완료 토글 처리 - 애니메이션 효과 추가 */
+  /* [개선] 완료 토글 처리 */
   const handleToggleComplete = (e) => {
     e.stopPropagation();
-    setIsAnimating(true);
-    
-    setTimeout(() => setIsAnimating(false), 600);
     onToggleItemComplete(item.id, !item.is_completed);
   };
 
@@ -166,7 +162,6 @@ const ToDoItem = ({
           flex items-center justify-between py-2 sm:py-1 border-t border-b border-l-4 border-gray-100 
           ${currentPriorityConfig.color}
           group bg-white touch-manipulation item-fade-in
-          ${isAnimating ? 'completing' : ''} 
           ${isDeleting ? 'item-slide-out' : ''}
         `}
       >

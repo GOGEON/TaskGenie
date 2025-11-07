@@ -177,27 +177,7 @@ li[draggable="true"].dragging {
 }
 
 /* 항목이 완료 상태로 변경될 때 */
-li.completing {
-  animation: completeItem 0.6s ease-in-out;
-}
-
-@keyframes completeItem {
-  0% {
-    transform: scale(1);
-  }
-  25% {
-    transform: scale(0.97) translateX(5px);
-  }
-  50% {
-    transform: scale(1.02);
-  }
-  75% {
-    transform: scale(0.98) translateX(-3px);
-  }
-  100% {
-    transform: scale(1) translateX(0);
-  }
-}
+/* 모달 페이드인 애니메이션 */
 
 /* 새로운 항목 추가 시 페이드인 */
 @keyframes itemFadeIn {
