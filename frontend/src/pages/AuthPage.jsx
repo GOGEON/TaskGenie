@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { saveToken } from '../services/localStorageService';
 import { signInWithGoogle, signInWithNaver, signInWithKakao } from '../services/socialAuthService';
 import toast from 'react-hot-toast';
@@ -23,13 +23,13 @@ function AuthPage({ onLoginSuccess }) {
       if (isRegister) {
         // 이메일을 username으로 사용 (@ 앞부분)
         const username = email.split('@')[0];
-        await axios.post('http://localhost:8000/auth/register', { username, password, email });
+        await api.post('/auth/register', { username, password, email });
         toast.success('회원가입에 성공했습니다! 로그인 해주세요.');
         setIsRegister(false); // Switch to login after successful registration
       } else {
         // 이메일을 username으로 사용 (@ 앞부분)
         const username = email.split('@')[0];
-        const response = await axios.post('http://localhost:8000/auth/login', `username=${username}&password=${password}`, {
+        const response = await api.post('/auth/login', `username=${username}&password=${password}`, {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           }

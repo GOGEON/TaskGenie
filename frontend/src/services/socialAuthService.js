@@ -5,10 +5,8 @@ import {
   signOut as firebaseSignOut 
 } from 'firebase/auth';
 import { auth, googleProvider } from './firebaseConfig';
-import axios from 'axios';
+import api from './api';
 import { saveToken } from './localStorageService';
-
-const API_BASE_URL = 'http://localhost:8000';
 
 /**
  * Google 로그인 (팝업 방식)
@@ -21,7 +19,7 @@ export const signInWithGoogle = async () => {
     const idToken = await user.getIdToken();
     
     // 백엔드에 소셜 로그인 정보 전송
-    const response = await axios.post(`${API_BASE_URL}/auth/social-login`, {
+    const response = await api.post('/auth/social-login', {
       provider: 'google',
       id_token: idToken,
       email: user.email,
@@ -52,7 +50,7 @@ export const handleGoogleRedirectResult = async () => {
     const idToken = await user.getIdToken();
     
     // 백엔드에 소셜 로그인 정보 전송
-    const response = await axios.post(`${API_BASE_URL}/auth/social-login`, {
+    const response = await api.post('/auth/social-login', {
       provider: 'google',
       id_token: idToken,
       email: user.email,
@@ -103,7 +101,7 @@ export const handleNaverCallback = async (code, state) => {
     }
     
     // 백엔드에서 액세스 토큰 교환 및 사용자 정보 조회
-    const response = await axios.post(`${API_BASE_URL}/auth/naver-callback`, {
+    const response = await api.post('/auth/naver-callback', {
       code,
       state,
       redirect_uri: window.location.origin + '/auth/naver/callback'
@@ -144,7 +142,7 @@ export const signInWithKakao = async () => {
 export const handleKakaoCallback = async (code) => {
   try {
     // 백엔드에서 액세스 토큰 교환 및 사용자 정보 조회
-    const response = await axios.post(`${API_BASE_URL}/auth/kakao-callback`, {
+    const response = await api.post('/auth/kakao-callback', {
       code,
       redirect_uri: window.location.origin + '/auth/kakao/callback'
     });
@@ -168,7 +166,7 @@ export const handleRedirectResult = async () => {
     const user = result.user;
     const idToken = await user.getIdToken();
     
-    const response = await axios.post(`${API_BASE_URL}/auth/social-login`, {
+    const response = await api.post('/auth/social-login', {
       provider: 'google',
       id_token: idToken,
       email: user.email,
