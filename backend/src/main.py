@@ -6,8 +6,9 @@ from fastapi.exceptions import RequestValidationError
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
-# .env 파일에서 환경 변수 로드
-load_dotenv()
+# .env 파일에서 환경 변수 로드 (로컬 개발 환경에서만 사용)
+if os.getenv("RENDER") is None:
+    load_dotenv()
 
 # Firestore 사용 여부 확인
 USE_FIRESTORE = os.getenv("USE_FIRESTORE", "false").lower() == "true"
