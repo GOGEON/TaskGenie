@@ -7,7 +7,6 @@ from datetime import datetime
 from google.cloud import firestore
 
 from ..firestore_db import get_firestore_db
-from ..models.user import User
 from ..schemas import ToDoItemUpdate, ToDoListUpdate
 from ..services.ai_service import generate_todo_items_from_keyword, generate_sub_tasks_from_main_task
 
@@ -38,7 +37,7 @@ def _create_items_recursively(db: firestore.Client, items_data: List[Dict[str, A
             _create_items_recursively(db, item_data["children"], todo_list_id, item_id)
 
 
-def create_todo_list_with_ai_items(user: User, keyword: str) -> Dict[str, Any]:
+def create_todo_list_with_ai_items(user: Any, keyword: str) -> Dict[str, Any]:
     """
     AI를 사용하여 새로운 Todo 리스트 생성
     """
@@ -64,7 +63,7 @@ def create_todo_list_with_ai_items(user: User, keyword: str) -> Dict[str, Any]:
     return get_todo_list_by_id(list_id, user)
 
 
-def create_subtasks_for_item(user: User, parent_item_id: str) -> Dict[str, Any]:
+def create_subtasks_for_item(user: Any, parent_item_id: str) -> Dict[str, Any]:
     """
     특정 아이템의 하위 작업 생성
     """
@@ -128,7 +127,7 @@ def create_subtasks_for_item(user: User, parent_item_id: str) -> Dict[str, Any]:
     return get_todo_item_by_id(parent_item_id)
 
 
-def get_todo_lists_by_user(user: User) -> List[Dict[str, Any]]:
+def get_todo_lists_by_user(user: Any) -> List[Dict[str, Any]]:
     """
     사용자의 모든 Todo 리스트 가져오기
     """
@@ -177,7 +176,7 @@ def _get_items_for_list(list_id: str, parent_id: str = None) -> List[Dict[str, A
     return items
 
 
-def get_todo_list_by_id(list_id: str, user: User) -> Dict[str, Any]:
+def get_todo_list_by_id(list_id: str, user: Any) -> Dict[str, Any]:
     """
     특정 Todo 리스트 가져오기
     """
@@ -217,7 +216,7 @@ def get_todo_item_by_id(item_id: str) -> Dict[str, Any]:
     return item_data
 
 
-def update_todo_list(list_id: str, user: User, list_update: ToDoListUpdate) -> Dict[str, Any]:
+def update_todo_list(list_id: str, user: Any, list_update: ToDoListUpdate) -> Dict[str, Any]:
     """
     Todo 리스트 업데이트
     """
@@ -240,7 +239,7 @@ def update_todo_list(list_id: str, user: User, list_update: ToDoListUpdate) -> D
     return get_todo_list_by_id(list_id, user)
 
 
-def update_todo_item(item_id: str, user: User, item_update: ToDoItemUpdate) -> Dict[str, Any]:
+def update_todo_item(item_id: str, user: Any, item_update: ToDoItemUpdate) -> Dict[str, Any]:
     """
     Todo 아이템 업데이트
     """
@@ -266,7 +265,7 @@ def update_todo_item(item_id: str, user: User, item_update: ToDoItemUpdate) -> D
     return get_todo_item_by_id(item_id)
 
 
-def delete_todo_item(item_id: str, user: User) -> bool:
+def delete_todo_item(item_id: str, user: Any) -> bool:
     """
     Todo 아이템 삭제 (자식 아이템도 함께 삭제)
     """
@@ -304,7 +303,7 @@ def _delete_children_recursively(parent_id: str):
         child.reference.delete()
 
 
-def delete_todo_list(list_id: str, user: User) -> bool:
+def delete_todo_list(list_id: str, user: Any) -> bool:
     """
     Todo 리스트 삭제 (모든 아이템 포함)
     """
