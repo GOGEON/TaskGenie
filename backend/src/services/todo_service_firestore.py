@@ -302,3 +302,48 @@ def delete_todo_list(list_id: str, user: Any) -> bool:
     batch.commit()
     
     return True
+
+def create_todo_item_from_parsed_data(user: Any, list_id: str, parsed_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Creates a new ToDo item from data parsed by the AI service.
+    """
+    db = get_firestore_db()
+
+    # 1. Verify that the list exists and belongs to the user
+    list_doc_ref = db.collection('todo_lists').document(list_id)
+    list_doc = list_doc_ref.get()
+    if not list_doc.exists or list_doc.to_dict().get('user_id') != user.id:
+        return None
+
+    # 2. Determine the order for the new item (append to the end of root items)
+    items_query = db.collection('todo_items').where('todo_list_id', '==', list_id).where('parent_id', '==', None).stream()
+    order = sum(1 for _ in items_query)
+
+    # 3. Prepare the new item document
+    item_id = str(uuid.uuid4())
+    due_date = parsed_data.get("due_date")
+    if due_date and isinstance(due_date, str):
+        due_date = datetime.fromisoformat(due_date.replace("Z", "+00:00"))
+    
+    new_item_doc = {
+        "id": item_id,
+        "todo_list_id": list_id,
+        "parent_id": None, # Parsed tasks are added as root items
+        "description": parsed_data.get("description", "New Task"),
+        "is_completed": False,
+        "order": order,
+        "priority": parsed_data.get("priority", "medium"),
+        "due_date": due_date,
+        "reminder_date": None, # Reminder can be set later
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+        # Store other AI metadata if needed, e.g.,
+        # "estimated_time_minutes": parsed_data.get("estimated_time_minutes"),
+        # "category": parsed_data.get("category"),
+    }
+
+    # 4. Save the new item to Firestore
+    db.collection('todo_items').document(item_id).set(new_item_doc)
+
+    # 5. Return the newly created item
+    return get_todo_item_by_id(item_id)

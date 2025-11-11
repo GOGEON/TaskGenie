@@ -7,6 +7,7 @@ import {
   generateSubtasks,
   updateToDoItem,
   deleteToDoItem,
+  createTodoItemFromNaturalLanguage,
 } from '../services/todoApiService';
 
 // --- Recursive Helper Functions for State Management ---
@@ -211,33 +212,28 @@ function ProjectView({ project, setProjects }) {
   // --- New Task Input Handler ---
   const handleAddTask = (e) => {
     if (e.key === 'Enter' && taskInputRef.current.value.trim()) {
-      const mainTaskDescription = taskInputRef.current.value.trim();
-      const subtasks = generateClientSideSubtasks(mainTaskDescription); // Client-side AI placeholder
+      const naturalLanguageText = taskInputRef.current.value.trim();
+      taskInputRef.current.value = ''; // Clear input immediately
 
-      // For now, we'll just add the main task to the list.
-      // In a real scenario, you'd call a backend API to add the main task
-      // and then potentially another API to generate and add subtasks.
-      // This is a simplified client-side representation.
-
-      const newMainTask = {
-        id: `temp-${Date.now()}`,
-        description: mainTaskDescription,
-        is_completed: false,
-        children: subtasks.map((desc, index) => ({
-          id: `temp-sub-${Date.now()}-${index}`,
-          description: desc,
-          is_completed: false,
-          children: [],
-        })),
-      };
-
-      const updatedProject = {
-        ...project,
-        items: [...project.items, newMainTask],
-      };
-      updateProjectInApp(updatedProject);
-      taskInputRef.current.value = '';
-      toast.success('새 작업이 추가되었습니다!');
+      toast.promise(
+        createTodoItemFromNaturalLanguage(naturalLanguageText, project.id),
+        {
+          loading: 'AI가 할 일을 분석하고 있습니다...',
+          success: (newItem) => {
+            const updatedProject = {
+              ...project,
+              items: [...project.items, newItem],
+            };
+            updateProjectInApp(updatedProject);
+            return 'AI가 할 일을 성공적으로 추가했습니다!';
+          },
+          error: (err) => {
+            // Restore input if there was an error
+            taskInputRef.current.value = naturalLanguageText;
+            return err.response?.data?.detail || '할 일 추가에 실패했습니다.';
+          },
+        }
+      );
     }
   };
 

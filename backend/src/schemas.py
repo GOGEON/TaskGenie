@@ -88,3 +88,8 @@ class ToDoItemUpdate(BaseModel):
     priority: Optional[str] = None  # 'none' | 'low' | 'medium' | 'high'
     due_date: Optional[datetime] = None
     reminder_date: Optional[datetime] = None
+
+class NaturalLanguageTaskCreate(BaseModel):
+    text: str
+    list_id: str
+

@@ -131,3 +131,81 @@ Return the list as a numbered list, e.g.,
             f"'{main_task_description}'에 대한 두 번째 세부 계획",
             f"'{main_task_description}'에 대한 세 번째 세부 계획"
         ]
+
+def analyze_task_from_natural_language(natural_language_text: str) -> dict:
+    """
+    Analyzes a natural language string to extract structured task information
+    using the Gemini API.
+    """
+    try:
+        model = genai.GenerativeModel('gemini-flash-latest')
+        
+        # Get current date and time to provide context to the AI
+        from datetime import datetime
+        current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+        prompt = f"""You are a sophisticated task parser. Analyze the following to-do item and return its components as a JSON object.
+
+Current date and time for context: {current_time_str}
+
+To-do item: "{natural_language_text}"
+
+Analyze the text and provide the following information in a valid JSON object format ONLY. Do not include any other text, explanations, or markdown formatting.
+
+1.  `description`: (string) The core action or task to be done.
+2.  `due_date`: (string, ISO 8601 format YYYY-MM-DD HH:MM:SS or YYYY-MM-DD) The deadline for the task. Infer from relative terms like '내일', '오늘 저녁 6시', '다음 주 수요일'. If no date is mentioned, return null.
+3.  `priority`: (string) The priority of the task. Infer from keywords like '긴급', '중요'. Can be 'high', 'medium', or 'low'. If not specified, default to 'medium'.
+4.  `estimated_time_minutes`: (integer) The estimated time required to complete the task in minutes. Infer from the task's complexity and description. Examples: '5분 스트레칭' -> 5, '보고서 작성' -> 120. If not clear, return null.
+5.  `category`: (string) The category of the task. Infer from the content. Examples: '업무', '개인', '운동', '학습'. If not clear, return null.
+
+Example 1:
+Input: "내일까지 운동하기"
+Output:
+{{
+  "description": "운동하기",
+  "due_date": "2025-11-12 23:59:59",
+  "priority": "medium",
+  "estimated_time_minutes": 60,
+  "category": "운동"
+}}
+
+Example 2:
+Input: "긴급! 오늘 저녁 6시까지 보고서 제출"
+Output:
+{{
+  "description": "보고서 제출",
+  "due_date": "2025-11-11 18:00:00",
+  "priority": "high",
+  "estimated_time_minutes": 180,
+  "category": "업무"
+}}
+
+Example 3:
+Input: "책 읽기"
+Output:
+{{
+  "description": "책 읽기",
+  "due_date": null,
+  "priority": "low",
+  "estimated_time_minutes": 90,
+  "category": "개인"
+}}
+"""
+        response = model.generate_content(prompt)
+        
+        # Clean the response to get only the JSON part
+        json_str = response.text.strip().replace('```json', '').replace('```', '').strip()
+        
+        parsed_data = json.loads(json_str)
+        return parsed_data
+
+    except Exception as e:
+        print(f"Error in analyze_task_from_natural_language: {e}")
+        # Fallback to a simple parsing
+        return {
+            "description": natural_language_text,
+            "due_date": None,
+            "priority": "medium",
+            "estimated_time_minutes": None,
+            "category": None
+        }

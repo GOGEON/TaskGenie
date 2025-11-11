@@ -35,3 +35,8 @@ export const deleteToDoList = async (listId) => {
   const response = await api.delete(`/todos/${listId}`);
   return response.data;
 };
+
+export const createTodoItemFromNaturalLanguage = async (text, listId) => {
+  const response = await api.post('/todos/parse-and-create-item', { text, list_id: listId });
+  return response.data;
+};

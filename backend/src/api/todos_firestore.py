@@ -6,11 +6,48 @@ import os
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from ..schemas import ToDoListCreate, ToDoListResponse, ToDoItemUpdate, ToDoItemResponse, ToDoListUpdate
 from ..services.auth_service_firestore import get_current_user
 from ..services import todo_service_firestore as todo_service
+from ..services.nlp_parser import nlp_parser
+from ..schemas import (
+    ToDoListCreate, ToDoListResponse, ToDoItemUpdate, 
+    ToDoItemResponse, ToDoListUpdate, NaturalLanguageTaskCreate
+)
+
 
 router = APIRouter()
+
+
+@router.post("/parse-and-create-item", response_model=ToDoItemResponse)
+def parse_and_create_todo_item(
+    task_create: NaturalLanguageTaskCreate,
+    current_user: Any = Depends(get_current_user),
+):
+    """
+    Parses a natural language string to create a new ToDo item.
+    """
+    # 1. Parse the natural language text to get structured data
+    parsed_data = nlp_parser.parse_task(task_create.text)
+    if not parsed_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Could not parse the provided text.",
+        )
+
+    # 2. Create the ToDo item in the specified list
+    new_item = todo_service.create_todo_item_from_parsed_data(
+        user=current_user,
+        list_id=task_create.list_id,
+        parsed_data=parsed_data
+    )
+
+    if not new_item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="To-Do List not found or you do not have permission to access it.",
+        )
+
+    return new_item
 
 
 @router.post("/generate", response_model=ToDoListResponse)
