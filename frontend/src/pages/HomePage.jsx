@@ -12,6 +12,7 @@ import {
   deleteToDoItem,
   deleteToDoList,
   updateToDoList,
+  createTodoItemFromNaturalLanguage,
 } from '../services/todoApiService';
 
 const reorderChildren = (items, parentId, dragIndex, hoverIndex) => {
@@ -128,6 +129,7 @@ function HomePage({ project, setProjects, triggerRefetch }) {
   const [editingItem, setEditingItem] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingItemId, setGeneratingItemId] = useState(null);
+  const taskInputRef = React.useRef(null);
 
   useEffect(() => {
     setCurrentProject(project);
@@ -138,6 +140,35 @@ function HomePage({ project, setProjects, triggerRefetch }) {
       prevProjects.map(p => (p.id === updatedProject.id ? updatedProject : p))
     );
   };
+
+  const handleAddTask = (e) => {
+    if (e.key === 'Enter' && taskInputRef.current.value.trim()) {
+      const naturalLanguageText = taskInputRef.current.value.trim();
+      taskInputRef.current.value = ''; // Clear input immediately
+
+      toast.promise(
+        createTodoItemFromNaturalLanguage(naturalLanguageText, currentProject.id),
+        {
+          loading: 'AI가 할 일을 분석하고 있습니다...',
+          success: (newItem) => {
+            const updatedProject = {
+              ...currentProject,
+              items: [...currentProject.items, newItem],
+            };
+            setCurrentProject(updatedProject);
+            updateGlobalProjectState(updatedProject);
+            return 'AI가 할 일을 성공적으로 추가했습니다!';
+          },
+          error: (err) => {
+            // Restore input if there was an error
+            taskInputRef.current.value = naturalLanguageText;
+            return err.response?.data?.detail || '할 일 추가에 실패했습니다.';
+          },
+        }
+      );
+    }
+  };
+
 
   const moveItem = useCallback((dragIndex, hoverIndex, parentId = null) => {
     setCurrentProject((prevProject) => {
@@ -506,7 +537,22 @@ function HomePage({ project, setProjects, triggerRefetch }) {
         ) : null;
       })()}
 
-      {/* [삭제] 키워드 입력 영역 제거 (이전: 메인 화면 상단에 KeywordInput 컴포넌트 배치) */}
+      {/* [추가] 새 작업 추가 입력 영역 */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="w-5 h-5 flex items-center justify-center">
+            <div className="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
+          </div>
+          <input 
+            type="text" 
+            placeholder="새 작업을 추가하세요... (예: 내일까지 보고서 제출)" 
+            className="flex-1 text-sm text-gray-600 border-none outline-none bg-transparent"
+            onKeyPress={handleAddTask}
+            ref={taskInputRef}
+          />
+        </div>
+      </div>
+
       <div>
         <div className="mb-6">
           <ToDoListDisplay
