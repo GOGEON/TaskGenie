@@ -141,8 +141,22 @@ def analyze_task_from_natural_language(natural_language_text: str) -> dict:
         model = genai.GenerativeModel('gemini-flash-latest')
         
         # Get current date and time to provide context to the AI
-        from datetime import datetime
-        current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+        
+        # Set timezone to Seoul
+        kst = ZoneInfo("Asia/Seoul")
+        now = datetime.now(kst)
+        current_time_str = now.strftime("%Y-%m-%d %H:%M")
+
+        # New rule for "by tomorrow": 24 hours from now, rounded up to the nearest 30 mins
+        target_time = now + timedelta(hours=24)
+        if target_time.minute % 30 != 0:
+            minutes_to_add = 30 - (target_time.minute % 30)
+            target_time += timedelta(minutes=minutes_to_add)
+        # Reset seconds for a clean time
+        target_time = target_time.replace(second=0, microsecond=0)
+        tomorrow_due_date_str = target_time.strftime("%Y-%m-%d %H:%M:%S")
 
         prompt = f"""You are a sophisticated task parser. Analyze the following to-do item and return its components as a JSON object.
 
@@ -163,7 +177,7 @@ Input: "내일까지 운동하기"
 Output:
 {{
   "description": "운동하기",
-  "due_date": "2025-11-12 23:59:59",
+  "due_date": "{tomorrow_due_date_str}",
   "priority": "medium",
   "estimated_time_minutes": 60,
   "category": "운동"
@@ -174,7 +188,7 @@ Input: "긴급! 오늘 저녁 6시까지 보고서 제출"
 Output:
 {{
   "description": "보고서 제출",
-  "due_date": "2025-11-11 18:00:00",
+  "due_date": "{now.strftime('%Y-%m-%d')} 18:00:00",
   "priority": "high",
   "estimated_time_minutes": 180,
   "category": "업무"
