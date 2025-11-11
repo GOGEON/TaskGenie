@@ -308,6 +308,7 @@ def create_todo_item_from_parsed_data(user: Any, list_id: str, parsed_data: Dict
     Creates a new ToDo item from data parsed by the AI service.
     """
     db = get_firestore_db()
+    from zoneinfo import ZoneInfo
 
     # 1. Verify that the list exists and belongs to the user
     list_doc_ref = db.collection('todo_lists').document(list_id)
@@ -321,10 +322,20 @@ def create_todo_item_from_parsed_data(user: Any, list_id: str, parsed_data: Dict
 
     # 3. Prepare the new item document
     item_id = str(uuid.uuid4())
-    due_date = parsed_data.get("due_date")
-    if due_date and isinstance(due_date, str):
-        due_date = datetime.fromisoformat(due_date.replace("Z", "+00:00"))
     
+    # --- Timezone-aware due date handling ---
+    due_date = None
+    due_date_str = parsed_data.get("due_date")
+    if due_date_str and isinstance(due_date_str, str):
+        try:
+            # Create a naive datetime object from the string
+            naive_dt = datetime.fromisoformat(due_date_str)
+            # Make it timezone-aware by setting the KST timezone
+            kst = ZoneInfo("Asia/Seoul")
+            due_date = naive_dt.replace(tzinfo=kst)
+        except ValueError:
+            due_date = None # Handle potential parsing errors from AI
+
     new_item_doc = {
         "id": item_id,
         "todo_list_id": list_id,
@@ -335,8 +346,8 @@ def create_todo_item_from_parsed_data(user: Any, list_id: str, parsed_data: Dict
         "priority": parsed_data.get("priority", "medium"),
         "due_date": due_date,
         "reminder_date": None, # Reminder can be set later
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow(),
+        "created_at": datetime.now(ZoneInfo("Asia/Seoul")), # Also make creation time timezone-aware
+        "updated_at": datetime.now(ZoneInfo("Asia/Seoul")), # Also make update time timezone-aware
         # Store other AI metadata if needed, e.g.,
         # "estimated_time_minutes": parsed_data.get("estimated_time_minutes"),
         # "category": parsed_data.get("category"),
