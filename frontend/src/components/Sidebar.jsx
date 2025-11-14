@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ReactComponent as Logo } from '../assets/logo.svg';
 
 const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewProject, onLogout }) => {
   const [width, setWidth] = useState(320);
@@ -6,7 +7,6 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
   const sidebarRef = useRef(null);
 
   const userName = user?.username || '사용자';
-  const userInitial = userName.charAt(0).toUpperCase();
 
   /* [개선] 가중치 기반 진행률 계산 - 계층 구조를 고려한 정확한 진행률 표시 */
   /* 이전: 단순 카운트 방식 (완료 항목 / 전체 항목 * 100) */
@@ -84,12 +84,13 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
     >
       {/* User Area */}
       <div className="p-3 sm:p-4 border-b border-gray-100">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-            {userInitial}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Logo className="w-8 h-8 sm:w-9 sm:h-9" />
+            <span className="font-bold text-lg text-gray-800">TaskGenie</span>
           </div>
           <div className="flex items-center text-sm text-gray-600 min-w-0">
-            <span className="truncate">{userName}</span>
+            <span className="truncate hidden sm:inline">{userName}</span>
             <button onClick={onLogout} className="ml-2 sm:ml-4 text-xs text-red-500 hover:text-red-700 flex-shrink-0">로그아웃</button>
           </div>
         </div>
