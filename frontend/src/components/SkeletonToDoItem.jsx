@@ -7,6 +7,11 @@ const SkeletonToDoItem = () => {
       className="flex items-center justify-between py-2 sm:py-1 border-t border-b border-l-4 border-gray-100 bg-white animate-pulse"
     >
       <div className="flex items-center flex-grow min-w-0">
+        {/* 드래그 핸들 스페이서 */}
+        <div className="p-1 flex-shrink-0">
+            <div className="w-5 h-5"></div>
+        </div>
+        
         {/* 화살표 영역 */}
         <div className="w-8 sm:w-8 text-center flex-shrink-0">
             {/* 이 영역은 비워두거나, 필요 시 스켈레톤 아이콘 추가 */}
@@ -22,6 +27,11 @@ const SkeletonToDoItem = () => {
               style={{ width: `${Math.random() * 40 + 30}%` }}
             ></div>
         </div>
+      </div>
+      
+      {/* 케밥 메뉴 스페이서 */}
+      <div className="flex-shrink-0 ml-2">
+        <div className="w-5 h-5"></div>
       </div>
     </li>
   );
