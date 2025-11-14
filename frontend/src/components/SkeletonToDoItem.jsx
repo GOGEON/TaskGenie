@@ -28,5 +28,3 @@ const SkeletonToDoItem = () => {
 };
 
 export default SkeletonToDoItem;
-
-export default SkeletonToDoItem;
