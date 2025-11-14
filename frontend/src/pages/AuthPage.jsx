@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import api from '../services/api';
 import { saveToken } from '../services/localStorageService';
-import { signInWithGoogle, signInWithNaver, signInWithKakao } from '../services/socialAuthService';
+import { signInWithGoogle, signInWithKakao } from '../services/socialAuthService'; //, signInWithNaver
 import toast from 'react-hot-toast';
 
 function AuthPage({ onLoginSuccess }) {
@@ -60,11 +60,13 @@ function AuthPage({ onLoginSuccess }) {
           toast.success('Google 로그인 성공!');
           onLoginSuccess(result.access_token);
         }
-      } else if (provider === 'naver') {
-        // 네이버는 항상 리디렉션 방식
-        await signInWithNaver();
-        // 리디렉션되므로 여기는 실행되지 않음
-      } else if (provider === 'kakao') {
+      } 
+      // else if (provider === 'naver') {
+      //   // 네이버는 항상 리디렉션 방식
+      //   await signInWithNaver();
+      //   // 리디렉션되므로 여기는 실행되지 않음
+      // } 
+      else if (provider === 'kakao') {
         // 카카오는 항상 리디렉션 방식
         await signInWithKakao();
         // 리디렉션되므로 여기는 실행되지 않음
@@ -151,14 +153,14 @@ function AuthPage({ onLoginSuccess }) {
           </button>
 
           {/* 네이버 로그인 버튼 (공식 스타일 - NAVER GREEN #03C75A) */}
-          <button
+          {/* <button
             onClick={() => handleSocialLogin('naver')}
             disabled={loading}
             className="w-full flex items-center justify-center gap-3 py-3 sm:py-2.5 px-4 rounded-md shadow-sm text-sm sm:text-base font-bold text-white bg-[#03C75A] hover:bg-[#02b350] active:bg-[#019f45] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#03C75A] min-h-[44px] sm:min-h-0 touch-manipulation transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="font-black text-2xl leading-none" style={{ fontFamily: 'Arial Black, sans-serif' }}>N</span>
             <span>네이버로 로그인</span>
-          </button>
+          </button> */}
 
           {/* 카카오 로그인 버튼 (공식 스타일) */}
           <button
