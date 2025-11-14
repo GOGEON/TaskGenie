@@ -254,11 +254,11 @@ const ToDoItem = ({
         </ul>
       )}
       
-      {/* [추가] AI 생성 중 스켈레톤 로딩 표시 (UX 개선) */}
+      {/* [수정] 스켈레톤 UI가 실제 UI와 일치하도록 level prop 제거 */}
       {isGenerating && generatingItemId === item.id && (
         <ul className="list-none p-0 pl-6 sm:pl-8">
           {[...Array(3)].map((_, i) => (
-            <SkeletonToDoItem key={`skeleton-${i}`} level={1} />
+            <SkeletonToDoItem key={`skeleton-${i}`} />
           ))}
         </ul>
       )}

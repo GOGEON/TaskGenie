@@ -144,7 +144,7 @@ pytest
 - **[코드 변경사항](./docs/CODE_CHANGES_SUMMARY.md)** - 상세 코드 변경 내역
 - **[개선 제안](./docs/IMPROVEMENT_SUGGESTIONS.md)** - 향후 개선 계획
 
-## 🌟 주요 변경사항 (2025.01.06)
+## 🌟 주요 변경사항 (2025.11.06)
 
 - ✅ **SQLite → Firestore 마이그레이션** - 클라우드 네이티브 아키텍처로 전환
 - ✅ **확장성 개선** - 무제한 동시 접속 지원
