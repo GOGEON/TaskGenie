@@ -21,9 +21,9 @@ class NaturalLanguageParser:
             ai_result["description"] = text # Fallback to original text
 
         # Priority: Validate priority value
-        valid_priorities = ["high", "medium", "low"]
+        valid_priorities = ["high", "medium", "low", "none"]
         if ai_result.get("priority") not in valid_priorities:
-            ai_result["priority"] = "medium" # Default value
+            ai_result["priority"] = "none" # Default value
 
         # Due Date: Ensure it's a valid format or null
         due_date_str = ai_result.get("due_date")
