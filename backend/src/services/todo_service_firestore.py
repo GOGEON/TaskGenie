@@ -343,7 +343,7 @@ def create_todo_item_from_parsed_data(user: Any, list_id: str, parsed_data: Dict
         "description": parsed_data.get("description", "New Task"),
         "is_completed": False,
         "order": order,
-        "priority": parsed_data.get("priority", "medium"),
+        "priority": parsed_data.get("priority", "none"),
         "due_date": due_date,
         "reminder_date": None, # Reminder can be set later
         "created_at": datetime.now(ZoneInfo("Asia/Seoul")), # Also make creation time timezone-aware

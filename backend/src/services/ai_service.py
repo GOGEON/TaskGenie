@@ -168,7 +168,7 @@ Analyze the text and provide the following information in a valid JSON object fo
 
 1.  `description`: (string) The core action or task to be done.
 2.  `due_date`: (string, ISO 8601 format YYYY-MM-DD HH:MM:SS or YYYY-MM-DD) The deadline for the task. Infer from relative terms like '내일', '오늘 저녁 6시', '다음 주 수요일'. If no date is mentioned, return null.
-3.  `priority`: (string) The priority of the task. Infer from keywords like '긴급', '중요'. Can be 'high', 'medium', or 'low'. If not specified, default to 'medium'.
+3.  `priority`: (string) The priority of the task. Infer from keywords like '긴급', '중요'. Can be 'high', 'medium', 'low', 'none'. If not specified, default to 'none'.
 4.  `estimated_time_minutes`: (integer) The estimated time required to complete the task in minutes. Infer from the task's complexity and description. Examples: '5분 스트레칭' -> 5, '보고서 작성' -> 120. If not clear, return null.
 5.  `category`: (string) The category of the task. Infer from the content. Examples: '업무', '개인', '운동', '학습'. If not clear, return null.
 
@@ -178,7 +178,7 @@ Output:
 {{
   "description": "운동하기",
   "due_date": "{tomorrow_due_date_str}",
-  "priority": "medium",
+  "priority": "none",
   "estimated_time_minutes": 60,
   "category": "운동"
 }}
@@ -200,7 +200,7 @@ Output:
 {{
   "description": "책 읽기",
   "due_date": null,
-  "priority": "low",
+  "priority": "none",
   "estimated_time_minutes": 90,
   "category": "개인"
 }}
@@ -219,7 +219,7 @@ Output:
         return {
             "description": natural_language_text,
             "due_date": None,
-            "priority": "medium",
+            "priority": "none",
             "estimated_time_minutes": None,
             "category": None
         }
