@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ReactComponent as Logo } from '../assets/logo.svg';
+import Logo from '../assets/logo.svg?react';
 
 const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewProject, onLogout }) => {
   const [width, setWidth] = useState(320);
