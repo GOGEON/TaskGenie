@@ -13,9 +13,13 @@ import OnboardingGuide from './components/OnboardingGuide';
 import EmptyState from './components/EmptyState';
 /* [추가] 기본 prompt() 대신 사용할 전문적인 키워드 입력 모달 컴포넌트 추가 */
 import KeywordInputModal from './components/KeywordInputModal';
+/* [추가] 전역 빠른 추가 모달 컴포넌트 추가 (Ctrl/Cmd + K) - AI 파싱 없이 즉시 생성 */
+import QuickAddModal from './components/QuickAddModal';
 
 import { loadToken, removeToken } from './services/localStorageService';
 import { getToDos, generateToDoList, deleteToDoList } from './services/todoApiService';
+/* [추가] 전역 키보드 단축키 훅 추가 */
+import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 
 import './App.css';
 
@@ -27,8 +31,17 @@ function App() {
   const [refetchTrigger, setRefetchTrigger] = useState(0);
   /* [추가] 키워드 입력 모달의 열림/닫힘 상태 관리 (이전: prompt() 사용) */
   const [isKeywordModalOpen, setIsKeywordModalOpen] = useState(false);
+  /* [추가] 빠른 추가 모달의 열림/닫힘 상태 관리 (Ctrl/Cmd + K) */
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   const triggerRefetch = () => setRefetchTrigger(c => c + 1);
+
+  /* [추가] Ctrl/Cmd + K 단축키로 빠른 추가 모달 열기 */
+  useKeyboardShortcuts('k', () => {
+    if (user && projects.length > 0) {
+      setIsQuickAddOpen(true);
+    }
+  }, { ctrl: true });
 
   useEffect(() => {
     if (token) {
@@ -113,6 +126,36 @@ function App() {
     }
   };
 
+  /* [추가] 빠른 추가 모달에서 작업 추가 처리 - AI 파싱 없이 직접 생성 */
+  const handleQuickAddSubmit = async (text, projectId) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/todos/items`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${loadToken()}`
+        },
+        body: JSON.stringify({
+          description: text,
+          list_id: projectId,
+          priority: 'none',
+          due_date: null
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('작업 추가 실패');
+      }
+      
+      toast.success('작업이 추가되었습니다!');
+      triggerRefetch();
+      setIsQuickAddOpen(false);
+    } catch (error) {
+      console.error('작업 추가 실패:', error);
+      toast.error('작업 추가에 실패했습니다.');
+    }
+  };
+
   const handleDeleteProject = async (projectId) => {
     if (window.confirm('이 프로젝트를 정말로 삭제하시겠습니까?')) {
       try {
@@ -144,6 +187,14 @@ function App() {
         isOpen={isKeywordModalOpen}
         onClose={() => setIsKeywordModalOpen(false)}
         onSubmit={handleKeywordSubmit}
+      />
+      {/* [추가] 전역 빠른 추가 모달 (Ctrl/Cmd + K) - AI 파싱 없이 즉시 생성 */}
+      <QuickAddModal 
+        isOpen={isQuickAddOpen}
+        onClose={() => setIsQuickAddOpen(false)}
+        onSubmit={handleQuickAddSubmit}
+        projects={projects}
+        activeProjectId={activeProjectId}
       />
       <Router>
         <Routes>

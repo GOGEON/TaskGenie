@@ -4,7 +4,7 @@ Firestore 기반 Todo API 라우터
 from typing import List, Any
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 
 from ..services.auth_service_firestore import get_current_user
 from ..services import todo_service_firestore as todo_service
@@ -16,6 +16,75 @@ from ..schemas import (
 
 
 router = APIRouter()
+
+
+@router.post("/items", response_model=ToDoItemResponse)
+def create_todo_item_fast(
+    description: str = Body(...),
+    list_id: str = Body(...),
+    priority: str = Body("none"),
+    due_date: str = Body(None),
+    current_user: Any = Depends(get_current_user),
+):
+    """
+    빠른 작업 추가 (AI 파싱 없이 직접 생성)
+    Quick Add 모달에서 사용 - AI 응답 대기 없이 즉시 작업 생성
+    """
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    import uuid
+    from ..firestore_db import get_firestore_db
+    
+    db = get_firestore_db()
+    
+    # Validate priority
+    valid_priorities = ["high", "medium", "low", "none"]
+    if priority not in valid_priorities:
+        priority = "none"
+    
+    # Verify list exists and belongs to user
+    list_doc = db.collection('todo_lists').document(list_id).get()
+    if not list_doc.exists or list_doc.to_dict().get('user_id') != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="To-Do List not found or you do not have permission to access it.",
+        )
+    
+    # Get order for new item
+    items_query = db.collection('todo_items').where('todo_list_id', '==', list_id).where('parent_id', '==', None).stream()
+    order = sum(1 for _ in items_query)
+    
+    # Create item
+    item_id = str(uuid.uuid4())
+    
+    # Handle due date if provided
+    due_date_obj = None
+    if due_date:
+        try:
+            naive_dt = datetime.fromisoformat(due_date)
+            kst = ZoneInfo("Asia/Seoul")
+            due_date_obj = naive_dt.replace(tzinfo=kst)
+        except (ValueError, TypeError):
+            due_date_obj = None
+    
+    new_item_doc = {
+        "id": item_id,
+        "todo_list_id": list_id,
+        "parent_id": None,
+        "description": description,
+        "is_completed": False,
+        "order": order,
+        "priority": priority,
+        "due_date": due_date_obj,
+        "reminder_date": None,
+        "created_at": datetime.now(ZoneInfo("Asia/Seoul")),
+        "updated_at": datetime.now(ZoneInfo("Asia/Seoul")),
+    }
+    
+    db.collection('todo_items').document(item_id).set(new_item_doc)
+    
+    # Return created item
+    return todo_service.get_todo_item_by_id(item_id)
 
 
 @router.post("/parse-and-create-item", response_model=ToDoItemResponse)
