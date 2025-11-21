@@ -140,12 +140,14 @@ const ToDoItem = ({
   };
 
   /* [추가] 우선순위별 색상 및 아이콘 설정 */
-  /* none: 회색 테두리, low: 진한 회색, medium: 주황색, high: 빨간색 */
+  /* none: 회색, low: 파란색(Todoist 스타일), medium: 주황색, high: 빨간색 */
+  /* 가시성을 위해 배경색(bg)과 테두리색(border)을 분리하여 설정 */
+  /* [수정] 완료 시에도 우선순위 색상을 유지하기 위해 completed 스타일 추가 */
   const priorityConfig = {
-    none: { color: 'border-l-gray-200', icon: '○' },
-    low: { color: 'border-l-gray-400', icon: '⚪' },
-    medium: { color: 'border-l-orange-500', icon: '🟡' },
-    high: { color: 'border-l-red-500', icon: '🔴' }
+    none: { border: 'border-gray-300', bg: 'bg-transparent', completed: 'bg-gray-400 border-gray-400', icon: '○' },
+    low: { border: 'border-blue-500', bg: 'bg-blue-50', completed: 'bg-blue-400 border-blue-400', icon: '⚪' },
+    medium: { border: 'border-orange-500', bg: 'bg-orange-50', completed: 'bg-orange-400 border-orange-400', icon: '🟡' },
+    high: { border: 'border-red-600', bg: 'bg-red-50', completed: 'bg-red-400 border-red-400', icon: '🔴' }
   };
   const currentPriorityConfig = priorityConfig[item.priority || 'none'];
 
@@ -159,8 +161,7 @@ const ToDoItem = ({
           transform: isDragging ? 'scale(1.02)' : 'scale(1)',
         }}
         className={`
-          flex items-center justify-between py-2 sm:py-1 border-t border-b border-l-4 border-gray-100 
-          ${currentPriorityConfig.color}
+          flex items-center justify-between py-2 sm:py-1 border-b border-gray-100 
           group bg-white touch-manipulation item-fade-in
           ${isDeleting ? 'item-slide-out' : ''}
         `}
@@ -185,16 +186,41 @@ const ToDoItem = ({
             )}
           </div>
 
-          {/* [수정] 커스텀 원형 체크박스로 변경 (이전: 기본 사각형 체크박스) */}
-          <input
-            type="checkbox"
-            checked={item.is_completed}
-            onChange={handleToggleComplete}
-            className="custom-checkbox mx-2 flex-shrink-0 min-w-[20px] min-h-[20px] sm:min-w-[18px] sm:min-h-[18px]"
-          />
+          {/* [수정] Todoist 스타일 우선순위 체크박스 */}
+          {/* 우선순위에 따른 테두리 색상 적용, 완료 시 채워짐 */}
+          <div 
+            className="relative flex items-center justify-center p-1 cursor-pointer group/checkbox"
+            onClick={handleToggleComplete}
+          >
+            <div className={`
+              w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
+              ${item.is_completed 
+                ? currentPriorityConfig.completed /* [수정] 완료 시 우선순위별 색상 적용 */
+                : `${currentPriorityConfig.border} ${currentPriorityConfig.bg} hover:bg-opacity-80`
+              }
+            `}>
+              {/* 체크 표시 아이콘 (완료되었거나 호버 시 표시) */}
+              <svg 
+                className={`
+                  w-3 h-3 text-white transition-opacity duration-200
+                  ${item.is_completed ? 'opacity-100' : 'opacity-0 group-hover/checkbox:opacity-100'}
+                  ${!item.is_completed && currentPriorityConfig.border.includes('red') ? 'text-red-600' : ''}
+                  ${!item.is_completed && currentPriorityConfig.border.includes('orange') ? 'text-orange-500' : ''}
+                  ${!item.is_completed && currentPriorityConfig.border.includes('blue') ? 'text-blue-500' : ''}
+                  ${!item.is_completed && currentPriorityConfig.border.includes('gray') ? 'text-gray-400' : ''}
+                `} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                strokeWidth="3"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
 
           {/* [삭제] 항목 텍스트 앞 우선순위 아이콘 제거 (이전: 🔴🟡⚪ 이모지 표시) */}
-          <span className={`flex-grow p-1 pr-2 break-words ${item.is_completed ? 'text-gray-400 line-through' : 'text-gray-800'} text-sm sm:text-base`}>
+          <span className={`flex-grow p-1 pr-2 ml-2 break-words ${item.is_completed ? 'text-gray-400 line-through' : 'text-gray-800'} text-sm sm:text-base`}>
             {item.description}
           </span>
           

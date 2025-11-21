@@ -509,22 +509,31 @@ function HomePage({ project, setProjects, triggerRefetch }) {
 
   return (
     <div className="container p-8 max-w-5xl mx-auto" style={{ textAlign: 'left' }}>
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          options={contextMenuOptions}
-          onClose={handleCloseContextMenu}
-          priorityConfig={{
-            currentPriority: contextMenu.currentPriority,
-            onPriorityChange: (newPriority) => handleUpdatePriority(contextMenu.itemId, newPriority)
-          }}
-          dateConfig={{
-            dueDate: contextMenu.dueDate,
-            onDueDateChange: (newDate) => handleUpdateDueDate(contextMenu.itemId, newDate)
-          }}
-        />
-      )}
+      {contextMenu && (() => {
+        /* [수정] 컨텍스트 메뉴가 열려있을 때 실시간으로 최신 항목 데이터를 조회 */
+        /* 이를 통해 우선순위나 마감일 변경 시 메뉴 내에서도 즉시 반영됨 */
+        const targetItem = findItemRecursive(currentProject.items, contextMenu.itemId);
+        
+        /* 항목이 삭제되었거나 찾을 수 없는 경우 메뉴를 표시하지 않음 */
+        if (!targetItem) return null;
+
+        return (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            options={contextMenuOptions}
+            onClose={handleCloseContextMenu}
+            priorityConfig={{
+              currentPriority: targetItem.priority || 'none', /* [수정] 실시간 우선순위 사용 */
+              onPriorityChange: (newPriority) => handleUpdatePriority(contextMenu.itemId, newPriority)
+            }}
+            dateConfig={{
+              dueDate: targetItem.due_date, /* [수정] 실시간 마감일 사용 */
+              onDueDateChange: (newDate) => handleUpdateDueDate(contextMenu.itemId, newDate)
+            }}
+          />
+        );
+      })()}
 
       {editingItem && (() => {
         const item = findItemRecursive(currentProject.items, editingItem);

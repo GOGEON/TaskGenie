@@ -5,11 +5,13 @@ import React from 'react';
 
 const PrioritySelector = ({ value = 'none', onChange, disabled = false }) => {
   /* 우선순위 옵션 정의 - 아이콘, 레이블, 색상 */
+  /* [수정] 텍스트 색상(text)과 배경 색상(bg)을 분리하여 정의 */
+  /* 선택되지 않아도 텍스트/아이콘 색상은 항상 표시됨 */
   const priorities = [
-    { value: 'none', label: '없음', color: 'text-gray-400 bg-gray-50 hover:bg-gray-100', icon: '○' },
-    { value: 'low', label: '낮음', color: 'text-gray-600 bg-gray-50 hover:bg-gray-100', icon: '⚪' },
-    { value: 'medium', label: '보통', color: 'text-orange-600 bg-orange-50 hover:bg-orange-100', icon: '🟡' },
-    { value: 'high', label: '높음', color: 'text-red-600 bg-red-50 hover:bg-red-100', icon: '🔴' }
+    { value: 'none', label: '없음', text: 'text-gray-500', bg: 'bg-gray-50', hover: 'hover:bg-gray-100', icon: '○' },
+    { value: 'low', label: '낮음', text: 'text-blue-600', bg: 'bg-blue-50', hover: 'hover:bg-blue-100', icon: '⚪' },
+    { value: 'medium', label: '보통', text: 'text-orange-600', bg: 'bg-orange-50', hover: 'hover:bg-orange-100', icon: '🟡' },
+    { value: 'high', label: '높음', text: 'text-red-600', bg: 'bg-red-50', hover: 'hover:bg-red-100', icon: '🔴' }
   ];
 
   const currentPriority = priorities.find(p => p.value === value) || priorities[0];
@@ -26,7 +28,8 @@ const PrioritySelector = ({ value = 'none', onChange, disabled = false }) => {
           disabled={disabled}
           className={`
             px-3 py-1.5 text-sm transition-colors whitespace-nowrap
-            ${value === priority.value ? priority.color : 'bg-white text-gray-500 hover:bg-gray-50'}
+            ${priority.text} /* 항상 고유 텍스트 색상 적용 */
+            ${value === priority.value ? priority.bg : 'bg-white hover:bg-gray-50'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
             flex flex-row items-center gap-1.5
           `}
