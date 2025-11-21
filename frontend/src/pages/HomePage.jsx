@@ -67,8 +67,9 @@ const editItemRecursive = (items, itemId, newDescription) => {
 };
 
 const deleteItemRecursive = (items, itemId) => {
+  console.log('Deleting item:', itemId);
   return items
-    .filter(item => item.id !== itemId)
+    .filter(item => String(item.id) !== String(itemId))
     .map(item => {
       if (item.children?.length) {
         return { ...item, children: deleteItemRecursive(item.children, itemId) };
@@ -130,10 +131,20 @@ function HomePage({ project, setProjects, triggerRefetch }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingItemId, setGeneratingItemId] = useState(null);
   const taskInputRef = React.useRef(null);
+  /* [추가] 빠른 클릭 시 경쟁 상태 방지를 위한 최신 프로젝트 상태 참조 */
+  const projectRef = React.useRef(currentProject);
+  /* [추가] 체크박스 토글 요청 큐 - 모든 클릭을 순차 처리 */
+  const toggleQueueRef = React.useRef([]);
+  const isProcessingQueueRef = React.useRef(false);
 
   useEffect(() => {
     setCurrentProject(project);
   }, [project]);
+
+  /* [추가] currentProject가 변경될 때마다 projectRef 동기화 */
+  useEffect(() => {
+    projectRef.current = currentProject;
+  }, [currentProject]);
 
   const updateGlobalProjectState = (updatedProject) => {
     setProjects(prevProjects =>
@@ -206,40 +217,114 @@ function HomePage({ project, setProjects, triggerRefetch }) {
     }
   };
 
-  const handleToggleItemComplete = async (itemId, isCompleted) => {
-    // Optimistic UI update
-    const itemsWithToggledChildren = toggleItemAndChildren(currentProject.items, itemId, isCompleted);
-    const syncedItems = synchronizeParentStates(itemsWithToggledChildren);
-    
-    // 변경된 항목들을 찾기 위해 원본과 비교
-    const findChangedItems = (oldItems, newItems) => {
-      const changes = [];
-      const compare = (oldList, newList) => {
-        newList.forEach((newItem) => {
-          const oldItem = oldList.find(old => old.id === newItem.id);
-          if (oldItem && oldItem.is_completed !== newItem.is_completed) {
-            changes.push({ id: newItem.id, is_completed: newItem.is_completed });
+  /* [수정] 체크박스 토글 실제 실행 함수 - 현재 상태에서 영향받은 모든 항목 저장 */
+  const executeToggle = async (itemId, isCompleted) => {
+    try {
+      // projectRef.current에서 해당 항목과 그 자식들의 현재 상태를 찾아서 저장
+      const collectItemAndChildren = (items, targetId) => {
+        const result = [];
+        const findAndCollect = (itemsList) => {
+          for (const item of itemsList) {
+            if (item.id === targetId) {
+              // 이 항목과 모든 자식 수집
+              const collectAll = (i) => {
+                result.push({ id: i.id, is_completed: i.is_completed });
+                if (i.children?.length) {
+                  i.children.forEach(collectAll);
+                }
+              };
+              collectAll(item);
+              return true;
+            }
+            if (item.children?.length && findAndCollect(item.children)) {
+              return true;
+            }
           }
-          if (newItem.children?.length) {
-            const oldChildren = oldItem?.children || [];
-            compare(oldChildren, newItem.children);
+          return false;
+        };
+        findAndCollect(items);
+        return result;
+      };
+      
+      const affectedItems = collectItemAndChildren(projectRef.current.items, itemId);
+      
+      // 영향받은 모든 항목 업데이트
+      const promises = affectedItems.map(item =>
+        updateToDoItem(item.id, { is_completed: item.is_completed })
+      );
+      await Promise.all(promises);
+      
+      // 성공 시 글로벌 상태도 업데이트
+      updateGlobalProjectState(projectRef.current);
+    } catch (err) {
+      console.error('할 일 항목 상태 업데이트 중 오류 발생:', err);
+      toast.error("상태 업데이트에 실패했습니다. 페이지를 새로고침 해주세요.");
+    }
+  };
+
+  /* [수정] 큐 처리 함수 - 순차적으로 모든 토글 요청 실행 + 완료 후 최종 동기화 */
+  const processToggleQueue = useCallback(async () => {
+    if (isProcessingQueueRef.current || toggleQueueRef.current.length === 0) {
+      return;
+    }
+    
+    isProcessingQueueRef.current = true;
+    
+    while (toggleQueueRef.current.length > 0) {
+      const { itemId, isCompleted } = toggleQueueRef.current.shift();
+      await executeToggle(itemId, isCompleted);
+    }
+    
+    // [추가] 모든 토글 완료 후 최종 order 동기화
+    try {
+      const currentState = projectRef.current;
+      
+      // 모든 항목의 ID와 order를 수집 (재귀적으로)
+      const collectAllItems = (items) => {
+        const result = [];
+        items.forEach(item => {
+          result.push({ id: item.id, order: item.order });
+          if (item.children?.length) {
+            result.push(...collectAllItems(item.children));
           }
         });
+        return result;
       };
-      compare(oldItems, newItems);
-      return changes;
-    };
+      
+      const allItemsToUpdate = collectAllItems(currentState.items);
+      
+      // 순서 일괄 저장
+      const orderPromises = allItemsToUpdate.map(item =>
+        updateToDoItem(item.id, { order: item.order })
+      );
+      await Promise.all(orderPromises);
+      
+      // 최종 글로벌 상태 업데이트
+      updateGlobalProjectState(currentState);
+    } catch (err) {
+      console.error('순서 업데이트 중 오류 발생:', err);
+    }
     
-    const changedItems = findChangedItems(currentProject.items, syncedItems);
+    isProcessingQueueRef.current = false;
+  }, []);
+
+  const handleToggleItemComplete = (itemId, isCompleted) => {
+    /* [수정] 큐에 요청 추가하고 즉시 낙관적 UI 업데이트 */
+    toggleQueueRef.current.push({ itemId, isCompleted });
+    
+    // 즉시 낙관적 UI 업데이트
+    const baseProject = projectRef.current;
+    const itemsWithToggledChildren = toggleItemAndChildren(baseProject.items, itemId, isCompleted);
+    const syncedItems = synchronizeParentStates(itemsWithToggledChildren);
     
     // 재귀적으로 모든 레벨에서 완료된 항목을 하단으로 이동 (정렬)
     const sortItemsRecursively = (items) => {
       return items
         .sort((a, b) => {
           if (a.is_completed !== b.is_completed) {
-            return a.is_completed - b.is_completed; // false(0) < true(1), 완료되지 않은 항목이 위로
+            return a.is_completed - b.is_completed;
           }
-          return a.order - b.order; // 같은 완료 상태면 order 순서 유지
+          return a.order - b.order;
         })
         .map(item => {
           if (item.children?.length) {
@@ -263,42 +348,12 @@ function HomePage({ project, setProjects, triggerRefetch }) {
     };
     
     const reorderedItems = reassignOrderRecursively(sortedItems);
-    const updatedProject = { ...currentProject, items: reorderedItems };
+    const updatedProject = { ...baseProject, items: reorderedItems };
+    projectRef.current = updatedProject;
     setCurrentProject(updatedProject);
-
-    try {
-      // 변경된 모든 항목의 체크 상태를 업데이트
-      const completionPromises = changedItems.map(item =>
-        updateToDoItem(item.id, { is_completed: item.is_completed })
-      );
-      await Promise.all(completionPromises);
-      
-      // 모든 항목의 ID와 order를 수집 (재귀적으로)
-      const collectAllItems = (items) => {
-        const result = [];
-        items.forEach(item => {
-          result.push({ id: item.id, order: item.order });
-          if (item.children?.length) {
-            result.push(...collectAllItems(item.children));
-          }
-        });
-        return result;
-      };
-      
-      const allItemsToUpdate = collectAllItems(reorderedItems);
-      
-      // 순서도 함께 저장
-      const orderPromises = allItemsToUpdate.map(item =>
-        updateToDoItem(item.id, { order: item.order })
-      );
-      await Promise.all(orderPromises);
-      
-      updateGlobalProjectState(updatedProject);
-    } catch (err) {
-      console.error('할 일 항목 상태 업데이트 중 오류 발생:', err);
-      toast.error("상태 업데이트에 실패했습니다. 페이지를 새로고침 해주세요.");
-      setCurrentProject(project);
-    }
+    
+    // 큐 처리 시작
+    processToggleQueue();
   };
 
   const handleEditItem = async (itemId, newDescription) => {
@@ -394,6 +449,7 @@ function HomePage({ project, setProjects, triggerRefetch }) {
   };
 
   const handleDeleteItem = async (itemId) => {
+    console.log('handleDeleteItem called with:', itemId);
     if (window.confirm('이 항목과 모든 하위 항목을 정말로 삭제하시겠습니까?')) {
       const updatedItems = deleteItemRecursive(currentProject.items, itemId);
       const updatedProject = { ...currentProject, items: updatedItems };
@@ -401,9 +457,11 @@ function HomePage({ project, setProjects, triggerRefetch }) {
       updateGlobalProjectState(updatedProject);
 
       try {
+        console.log('Calling API deleteToDoItem:', itemId);
         await deleteToDoItem(itemId);
         toast.success("항목이 삭제되었습니다.");
       } catch (err) {
+        console.error('Delete failed:', err);
         toast.error("항목 삭제에 실패했습니다.");
         setCurrentProject(project);
         updateGlobalProjectState(project);

@@ -124,13 +124,7 @@ const ToDoItem = ({
     onToggleItemComplete(item.id, !item.is_completed);
   };
 
-  /* [개선] 삭제 처리 - 슬라이드 아웃 애니메이션 추가 */
-  const handleDelete = () => {
-    setIsDeleting(true);
-    setTimeout(() => {
-      onDeleteItem(item.id);
-    }, 400); // 애니메이션 시간과 맞춤
-  };
+
 
   /* [추가] 우선순위 변경 핸들러 */
   const handlePriorityChange = (newPriority) => {
