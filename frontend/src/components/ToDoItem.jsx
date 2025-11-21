@@ -200,22 +200,33 @@ const ToDoItem = ({
           
           {/* [추가] 마감일 배지 표시 - 색상 코드로 긴급도 표시 */}
           {/* 빨강: 마감일 지남, 주황: 24시간 이내, 파랑: 여유 있음 */}
-          {item.due_date && (
-            <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex items-center gap-1 ${
-              new Date(item.due_date) < new Date() && !item.is_completed
-                ? 'bg-red-100 text-red-700'
-                : new Date(item.due_date) < new Date(Date.now() + 24 * 60 * 60 * 1000) && !item.is_completed
-                ? 'bg-orange-100 text-orange-700'
-                : 'bg-blue-100 text-blue-700'
-            }`}>
-              📅 {new Date(item.due_date).toLocaleDateString('ko-KR', { 
-                month: 'short', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </span>
-          )}
+          {/* [수정] 날짜 전용과 날짜+시간 형식을 모두 지원 */}
+          {item.due_date && (() => {
+            const dueDate = new Date(item.due_date);
+            const now = new Date();
+            const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            
+            // 날짜만 있는지 (시간이 00:00:00인지) 확인
+            const isDateOnly = dueDate.getHours() === 0 && dueDate.getMinutes() === 0 && dueDate.getSeconds() === 0;
+            
+            // 날짜 형식 결정: 날짜 전용이면 시간 제외, 아니면 시간 포함
+            const dateFormat = isDateOnly
+              ? { month: 'short', day: 'numeric' }
+              : { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            
+            // 색상 결정
+            const colorClass = dueDate < now && !item.is_completed
+              ? 'bg-red-100 text-red-700'
+              : dueDate < tomorrow && !item.is_completed
+              ? 'bg-orange-100 text-orange-700'
+              : 'bg-blue-100 text-blue-700';
+            
+            return (
+              <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex items-center gap-1 ${colorClass}`}>
+                📅 {dueDate.toLocaleDateString('ko-KR', dateFormat)}
+              </span>
+            );
+          })()}
         </div>
 
         {/* [수정] 케밥 메뉴로 액션 통합 (이전: 개별 수정/삭제 버튼) */}

@@ -1,6 +1,7 @@
 /* [추가] 전역 빠른 추가 모달 컴포넌트 */
 /* 목적: 어디서나 Ctrl/Cmd + K로 빠르게 작업을 추가할 수 있는 모달 */
 import React, { useState, useRef, useEffect } from 'react';
+import { getParserExamples } from '../utils/nlpParser';
 
 /**
  * QuickAddModal 컴포넌트
@@ -16,6 +17,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
   const [text, setText] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(activeProjectId);
   const [error, setError] = useState('');
+  const [placeholder, setPlaceholder] = useState('무엇을 해야 하나요?');
   const inputRef = useRef(null);
 
   /* [추가] 모달 열릴 때 자동 포커스 및 초기화 */
@@ -24,6 +26,9 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
       inputRef.current.focus();
       setText('');
       setError('');
+      // 랜덤 예시 설정
+      setPlaceholder(getParserExamples('ko'));
+      
       // 활성 프로젝트가 있으면 자동 선택
       if (activeProjectId) {
         setSelectedProjectId(activeProjectId);
@@ -110,7 +115,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
                 setError('');
               }}
               onKeyDown={handleKeyDown}
-              placeholder="무엇을 해야 하나요?"
+              placeholder={placeholder}
               className={`w-full px-4 py-3 text-lg border rounded-lg focus:outline-none focus:ring-2 ${
                 error 
                   ? 'border-red-500 focus:ring-red-200' 
@@ -144,12 +149,6 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
             </select>
           </div>
 
-          {/* [수정] 도움말 텍스트 - AI 파싱 제거로 즉시 생성 */}
-          <div className="mb-6 p-3 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-700">
-              💡 <strong>팁:</strong> 작업이 즉시 추가됩니다. 우선순위와 마감일은 나중에 설정할 수 있습니다.
-            </p>
-          </div>
 
           {/* 버튼 */}
           <div className="flex space-x-3">

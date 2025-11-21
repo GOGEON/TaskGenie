@@ -71,6 +71,7 @@ function ContextMenu({ x, y, options, onClose, priorityConfig, dateConfig }) {
       )}
       
       {/* [추가] 마감일 설정 섹션 - 날짜/시간 선택기 통합 */}
+      {/* [수정] 시간 입력 선택 사항으로 변경 (showTime prop 제거) */}
       {dateConfig && (
         <div className="px-4 py-3 border-b border-gray-200">
           <DateTimePicker
@@ -79,7 +80,6 @@ function ContextMenu({ x, y, options, onClose, priorityConfig, dateConfig }) {
             onChange={(newDate) => {
               dateConfig.onDueDateChange(newDate);
             }}
-            showTime={true}
           />
         </div>
       )}

@@ -126,26 +126,20 @@ function App() {
     }
   };
 
-  /* [추가] 빠른 추가 모달에서 작업 추가 처리 - AI 파싱 없이 직접 생성 */
+  /* [수정] 빠른 추가 모달에서 작업 추가 처리 - 클라이언트 사이드 자연어 파싱 (AI 없음) */
   const handleQuickAddSubmit = async (text, projectId) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/todos/items`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${loadToken()}`
-        },
-        body: JSON.stringify({
-          description: text,
-          list_id: projectId,
-          priority: 'none',
-          due_date: null
-        })
-      });
+      // 클라이언트 사이드에서 정규식으로 파싱 (AI 호출 없음)
+      const { parseNaturalLanguage } = await import('./utils/nlpParser');
+      const parsed = parseNaturalLanguage(text);
       
-      if (!response.ok) {
-        throw new Error('작업 추가 실패');
-      }
+      const api = (await import('./services/api')).default;
+      await api.post('/todos/items', {
+        description: parsed.description,
+        list_id: projectId,
+        priority: parsed.priority,
+        due_date: parsed.due_date
+      });
       
       toast.success('작업이 추가되었습니다!');
       triggerRefetch();
