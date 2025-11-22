@@ -100,3 +100,21 @@
 .react-datepicker__triangle {
   display: none !important;
 }
+
+/* Inline Calendar Customization */
+.custom-datepicker-inline-container .react-datepicker {
+  border: none !important;
+  box-shadow: none !important;
+  display: block !important; /* 인라인 모드에서는 block으로 */
+}
+
+.custom-datepicker-inline-container .react-datepicker__header {
+  background-color: white !important;
+  border-bottom: none !important;
+  padding-top: 0 !important;
+}
+
+.custom-datepicker-inline-container .react-datepicker__month-container {
+  width: 100% !important;
+  float: none !important;
+}

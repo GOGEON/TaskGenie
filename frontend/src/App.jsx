@@ -130,7 +130,7 @@ function App() {
   };
 
   /* [수정] 빠른 추가 모달에서 작업 추가 처리 - 클라이언트 사이드 자연어 파싱 (AI 없음) */
-  const handleQuickAddSubmit = async (text, projectId) => {
+  const handleQuickAddSubmit = async (text, projectId, parentId = null) => {
     try {
       // 클라이언트 사이드에서 정규식으로 파싱 (AI 호출 없음)
       const { parseNaturalLanguage } = await import('./utils/nlpParser');
@@ -140,6 +140,7 @@ function App() {
       await api.post('/todos/items', {
         description: parsed.description,
         list_id: projectId,
+        parent_id: parentId, // [추가] 하위 작업 생성을 위한 parent_id 전달
         priority: parsed.priority,
         due_date: parsed.due_date
       });

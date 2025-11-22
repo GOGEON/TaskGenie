@@ -3,7 +3,9 @@
 /* [개선] Google Calendar 스타일의 심플한 UI */
 import React, { useState, useRef, useEffect } from 'react';
 import { getParserExamples, parseNaturalLanguage } from '../utils/nlpParser';
-import DatePicker from 'react-datepicker';
+import CustomDatePicker from './CustomDatePicker';
+import ProjectSelector from './ProjectSelector';
+import { FaRegCalendarAlt } from 'react-icons/fa';
 import "react-datepicker/dist/react-datepicker.css";
 import "../datepicker.css";
 import { ko } from 'date-fns/locale';
@@ -68,6 +70,7 @@ const toISOString = (localString) => {
 const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProjectId = null }) => {
   const [text, setText] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(activeProjectId);
+  const [selectedParentId, setSelectedParentId] = useState(null);
   const [error, setError] = useState('');
   const [placeholder, setPlaceholder] = useState('무엇을 해야 하나요?');
   const [parsedData, setParsedData] = useState(null);
@@ -79,7 +82,6 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
   const [showTimePicker, setShowTimePicker] = useState(false);
   
   const inputRef = useRef(null);
-  const datePickerRef = useRef(null);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -88,6 +90,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
       setError('');
       setParsedData(null);
       setManualPriority('none');
+      setSelectedParentId(null); // 초기화
       setShowDatePicker(false);
       setShowTimePicker(false);
       setPlaceholder(getParserExamples('ko'));
@@ -122,12 +125,13 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
       return;
     }
     
-    onSubmit(trimmedText, selectedProjectId);
+    onSubmit(trimmedText, selectedProjectId, selectedParentId);
     
     setText('');
     setError('');
     setParsedData(null);
     setManualPriority('none');
+    setSelectedParentId(null);
   };
 
   const handleKeyDown = (e) => {
@@ -214,7 +218,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-60 p-4"
+      className="fixed inset-0 flex items-start justify-center z-60 p-4 pt-32"
       style={{ backgroundColor: 'rgba(16, 24, 40, 0.1)' }}
       onClick={handleBackdropClick}
     >
@@ -248,83 +252,55 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
           <div className="mb-3 flex items-center gap-2 flex-wrap">
               {/* DatePicker 라이브러리 사용 */}
               <div className="relative">
-                <DatePicker
-                  key={showTimePicker ? 'with-time' : 'no-time'}
-                  open={showDatePicker}
-                  onInputClick={() => setShowDatePicker(true)}
-                  onClickOutside={() => setShowDatePicker(false)}
-                  selected={finalDueDate ? new Date(finalDueDate) : null}
-                  onChange={(date) => {
-                    if (!date) {
-                      handleDateClear();
-                      return;
-                    }
-                    // 로컬 시간으로 변환하여 ISO 문자열 생성
-                    const offset = date.getTimezoneOffset() * 60000;
-                    const localDate = new Date(date.getTime() - offset);
-                    const isoString = localDate.toISOString();
-                    
-                    // 시간 정보가 있는 경우 (기본 00:00:00이 아닌 경우)
-                    const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
-                    
-                    // handleDateChange 호출 형식을 맞춤
-                    handleDateChange({ 
-                      target: { 
-                        value: isoString.slice(0, hasTime ? 16 : 10) 
-                      } 
-                    });
-                    
-                    // 날짜 선택 후 달력 닫기 (시간 선택이 아닐 때만)
-                    if (!showTimePicker) {
-                      setShowDatePicker(false);
-                    }
-                  }}
-                  showTimeSelect={showTimePicker}
-                  timeFormat="HH:mm"
-                  timeIntervals={15}
-                  timeCaption="시간"
-                  dateFormat={showTimePicker ? "yyyy.MM.dd HH:mm" : "yyyy.MM.dd"}
-                  locale={ko}
-                  customInput={
-                    <button
-                      type="button"
-                      className="px-3 py-1.5 text-xs border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-1.5"
-                    >
-                      <i className="ri-calendar-line"></i>
-                      <span>{finalDueDate ? formatDueDate(finalDueDate) : '날짜'}</span>
-                    </button>
-                  }
-                  shouldCloseOnSelect={!showTimePicker}
-                  popperClassName="react-datepicker-popper"
-                  calendarClassName="custom-datepicker"
-                  dayClassName={(date) => 
-                    date.getDay() === 0 ? "text-red-500" : date.getDay() === 6 ? "text-blue-500" : undefined
-                  }
+                <button
+                  type="button"
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className={`px-3 py-1.5 text-xs border rounded-md transition-all flex items-center gap-1.5 ${
+                    showDatePicker 
+                      ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-100 text-blue-700' 
+                      : finalDueDate 
+                        ? 'text-blue-600 font-medium bg-blue-50 border-blue-200' 
+                        : 'border-gray-300 hover:bg-gray-50 text-gray-600'
+                  }`}
                 >
-                  <div className="px-2 py-2 border-t border-gray-200 flex justify-between items-center bg-gray-50">
-                    <button
-                      type="button"
-                      onClick={() => setShowTimePicker(!showTimePicker)}
-                      className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors"
-                    >
-                      {showTimePicker ? '시간 숨기기' : '시간 추가'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleDateClear();
-                        // DatePicker 내부 상태 초기화를 위해 null 전달 필요하지만
-                        // handleDateClear에서 이미 상태를 초기화하므로 닫기만 하면 됨
-                        if (datePickerRef.current) {
-                          datePickerRef.current.setOpen(false);
+                  <FaRegCalendarAlt />
+                  {finalDueDate ? formatDueDate(finalDueDate) : '날짜'}
+                </button>
+                
+                {showDatePicker && (
+                  <div className="absolute top-full left-0 mt-1 z-50">
+                    <CustomDatePicker
+                      selectedDate={finalDueDate ? new Date(finalDueDate) : null}
+                      onChange={(date) => {
+                        if (!date) {
+                          handleDateClear();
+                          return;
                         }
+                        const isoDate = toISOString(date);
+                        // 텍스트 필드 업데이트 로직 재사용
+                        if (isoDate) {
+                          const formattedDate = formatDueDate(isoDate);
+                          setText(prev => {
+                            const withoutDate = prev
+                              .replace(/오늘(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시)?/g, '')
+                              .replace(/내일(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시)?/g, '')
+                              .replace(/모레(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시)?/g, '')
+                              .replace(/(이번|다음|지난)\s*주(\s*말)?/g, '')
+                              .replace(/(이번|다음|지난)\s*달(\s*말)?/g, '')
+                              .replace(/\d{1,2}월\s+\d{1,2}일(\s+(오전|오후)\s+\d{1,2}시(\s+\d{1,2}분)?)?/g, '')
+                              .trim();
+                            return withoutDate ? `${withoutDate} ${formattedDate}` : formattedDate;
+                          });
+                        }
+                        // 시간 선택 모드가 아니면 닫기
+                        if (!showTimePicker) setShowDatePicker(false);
                       }}
-                      className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"
-                    >
-                      초기화
-                    </button>
+                      onClose={() => setShowDatePicker(false)}
+                      showTime={showTimePicker}
+                      onToggleTime={() => setShowTimePicker(!showTimePicker)}
+                    />
                   </div>
-                </DatePicker>
+                )}
               </div>
 
             {/* 우선순위 버튼 */}
@@ -340,18 +316,15 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
 
           {/* 프로젝트 선택 */}
           <div className="mb-4">
-            <select
-              value={selectedProjectId || ''}
-              onChange={(e) => setSelectedProjectId(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400"
-            >
-              <option value="">📁 프로젝트 선택...</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.keyword}
-                </option>
-              ))}
-            </select>
+            <ProjectSelector
+              projects={projects}
+              selectedProjectId={selectedProjectId}
+              selectedParentId={selectedParentId}
+              onSelect={(projectId, parentId) => {
+                setSelectedProjectId(projectId);
+                setSelectedParentId(parentId);
+              }}
+            />
           </div>
 
           {/* 버튼 */}
