@@ -69,6 +69,11 @@ const ProjectSelector = ({ projects, selectedProjectId, selectedParentId, onSele
 
   // 검색 필터링
   const filteredProjects = projects.map(project => {
+    // 검색어가 없으면 모든 항목 표시
+    if (!searchTerm) {
+      return { ...project, filteredItems: project.items || [], matches: true };
+    }
+    
     // 프로젝트 이름 매칭
     const projectMatches = project.keyword.toLowerCase().includes(searchTerm.toLowerCase());
     

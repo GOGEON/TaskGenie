@@ -24,6 +24,7 @@ def create_todo_item_fast(
     list_id: str = Body(...),
     priority: str = Body("none"),
     due_date: str = Body(None),
+    parent_id: str = Body(None),  # [추가] 하위 작업 생성을 위한 parent_id
     current_user: Any = Depends(get_current_user),
 ):
     """
@@ -50,8 +51,8 @@ def create_todo_item_fast(
             detail="To-Do List not found or you do not have permission to access it.",
         )
     
-    # Get order for new item
-    items_query = db.collection('todo_items').where('todo_list_id', '==', list_id).where('parent_id', '==', None).stream()
+    # Get order for new item (count items at the same parent level)
+    items_query = db.collection('todo_items').where('todo_list_id', '==', list_id).where('parent_id', '==', parent_id).stream()
     order = sum(1 for _ in items_query)
     
     # Create item
@@ -70,7 +71,7 @@ def create_todo_item_fast(
     new_item_doc = {
         "id": item_id,
         "todo_list_id": list_id,
-        "parent_id": None,
+        "parent_id": parent_id,  # [수정] 요청에서 받은 parent_id 사용
         "description": description,
         "is_completed": False,
         "order": order,
