@@ -1,6 +1,7 @@
+/* [추가] Quick Add 버튼을 위한 onOpenQuickAdd prop 추가 */
 import React from 'react';
 
-const Header = ({ activeProject, onDeleteProject, onToggleSidebar }) => {
+const Header = ({ activeProject, onDeleteProject, onToggleSidebar, onOpenQuickAdd }) => {
   const projectName = activeProject ? activeProject.keyword : '프로젝트를 선택하세요';
 
   return (
@@ -26,6 +27,19 @@ const Header = ({ activeProject, onDeleteProject, onToggleSidebar }) => {
         </div>
         
         <div className="flex items-center space-x-1 sm:space-x-3 flex-shrink-0">
+          {/* [추가] Quick Add 버튼 - 주요 CTA */}
+          {onOpenQuickAdd && (
+            <button
+              onClick={onOpenQuickAdd}
+              className="quick-add-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center space-x-1.5 sm:space-x-2 transition-all hover-lift shadow-md hover:shadow-lg min-h-[36px]"
+              title="빠른 추가 (Ctrl/Cmd + K)"
+            >
+              <i className="ri-add-line text-lg sm:text-base"></i>
+              <span className="hidden sm:inline text-sm font-medium">빠른 추가</span>
+              <span className="hidden lg:inline text-xs opacity-75 ml-1">⌘K</span>
+            </button>
+          )}
+          
           {activeProject && onDeleteProject && (
             <button
               onClick={() => onDeleteProject(activeProject.id)}

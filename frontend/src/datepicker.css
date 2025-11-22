@@ -1,0 +1,102 @@
+/* React Datepicker Custom Styles */
+.react-datepicker-popper {
+  z-index: 60 !important;
+}
+
+.custom-datepicker {
+  font-family: 'Pretendard Variable', sans-serif !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  padding: 0.5rem !important;
+  background-color: white !important;
+  display: flex !important;
+}
+
+.react-datepicker__header {
+  background-color: white !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+  padding-top: 0.5rem !important;
+}
+
+.react-datepicker__current-month {
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  color: #111827 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.react-datepicker__day-name {
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+  width: 2rem !important;
+  line-height: 2rem !important;
+  margin: 0.1rem !important;
+}
+
+.react-datepicker__day {
+  width: 2rem !important;
+  line-height: 2rem !important;
+  margin: 0.1rem !important;
+  border-radius: 9999px !important;
+  color: #374151 !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+.react-datepicker__day--today {
+  font-weight: bold !important;
+  color: #3b82f6 !important;
+}
+
+.react-datepicker__day--outside-month {
+  color: #d1d5db !important;
+}
+
+.react-datepicker__navigation {
+  top: 0.7rem !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: #6b7280 !important;
+  border-width: 2px 2px 0 0 !important;
+}
+
+.react-datepicker__time-container {
+  border-left: 1px solid #e5e7eb !important;
+  width: 6rem !important;
+  height: 280px !important; /* 달력 높이에 맞춤 */
+}
+
+.react-datepicker__time-container .react-datepicker__time {
+  height: 100% !important;
+  border-radius: 0 0.5rem 0.5rem 0 !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 0.5rem 0.5rem 0 !important;
+}
+
+.react-datepicker__time-list-item {
+  height: auto !important;
+  padding: 0.5rem !important;
+}
+
+.react-datepicker__time-list-item--selected {
+  background-color: #3b82f6 !important;
+}
+
+/* Triangle removal */
+.react-datepicker__triangle {
+  display: none !important;
+}

@@ -36,12 +36,15 @@ function App() {
 
   const triggerRefetch = () => setRefetchTrigger(c => c + 1);
 
-  /* [추가] Ctrl/Cmd + K 단축키로 빠른 추가 모달 열기 */
-  useKeyboardShortcuts('k', () => {
+  /* [추가] Quick Add 모달을 여는 함수 - 단축키 외에 버튼으로도 호출 가능 */
+  const handleOpenQuickAdd = () => {
     if (user && projects.length > 0) {
       setIsQuickAddOpen(true);
     }
-  }, { ctrl: true });
+  };
+
+  /* [추가] Ctrl/Cmd + K 단축키로 빠른 추가 모달 열기 */
+  useKeyboardShortcuts('k', handleOpenQuickAdd, { ctrl: true });
 
   useEffect(() => {
     if (token) {
@@ -216,6 +219,7 @@ function App() {
                   onAddNewProject={handleAddNewProject}
                   onDeleteProject={handleDeleteProject}
                   onLogout={handleLogout}
+                  onOpenQuickAdd={handleOpenQuickAdd}
                   triggerRefetch={triggerRefetch}
                 >
                   {activeProject ? (

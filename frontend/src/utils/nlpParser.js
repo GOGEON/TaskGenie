@@ -102,6 +102,22 @@ export const parseNaturalLanguage = (text) => {
     description = description.replace(/(\d{4}년\s*)?\d{1,2}월\s*\d{1,2}일/gi, '').trim();
   }
 
+  // 4-0. 월만 입력된 경우 (예: "12월") -> 1일로 설정
+  const monthOnlyMatch = text.match(/(\d{1,2})월(?!(\s*\d{1,2}일))/);
+  if (monthOnlyMatch && !dueDate) {
+    const month = parseInt(monthOnlyMatch[1]) - 1;
+    const year = now.getFullYear();
+    
+    let targetDate = new Date(year, month, 1, 0, 0, 0);
+    // 만약 입력된 월이 이번 달보다 이전이라면 내년으로 설정
+    if (targetDate < new Date(now.getFullYear(), now.getMonth(), 1)) {
+      targetDate.setFullYear(year + 1);
+    }
+    
+    dueDate = targetDate;
+    description = description.replace(/\d{1,2}월/gi, '').trim();
+  }
+
   // 4-1. X일 후/뒤 파싱
   const daysLaterMatch = text.match(/(\d+)\s*일\s*(후|뒤)/i);
   if (daysLaterMatch && !dueDate) {

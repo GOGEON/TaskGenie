@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import CustomDragLayer from './CustomDragLayer';
 
+/* [추가] Quick Add 모달을 열기 위한 onOpenQuickAdd prop 추가 */
 const MainLayout = ({ 
   user, 
   projects, 
@@ -13,6 +14,7 @@ const MainLayout = ({
   onAddNewProject, 
   onLogout,
   onDeleteProject,
+  onOpenQuickAdd,
   children 
 }) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
@@ -53,6 +55,7 @@ const MainLayout = ({
             activeProject={activeProject}
             onDeleteProject={onDeleteProject}
             onToggleSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            onOpenQuickAdd={onOpenQuickAdd}
           />
           <div className="flex-1 overflow-y-auto">
             {children}
