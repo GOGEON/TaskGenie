@@ -2,19 +2,19 @@ import React from 'react';
 
 function ProgressBar({ progress }) {
   return (
-    <div className="w-full bg-gray-200 rounded-full h-5 sm:h-6 relative overflow-hidden">
-      <div
-        className="bg-gradient-to-r from-blue-500 to-blue-600 h-5 sm:h-6 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold transition-all duration-500 ease-out progress-bar relative overflow-hidden"
-        style={{ width: `${progress}%` }}
-      >
-        <span className="drop-shadow-sm relative z-10">{progress.toFixed(0)}%</span>
-        {/* 반짝이는 효과 */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-shimmer" 
-             style={{
-               backgroundSize: '200% 100%',
-               animation: 'shimmer 2s infinite linear'
-             }}
-        />
+    <div className="w-full">
+      <div className="flex justify-between items-end mb-2">
+        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Progress</span>
+        <span className="text-sm font-bold text-indigo-600">{Math.round(progress)}%</span>
+      </div>
+      <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+        <div
+          className="h-full bg-indigo-600 rounded-full transition-all duration-1000 ease-out relative"
+          style={{ width: `${progress}%` }}
+        >
+          {/* Subtle gloss effect for premium feel, not cheap shimmer */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50" />
+        </div>
       </div>
     </div>
   );

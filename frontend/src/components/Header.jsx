@@ -5,8 +5,8 @@ const Header = ({ activeProject, onDeleteProject, onToggleSidebar, onOpenQuickAd
   const projectName = activeProject ? activeProject.keyword : '프로젝트를 선택하세요';
 
   return (
-    <div className="bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4">
-      <div className="flex items-center justify-between">
+    <div className="h-[72px] bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center flex-shrink-0">
+      <div className="flex items-center justify-between w-full">
         <div className="flex items-center space-x-2 min-w-0 flex-1">
           {/* Mobile Menu Button */}
           <button
@@ -31,7 +31,7 @@ const Header = ({ activeProject, onDeleteProject, onToggleSidebar, onOpenQuickAd
           {onOpenQuickAdd && (
             <button
               onClick={onOpenQuickAdd}
-              className="quick-add-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center space-x-1.5 sm:space-x-2 transition-all hover-lift shadow-md hover:shadow-lg min-h-[36px]"
+              className="quick-add-btn bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center space-x-1.5 sm:space-x-2 transition-all hover-lift shadow-md hover:shadow-lg min-h-[36px]"
               title="빠른 추가 (Ctrl/Cmd + K)"
             >
               <i className="ri-add-line text-lg sm:text-base"></i>

@@ -326,20 +326,7 @@ function ProjectView({ project, setProjects }) {
   return (
     <div className="flex-1 flex flex-col">
       {/* 할 일 입력 영역 */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-5 h-5 flex items-center justify-center">
-            <div className="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
-          </div>
-          <input 
-            type="text" 
-            placeholder="새 작업을 추가하세요... (예: 프로젝트 기획)" 
-            className="flex-1 text-sm text-gray-600 border-none outline-none bg-transparent"
-            onKeyPress={handleAddTask}
-            ref={taskInputRef}
-          />
-        </div>
-      </div>
+
 
       {/* 할 일 목록 */}
       <div className="flex-1 overflow-y-auto">

@@ -605,20 +605,7 @@ function HomePage({ project, setProjects, triggerRefetch }) {
       })()}
 
       {/* [추가] 새 작업 추가 입력 영역 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="flex items-center space-x-3">
-          <div className="w-5 h-5 flex items-center justify-center">
-            <div className="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
-          </div>
-          <input 
-            type="text" 
-            placeholder="새 작업을 추가하세요... (예: 내일까지 보고서 제출)" 
-            className="flex-1 text-sm text-gray-600 border-none outline-none bg-transparent"
-            onKeyPress={handleAddTask}
-            ref={taskInputRef}
-          />
-        </div>
-      </div>
+
 
       <div>
         <div className="mb-6">

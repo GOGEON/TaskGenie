@@ -354,34 +354,34 @@ input:focus, textarea:focus {
 }
 
 /* 스크롤바 스타일링 */
+/* 스크롤바 스타일링 */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: #cbd5e1; /* slate-300 */
   border-radius: 10px;
   transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #94a3b8; /* slate-400 */
 }
 
 /* 선택 텍스트 색상 */
 ::selection {
-  background-color: #3b82f6;
+  background-color: #4f46e5; /* indigo-600 */
   color: white;
 }
 
 ::-moz-selection {
-  background-color: #3b82f6;
+  background-color: #4f46e5; /* indigo-600 */
   color: white;
 }
 

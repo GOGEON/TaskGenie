@@ -3,15 +3,14 @@ import DatePicker from 'react-datepicker';
 import { ko } from 'date-fns/locale';
 import { addDays, nextSaturday, nextMonday, format } from 'date-fns';
 import { 
-  FaRegCalendar, 
-  FaRegSun, 
-  FaRegCalendarAlt, 
-  FaBan, 
-  FaRegClock, 
-  FaSync,
-  FaCouch
-} from 'react-icons/fa';
-import { BsCalendarWeek } from "react-icons/bs";
+  RiCalendarLine, 
+  RiSunLine, 
+  RiCalendarEventLine, 
+  RiCupLine, 
+  RiCalendarCloseLine,
+  RiTimeLine,
+  RiMoonLine
+} from 'react-icons/ri';
 
 import "react-datepicker/dist/react-datepicker.css";
 import '../datepicker.css';
@@ -92,7 +91,7 @@ const CustomDatePicker = ({
           onClick={() => handleQuickSelect('today')}
           className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700"
         >
-          <FaRegCalendar className="text-green-600" />
+          <RiCalendarLine className="text-green-600 text-lg" />
           <span className="flex-1">오늘</span>
           <span className="text-xs text-gray-400">{format(new Date(), 'EEE', { locale: ko })}</span>
         </button>
@@ -101,7 +100,7 @@ const CustomDatePicker = ({
           onClick={() => handleQuickSelect('tomorrow')}
           className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700"
         >
-          <FaRegSun className="text-orange-500" />
+          <RiSunLine className="text-orange-500 text-lg" />
           <span className="flex-1">내일</span>
           <span className="text-xs text-gray-400">{format(addDays(new Date(), 1), 'EEE', { locale: ko })}</span>
         </button>
@@ -110,7 +109,7 @@ const CustomDatePicker = ({
           onClick={() => handleQuickSelect('nextWeek')}
           className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700"
         >
-          <BsCalendarWeek className="text-purple-600" />
+          <RiCalendarEventLine className="text-purple-600 text-lg" />
           <span className="flex-1">다음 주</span>
           <span className="text-xs text-gray-400">{format(nextMonday(new Date()), 'M월 d일', { locale: ko })}</span>
         </button>
@@ -119,7 +118,7 @@ const CustomDatePicker = ({
           onClick={() => handleQuickSelect('weekend')}
           className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700"
         >
-          <FaCouch className="text-blue-500" />
+          <RiCupLine className="text-blue-500 text-lg" />
           <span className="flex-1">이번 주말</span>
           <span className="text-xs text-gray-400">{format(nextSaturday(new Date()), 'M월 d일', { locale: ko })}</span>
         </button>
@@ -128,7 +127,7 @@ const CustomDatePicker = ({
           onClick={() => handleQuickSelect('noDate')}
           className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700 border-t border-gray-100 mt-1 pt-2"
         >
-          <FaBan className="text-gray-400" />
+          <RiCalendarCloseLine className="text-gray-400 text-lg" />
           <span className="flex-1">날짜 없음</span>
         </button>
       </div>
@@ -168,36 +167,63 @@ const CustomDatePicker = ({
             showTime ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-200 text-gray-600'
           }`}
         >
-          <FaRegClock />
+          <RiTimeLine />
           {showTime ? '시간 숨기기' : '시간'}
         </button>
       </div>
       
       {/* 시간 선택기가 켜져있을 때 표시할 추가 UI (옵션) */}
+      {/* 시간 선택기가 켜져있을 때 표시할 추가 UI */}
       {showTime && (
-        <div className="border-t border-gray-100 p-2 h-48 overflow-y-auto bg-white">
-            <div className="text-xs font-semibold text-gray-500 mb-2 px-2">시간 선택</div>
-            <div className="grid grid-cols-3 gap-1">
-                {/* 간단한 시간 선택 예시 */}
-                {['09:00', '12:00', '14:00', '18:00', '20:00'].map(time => (
-                    <button
-                        key={time}
-                        onClick={() => {
-                            const [h, m] = time.split(':').map(Number);
-                            const newDate = selectedDate || new Date();
+        <div className="border-t border-gray-100 bg-white animate-slideInFromTop">
+            <div className="p-3 space-y-3">
+                {/* 1. 직접 입력 (Native Time Input) */}
+                <div className="relative">
+                    <label className="text-xs font-semibold text-gray-500 mb-1 block">시간 설정</label>
+                    <input 
+                        type="time"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-200 outline-none transition-all"
+                        value={selectedDate ? format(selectedDate, 'HH:mm') : ''}
+                        onChange={(e) => {
+                            if (!e.target.value) return;
+                            const [h, m] = e.target.value.split(':').map(Number);
+                            const newDate = selectedDate ? new Date(selectedDate) : new Date();
                             newDate.setHours(h, m);
                             onChange(newDate);
-                            // 시간 선택 후에는 닫지 않음 (미세 조정 가능성)
                         }}
-                        className="px-2 py-1 text-xs border rounded hover:bg-blue-50 hover:border-blue-200 text-center"
-                    >
-                        {time}
-                    </button>
-                ))}
+                    />
+                </div>
+
+                {/* 2. 스마트 프리셋 */}
+                <div>
+                    <label className="text-xs font-semibold text-gray-500 mb-1 block">추천 시간</label>
+                    <div className="grid grid-cols-2 gap-2">
+                        {[
+                            { label: '아침', time: '09:00', icon: <RiSunLine className="text-orange-400" /> },
+                            { label: '오후', time: '13:00', icon: <RiSunLine className="text-yellow-500" /> },
+                            { label: '저녁', time: '18:00', icon: <RiMoonLine className="text-indigo-400" /> },
+                            { label: '밤', time: '21:00', icon: <RiMoonLine className="text-purple-500" /> }
+                        ].map(preset => (
+                            <button
+                                key={preset.time}
+                                onClick={() => {
+                                    const [h, m] = preset.time.split(':').map(Number);
+                                    const newDate = selectedDate ? new Date(selectedDate) : new Date();
+                                    newDate.setHours(h, m);
+                                    onChange(newDate);
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 border border-gray-100 rounded-lg hover:bg-blue-50 hover:border-blue-100 transition-all group"
+                            >
+                                <span className="group-hover:scale-110 transition-transform">{preset.icon}</span>
+                                <div className="flex flex-col items-start">
+                                    <span className="text-xs font-medium text-gray-700">{preset.label}</span>
+                                    <span className="text-[10px] text-gray-400">{preset.time}</span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
-             {/* React Datepicker의 시간 선택을 여기에 넣을 수도 있지만, 
-                 디자인상 별도 영역이 깔끔할 수 있음. 
-                 일단은 심플하게 유지. */}
         </div>
       )}
     </div>

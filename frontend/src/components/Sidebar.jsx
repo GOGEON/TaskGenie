@@ -83,14 +83,14 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
       className="relative bg-white border-r border-gray-200 flex flex-col h-screen w-full lg:w-auto"
     >
       {/* User Area */}
-      <div className="p-3 sm:p-4 border-b border-gray-100">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+      <div className="h-[72px] px-4 border-b border-slate-200 flex items-center flex-shrink-0">
+        <div className="flex items-center space-x-3 w-full">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm flex-shrink-0">
             {userInitial}
           </div>
-          <div className="flex items-center text-sm text-gray-600 min-w-0">
-            <span className="truncate">{userName}</span>
-            <button onClick={onLogout} className="ml-2 sm:ml-4 text-xs text-red-500 hover:text-red-700 flex-shrink-0">로그아웃</button>
+          <div className="flex items-center text-sm text-gray-600 min-w-0 flex-1">
+            <span className="truncate font-medium text-slate-700">{userName}</span>
+            <button onClick={onLogout} className="ml-auto text-xs text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0 px-2 py-1 hover:bg-slate-100 rounded">로그아웃</button>
           </div>
         </div>
       </div>
@@ -100,12 +100,12 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
       <div className="p-3 sm:p-4">
         <button
           onClick={onAddNewProject}
-          className="w-full bg-white text-red-600 border border-red-600 py-2.5 sm:py-3 px-4 rounded-button flex items-center justify-center space-x-2 hover:shadow-lg transition-all whitespace-nowrap min-h-[44px] sm:min-h-0 touch-manipulation hover-lift btn-ripple hover:bg-red-50"
+          className="w-full bg-white text-slate-600 border border-dashed border-slate-300 py-2.5 sm:py-3 px-4 rounded-lg flex items-center justify-center space-x-2 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200 whitespace-nowrap min-h-[44px] sm:min-h-0 touch-manipulation group"
         >
-          <div className="w-4 h-4 flex items-center justify-center">
-            <i className="ri-add-line text-base sm:text-sm"></i>
+          <div className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded-full group-hover:bg-indigo-100 transition-colors">
+            <i className="ri-add-line text-slate-500 group-hover:text-indigo-600 text-sm"></i>
           </div>
-          <span className="text-sm sm:text-base font-medium">새 프로젝트</span>
+          <span className="text-sm font-medium">새 프로젝트</span>
         </button>
       </div>
 
@@ -131,16 +131,16 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
               <div
                 key={project.id}
                 onClick={() => onSelectProject(project.id)}
-                className={`py-2.5 sm:py-2 px-3 rounded cursor-pointer transition-all min-h-[44px] sm:min-h-0 touch-manipulation hover-lift ${
+                className={`py-2.5 sm:py-2 px-3 rounded-lg cursor-pointer transition-all min-h-[44px] sm:min-h-0 touch-manipulation ${
                   project.id === activeProjectId
-                  ? 'bg-orange-50 border-l-2 border-orange-400'
-                  : 'hover:bg-gray-100 active:bg-gray-200'
+                  ? 'bg-indigo-50 text-indigo-700'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
                 {/* 프로젝트 이름 및 아이콘 */}
                 <div className="flex items-center space-x-3 mb-1.5">
-                  <span className={`text-sm sm:text-base ${project.id === activeProjectId ? 'text-orange-600' : 'text-gray-500'} flex-shrink-0`}>#</span>
-                  <span className={`text-sm sm:text-base font-medium flex-1 truncate ${project.id === activeProjectId ? 'text-orange-700' : 'text-gray-700'}`}>
+                  <span className={`text-sm sm:text-base ${project.id === activeProjectId ? 'text-indigo-500' : 'text-slate-400'} flex-shrink-0`}>#</span>
+                  <span className={`text-sm sm:text-base font-medium flex-1 truncate ${project.id === activeProjectId ? 'text-indigo-700' : 'text-slate-700'}`}>
                     {project.keyword}
                   </span>
                   {/* [추가] 완료 체크 표시 - 진행률 100% 달성 시 시각적 피드백 */}
@@ -154,24 +154,24 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
                   <div className="pl-6 space-y-1">
                     {/* [추가] 가중치 기반 진행률 바 - 계층 구조 반영 */}
                     <div className="flex items-center space-x-2">
-                      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full transition-all duration-300 rounded-full ${
+                          className={`h-full transition-all duration-500 rounded-full ${
                             weightedProgress >= 99.9
-                              ? 'bg-green-500' 
+                              ? 'bg-emerald-500' 
                               : project.id === activeProjectId 
-                                ? 'bg-orange-500' 
-                                : 'bg-gray-400'
+                                ? 'bg-indigo-500' 
+                                : 'bg-slate-400'
                           }`}
                           style={{ width: `${weightedProgress}%` }}
                         />
                       </div>
                       <span className={`text-xs font-medium flex-shrink-0 min-w-[32px] text-right ${
                         weightedProgress >= 99.9
-                          ? 'text-green-600' 
+                          ? 'text-emerald-600' 
                           : project.id === activeProjectId 
-                            ? 'text-orange-600' 
-                            : 'text-gray-500'
+                            ? 'text-indigo-600' 
+                            : 'text-slate-500'
                       }`}>
                         {Math.round(weightedProgress)}%
                       </span>

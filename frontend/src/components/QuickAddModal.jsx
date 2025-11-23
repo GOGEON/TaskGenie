@@ -80,8 +80,25 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
   const [manualPriority, setManualPriority] = useState('none');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [openUpwards, setOpenUpwards] = useState(false);
   
   const inputRef = useRef(null);
+  const datePickerContainerRef = useRef(null);
+
+  /* [추가] 스마트 포지셔닝: 화면 아래 공간이 부족하면 위로 열림 */
+  useEffect(() => {
+    if (showDatePicker && datePickerContainerRef.current) {
+      const rect = datePickerContainerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const datePickerHeight = 450; // 달력 + 시간 선택 영역 예상 높이
+      
+      if (spaceBelow < datePickerHeight) {
+        setOpenUpwards(true);
+      } else {
+        setOpenUpwards(false);
+      }
+    }
+  }, [showDatePicker]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -251,7 +268,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
           {/* 인라인 컨트롤 */}
           <div className="mb-3 flex items-center gap-2 flex-wrap">
               {/* DatePicker 라이브러리 사용 */}
-              <div className="relative">
+              <div className="relative" ref={datePickerContainerRef}>
                 <button
                   type="button"
                   onClick={() => setShowDatePicker(!showDatePicker)}
@@ -268,7 +285,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
                 </button>
                 
                 {showDatePicker && (
-                  <div className="absolute top-full left-0 mt-1 z-50">
+                  <div className={`absolute left-0 z-50 ${openUpwards ? 'bottom-full mb-2' : 'top-full mt-1'}`}>
                     <CustomDatePicker
                       selectedDate={finalDueDate ? new Date(finalDueDate) : null}
                       onChange={(date) => {

@@ -118,12 +118,12 @@ function ToDoListDisplay({
               onBlur={handleKeywordSave}
               autoFocus
               style={{ fontWeight: 700 }}
-              className="flex-1 text-2xl sm:text-3xl border-2 border-gray-400 focus:outline-none focus:border-gray-600 px-2 py-1 rounded transition-all"
+              className="flex-1 text-2xl sm:text-3xl border border-slate-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 px-2 py-1 rounded-lg transition-all text-slate-800"
             />
           ) : (
             <h2 
               style={{ fontWeight: 700 }}
-              className="text-2xl sm:text-3xl truncate cursor-pointer hover:border hover:border-gray-300 px-2 py-1 rounded transition-all"
+              className="text-2xl sm:text-3xl truncate cursor-pointer hover:bg-slate-50 px-2 py-1 rounded-lg transition-all text-slate-800"
               onClick={handleKeywordClick}
               title="클릭하여 수정"
             >
