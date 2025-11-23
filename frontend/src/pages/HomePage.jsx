@@ -124,7 +124,7 @@ const synchronizeParentStates = (items) => {
   return newItems;
 };
 
-function HomePage({ project, setProjects, triggerRefetch }) {
+function HomePage({ project, setProjects, triggerRefetch, onOpenQuickAdd }) {
   const [currentProject, setCurrentProject] = useState(project);
   const [contextMenu, setContextMenu] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
@@ -622,6 +622,7 @@ function HomePage({ project, setProjects, triggerRefetch }) {
             onUpdatePriority={handleUpdatePriority}
             isGenerating={isGenerating}
             generatingItemId={generatingItemId}
+            onOpenQuickAdd={onOpenQuickAdd}
           />
         </div>
       </div>

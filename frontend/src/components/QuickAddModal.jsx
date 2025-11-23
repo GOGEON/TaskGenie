@@ -225,8 +225,8 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
   const priorities = [
     { value: 'high', label: '높음', color: 'text-red-600', icon: '🔴' },
     { value: 'medium', label: '보통', color: 'text-orange-600', icon: '🟡' },
-    { value: 'low', label: '낮음', color: 'text-blue-600', icon: '🟢' },
-    { value: 'none', label: '없음', color: 'text-gray-500', icon: '○' }
+    { value: 'low', label: '낮음', color: 'text-indigo-600', icon: '🟢' },
+    { value: 'none', label: '없음', color: 'text-slate-500', icon: '○' }
   ];
 
   const currentPriority = priorities.find(p => p.value === (finalPriority || 'none'));
@@ -236,10 +236,10 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
   return (
     <div
       className="fixed inset-0 flex items-start justify-center z-60 p-4 pt-32"
-      style={{ backgroundColor: 'rgba(16, 24, 40, 0.1)' }}
+      style={{ backgroundColor: 'rgba(15, 23, 42, 0.1)' }}
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full animate-scaleIn">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full animate-scaleIn border border-slate-100">
         {/* 내용 */}
         <form onSubmit={handleSubmit} className="p-4">
           {/* 제목 입력 */}
@@ -257,8 +257,8 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
               className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 ${
                 error 
                   ? 'border-red-500 focus:ring-red-200' 
-                  : 'border-gray-300 focus:ring-blue-400'
-              }`}
+                  : 'border-slate-300 focus:ring-indigo-400'
+              } text-slate-800 placeholder-slate-400`}
             />
             {error && (
               <p className="text-red-500 text-xs mt-1">{error}</p>
@@ -274,10 +274,10 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
                   onClick={() => setShowDatePicker(!showDatePicker)}
                   className={`px-3 py-1.5 text-xs border rounded-md transition-all flex items-center gap-1.5 ${
                     showDatePicker 
-                      ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-100 text-blue-700' 
+                      ? 'bg-indigo-50 border-indigo-300 ring-2 ring-indigo-100 text-indigo-700' 
                       : finalDueDate 
-                        ? 'text-blue-600 font-medium bg-blue-50 border-blue-200' 
-                        : 'border-gray-300 hover:bg-gray-50 text-gray-600'
+                        ? 'text-indigo-600 font-medium bg-indigo-50 border-indigo-200' 
+                        : 'border-slate-300 hover:bg-slate-50 text-slate-600'
                   }`}
                 >
                   <FaRegCalendarAlt />
@@ -324,7 +324,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
             <button
               type="button"
               onClick={handlePriorityChange}
-              className={`px-3 py-1.5 text-xs border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center gap-1.5 ${currentPriority.color}`}
+              className={`px-3 py-1.5 text-xs border border-slate-300 rounded-md hover:bg-slate-50 transition-colors flex items-center gap-1.5 ${currentPriority.color}`}
             >
               <span>{currentPriority.icon}</span>
               <span>{currentPriority.label}</span>
@@ -349,14 +349,14 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+              className="px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={!text.trim() || !selectedProjectId}
-              className="px-4 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
             >
               작업 추가
             </button>

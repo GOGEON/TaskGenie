@@ -3,6 +3,7 @@ import { useDragLayer } from 'react-dnd';
 import ToDoItem from './ToDoItem';
 import ProgressBar from './ProgressBar';
 import SkeletonToDoItem from './SkeletonToDoItem';
+import EmptyState from './EmptyState';
 
 /* [개선] 가중치 기반 진행률 계산 - 계층 구조를 고려한 정확한 진행률 측정 */
 /* 이전: 단순 카운트 방식 (완료된 항목 수 / 전체 항목 수 * 100) */
@@ -58,6 +59,7 @@ function ToDoListDisplay({
   isGenerating,
   generatingItemId,
   onUpdateKeyword, /* [추가] 프로젝트 키워드 수정 핸들러 */
+  onOpenQuickAdd, /* [추가] 빠른 추가 모달 열기 핸들러 */
 }) {
   /* [추가] 키워드 인라인 수정 기능 상태 관리 */
   const [isEditingKeyword, setIsEditingKeyword] = useState(false);
@@ -97,7 +99,15 @@ function ToDoListDisplay({
   };
 
   if (!todoList || todoList.items.length === 0) {
-    return <p className="text-center text-gray-500 p-4 sm:p-6 text-sm sm:text-base">아직 생성된 할 일 목록이 없습니다. 위에서 키워드를 입력하세요!</p>;
+    return (
+      <EmptyState 
+        type="tasks"
+        title="할 일이 아직 없습니다"
+        description="새로운 작업을 추가하고 생산성을 높여보세요! '빠른 추가'를 클릭하거나 Ctrl+K를 눌러보세요."
+        actionLabel="새 작업 추가하기"
+        onAction={onOpenQuickAdd}
+      />
+    );
   }
 
   /* [개선] 가중치 기반 진행률 계산 */

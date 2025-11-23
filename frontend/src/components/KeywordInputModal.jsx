@@ -73,7 +73,7 @@ const KeywordInputModal = ({ isOpen, onClose, onSubmit, title = "새 프로젝�
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-60 p-4"
+      className="fixed inset-0 flex items-center justify-center z-[60] p-4"
       style={{ backgroundColor: 'rgba(15, 23, 42, 0.1)' }}
       onClick={handleBackdropClick}
     >

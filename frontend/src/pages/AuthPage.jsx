@@ -84,37 +84,37 @@ function AuthPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md animate-scaleIn hover-lift">
-        <h2 className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6">
+    <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md animate-scaleIn hover-lift border border-slate-100">
+        <h2 className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6 text-slate-800">
           {isRegister ? '회원가입' : '로그인'}
         </h2>
         {error && <p className="text-red-500 text-center mb-4 text-sm sm:text-base bg-red-50 p-3 rounded-md animate-fadeIn">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">이메일</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">이메일</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="example@email.com"
-              className="mt-1 block w-full p-3 sm:p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[44px] sm:min-h-0"
+              className="mt-1 block w-full p-3 sm:p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base min-h-[44px] sm:min-h-0 text-slate-900 placeholder-slate-400"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">비밀번호</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full p-3 sm:p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base min-h-[44px] sm:min-h-0"
+              className="mt-1 block w-full p-3 sm:p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base min-h-[44px] sm:min-h-0 text-slate-900"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full py-3 sm:py-2 px-4 border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-h-[44px] sm:min-h-0 touch-manipulation transition-all hover-lift btn-ripple disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 sm:py-2 px-4 border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 min-h-[44px] sm:min-h-0 touch-manipulation transition-all hover-lift btn-ripple disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={loading}
           >
             {loading ? '처리 중...' : (isRegister ? '회원가입' : '로그인')}
@@ -125,10 +125,10 @@ function AuthPage({ onLoginSuccess }) {
         <div className="mt-6 mb-4">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-slate-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">또는</span>
+              <span className="px-2 bg-white text-slate-500">또는</span>
             </div>
           </div>
         </div>
@@ -139,7 +139,7 @@ function AuthPage({ onLoginSuccess }) {
           <button
             onClick={() => handleSocialLogin('google')}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3 sm:py-2.5 px-4 border border-[#747775] rounded-md shadow-sm text-sm sm:text-base font-medium text-[#1f1f1f] bg-white hover:bg-[#f8f9fa] active:bg-[#f1f3f4] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4285f4] min-h-[44px] sm:min-h-0 touch-manipulation transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-3 py-3 sm:py-2.5 px-4 border border-slate-300 rounded-md shadow-sm text-sm sm:text-base font-medium text-slate-700 bg-white hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 min-h-[44px] sm:min-h-0 touch-manipulation transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ fontFamily: "'Roboto', sans-serif" }}
           >
             <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
@@ -176,11 +176,11 @@ function AuthPage({ onLoginSuccess }) {
           </button>
         </div>
 
-        <p className="mt-4 text-center text-sm text-gray-600">
+        <p className="mt-4 text-center text-sm text-slate-600">
           {isRegister ? '이미 계정이 있으신가요?' : '계정이 없으신가요?'}{' '}
           <button
             onClick={() => setIsRegister(!isRegister)}
-            className="font-medium text-blue-600 hover:text-blue-500 active:text-blue-700 focus:outline-none touch-manipulation"
+            className="font-medium text-indigo-600 hover:text-indigo-500 active:text-indigo-700 focus:outline-none touch-manipulation"
           >
             {isRegister ? '로그인' : '회원가입'}
           </button>

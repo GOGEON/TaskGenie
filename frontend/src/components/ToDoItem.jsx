@@ -158,9 +158,18 @@ const ToDoItem = ({
           </div>
 
           {/* 우선순위 체크박스 */}
-          <div 
-            className="relative flex items-center justify-center p-1 cursor-pointer group/checkbox"
+          <button 
+            className="relative flex items-center justify-center p-1 cursor-pointer group/checkbox focus:outline-none"
             onClick={handleToggleComplete}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleToggleComplete(e);
+              }
+            }}
+            aria-label={item.is_completed ? "할 일 완료 취소" : "할 일 완료"}
+            role="checkbox"
+            aria-checked={item.is_completed}
           >
             <div className={`
               w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
@@ -168,6 +177,7 @@ const ToDoItem = ({
                 ? currentPriorityConfig.completed 
                 : `${currentPriorityConfig.border} ${currentPriorityConfig.bg} hover:bg-opacity-80`
               }
+              group-focus/checkbox:ring-2 group-focus/checkbox:ring-offset-2 group-focus/checkbox:ring-indigo-500
             `}>
               <RiCheckLine 
                 className={`
@@ -180,7 +190,7 @@ const ToDoItem = ({
                 `} 
               />
             </div>
-          </div>
+          </button>
 
           <span className={`flex-grow p-1 pr-2 ml-2 break-words ${item.is_completed ? 'text-slate-400 line-through' : 'text-slate-800'} text-sm sm:text-base`}>
             {item.description}

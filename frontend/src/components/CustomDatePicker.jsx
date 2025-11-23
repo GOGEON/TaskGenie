@@ -73,14 +73,14 @@ const CustomDatePicker = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-xl border border-gray-200 w-[280px] overflow-hidden flex flex-col animate-scaleIn origin-top-left">
+    <div className="bg-white rounded-lg shadow-xl border border-slate-200 w-[280px] overflow-hidden flex flex-col animate-scaleIn origin-top-left">
       {/* 상단: 선택된 날짜 표시 (이미지에는 입력창처럼 보임) */}
-      <div className="p-3 border-b border-gray-100">
+      <div className="p-3 border-b border-slate-100">
         <input
           type="text"
           value={selectedDate ? formatDate(selectedDate) : ''}
           placeholder="날짜 입력"
-          className="w-full text-sm font-semibold text-gray-800 placeholder-gray-400 outline-none bg-transparent"
+          className="w-full text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none bg-transparent"
           readOnly // 일단 읽기 전용으로
         />
       </div>
@@ -89,50 +89,50 @@ const CustomDatePicker = ({
       <div className="py-2">
         <button 
           onClick={() => handleQuickSelect('today')}
-          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700"
+          className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700"
         >
           <RiCalendarLine className="text-green-600 text-lg" />
           <span className="flex-1">오늘</span>
-          <span className="text-xs text-gray-400">{format(new Date(), 'EEE', { locale: ko })}</span>
+          <span className="text-xs text-slate-400">{format(new Date(), 'EEE', { locale: ko })}</span>
         </button>
         
         <button 
           onClick={() => handleQuickSelect('tomorrow')}
-          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700"
+          className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700"
         >
           <RiSunLine className="text-orange-500 text-lg" />
           <span className="flex-1">내일</span>
-          <span className="text-xs text-gray-400">{format(addDays(new Date(), 1), 'EEE', { locale: ko })}</span>
+          <span className="text-xs text-slate-400">{format(addDays(new Date(), 1), 'EEE', { locale: ko })}</span>
         </button>
 
         <button 
           onClick={() => handleQuickSelect('nextWeek')}
-          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700"
+          className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700"
         >
           <RiCalendarEventLine className="text-purple-600 text-lg" />
           <span className="flex-1">다음 주</span>
-          <span className="text-xs text-gray-400">{format(nextMonday(new Date()), 'M월 d일', { locale: ko })}</span>
+          <span className="text-xs text-slate-400">{format(nextMonday(new Date()), 'M월 d일', { locale: ko })}</span>
         </button>
 
         <button 
           onClick={() => handleQuickSelect('weekend')}
-          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700"
+          className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700"
         >
-          <RiCupLine className="text-blue-500 text-lg" />
+          <RiCupLine className="text-indigo-500 text-lg" />
           <span className="flex-1">이번 주말</span>
-          <span className="text-xs text-gray-400">{format(nextSaturday(new Date()), 'M월 d일', { locale: ko })}</span>
+          <span className="text-xs text-slate-400">{format(nextSaturday(new Date()), 'M월 d일', { locale: ko })}</span>
         </button>
 
         <button 
           onClick={() => handleQuickSelect('noDate')}
-          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-700 border-t border-gray-100 mt-1 pt-2"
+          className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700 border-t border-slate-100 mt-1 pt-2"
         >
-          <RiCalendarCloseLine className="text-gray-400 text-lg" />
+          <RiCalendarCloseLine className="text-slate-400 text-lg" />
           <span className="flex-1">날짜 없음</span>
         </button>
       </div>
 
-      <div className="border-t border-gray-100"></div>
+      <div className="border-t border-slate-100"></div>
 
       {/* 달력 (인라인) */}
       <div className="p-2 custom-datepicker-inline-container">
@@ -152,19 +152,19 @@ const CustomDatePicker = ({
           calendarClassName="border-0 shadow-none w-full"
           dayClassName={(date) => 
             date.getDate() === new Date().getDate() && date.getMonth() === new Date().getMonth() 
-              ? "font-bold text-blue-600" 
+              ? "font-bold text-indigo-600" 
               : undefined
           }
         />
       </div>
 
       {/* 하단 액션 (시간) */}
-      <div className="border-t border-gray-100 p-2 flex items-center justify-between bg-gray-50">
+      <div className="border-t border-slate-100 p-2 flex items-center justify-between bg-slate-50">
         <button 
           type="button"
           onClick={onToggleTime}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-            showTime ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-200 text-gray-600'
+            showTime ? 'bg-indigo-100 text-indigo-700' : 'hover:bg-slate-200 text-slate-600'
           }`}
         >
           <RiTimeLine />
@@ -175,14 +175,14 @@ const CustomDatePicker = ({
       {/* 시간 선택기가 켜져있을 때 표시할 추가 UI (옵션) */}
       {/* 시간 선택기가 켜져있을 때 표시할 추가 UI */}
       {showTime && (
-        <div className="border-t border-gray-100 bg-white animate-slideInFromTop">
+        <div className="border-t border-slate-100 bg-white animate-slideInFromTop">
             <div className="p-3 space-y-3">
                 {/* 1. 직접 입력 (Native Time Input) */}
                 <div className="relative">
-                    <label className="text-xs font-semibold text-gray-500 mb-1 block">시간 설정</label>
+                    <label className="text-xs font-semibold text-slate-500 mb-1 block">시간 설정</label>
                     <input 
                         type="time"
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-200 outline-none transition-all"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200 outline-none transition-all"
                         value={selectedDate ? format(selectedDate, 'HH:mm') : ''}
                         onChange={(e) => {
                             if (!e.target.value) return;
@@ -196,7 +196,7 @@ const CustomDatePicker = ({
 
                 {/* 2. 스마트 프리셋 */}
                 <div>
-                    <label className="text-xs font-semibold text-gray-500 mb-1 block">추천 시간</label>
+                    <label className="text-xs font-semibold text-slate-500 mb-1 block">추천 시간</label>
                     <div className="grid grid-cols-2 gap-2">
                         {[
                             { label: '아침', time: '09:00', icon: <RiSunLine className="text-orange-400" /> },
@@ -212,12 +212,12 @@ const CustomDatePicker = ({
                                     newDate.setHours(h, m);
                                     onChange(newDate);
                                 }}
-                                className="flex items-center gap-2 px-3 py-2 border border-gray-100 rounded-lg hover:bg-blue-50 hover:border-blue-100 transition-all group"
+                                className="flex items-center gap-2 px-3 py-2 border border-slate-100 rounded-lg hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
                             >
                                 <span className="group-hover:scale-110 transition-transform">{preset.icon}</span>
                                 <div className="flex flex-col items-start">
-                                    <span className="text-xs font-medium text-gray-700">{preset.label}</span>
-                                    <span className="text-[10px] text-gray-400">{preset.time}</span>
+                                    <span className="text-xs font-medium text-slate-700">{preset.label}</span>
+                                    <span className="text-[10px] text-slate-400">{preset.time}</span>
                                 </div>
                             </button>
                         ))}

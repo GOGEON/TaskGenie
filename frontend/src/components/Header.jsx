@@ -11,18 +11,18 @@ const Header = ({ activeProject, onDeleteProject, onToggleSidebar, onOpenQuickAd
           {/* Mobile Menu Button */}
           <button
             onClick={onToggleSidebar}
-            className="lg:hidden w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded transition-colors flex-shrink-0"
+            className="lg:hidden w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded transition-colors flex-shrink-0"
             aria-label="메뉴 열기"
           >
-            <i className="ri-menu-line text-gray-600 text-xl"></i>
+            <i className="ri-menu-line text-slate-600 text-xl"></i>
           </button>
           
           <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 hidden sm:flex">
-            <i className="ri-book-line text-gray-400"></i>
+            <i className="ri-book-line text-slate-400"></i>
           </div>
-          <span className="text-sm text-gray-500 hidden sm:inline">프로젝트 /</span>
+          <span className="text-sm text-slate-500 hidden sm:inline">프로젝트 /</span>
           <div className="flex items-center space-x-2 min-w-0">
-            <span className="text-base sm:text-lg font-medium text-gray-900 truncate">{projectName}</span>
+            <span className="text-base sm:text-lg font-medium text-slate-900 truncate">{projectName}</span>
           </div>
         </div>
         
@@ -49,14 +49,14 @@ const Header = ({ activeProject, onDeleteProject, onToggleSidebar, onOpenQuickAd
               <i className="ri-delete-bin-line text-red-400 hover:text-red-600 text-lg sm:text-xl transition-colors"></i>
             </button>
           )}
-          <div className="hidden md:flex w-8 h-8 items-center justify-center hover:bg-gray-100 rounded cursor-pointer transition-all hover-lift">
-            <i className="ri-notification-line text-gray-400 hover:text-gray-600 transition-colors"></i>
+          <div className="hidden md:flex w-8 h-8 items-center justify-center hover:bg-slate-100 rounded cursor-pointer transition-all hover-lift">
+            <i className="ri-notification-line text-slate-400 hover:text-slate-600 transition-colors"></i>
           </div>
-          <div className="hidden md:flex w-8 h-8 items-center justify-center hover:bg-gray-100 rounded cursor-pointer transition-all hover-lift">
-            <i className="ri-share-line text-gray-400 hover:text-gray-600 transition-colors"></i>
+          <div className="hidden md:flex w-8 h-8 items-center justify-center hover:bg-slate-100 rounded cursor-pointer transition-all hover-lift">
+            <i className="ri-share-line text-slate-400 hover:text-slate-600 transition-colors"></i>
           </div>
-          <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-gray-100 rounded cursor-pointer transition-all hover-lift">
-            <i className="ri-more-line text-gray-400 hover:text-gray-600 text-lg sm:text-xl transition-colors"></i>
+          <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-slate-100 rounded cursor-pointer transition-all hover-lift">
+            <i className="ri-more-line text-slate-400 hover:text-slate-600 text-lg sm:text-xl transition-colors"></i>
           </div>
         </div>
       </div>

@@ -122,8 +122,8 @@ li[draggable="true"]:active {
 /* 드래그 중인 요소 불투명 유지 */
 li[draggable="true"].dragging {
   opacity: 1 !important;
-  background-color: #dbeafe !important;
-  border: 2px solid #3b82f6 !important;
+  background-color: #e0e7ff !important; /* indigo-100 */
+  border: 2px solid #6366f1 !important; /* indigo-500 */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -286,10 +286,10 @@ li[draggable="true"].dragging {
 /* [추가] Quick Add 버튼 애니메이션 - 주목도 향상 */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); /* indigo-500 */
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); /* indigo-500 */
   }
 }
 

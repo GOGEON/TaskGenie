@@ -229,6 +229,7 @@ function App() {
                       project={activeProject} 
                       setProjects={setProjects} 
                       triggerRefetch={triggerRefetch}
+                      onOpenQuickAdd={handleOpenQuickAdd}
                     />
                   ) : projects.length === 0 ? (
                     /* [추가] 프로젝트가 없을 때 친근한 안내와 CTA 버튼을 제공하는 EmptyState */

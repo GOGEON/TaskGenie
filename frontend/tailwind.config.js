@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#dc2626',
-        secondary: '#f97316'
+        primary: '#4f46e5', // indigo-600
+        secondary: '#9333ea' // purple-600
       },
       borderRadius: {
         'none': '0px',
