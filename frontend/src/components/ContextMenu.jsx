@@ -54,13 +54,13 @@ function ContextMenu({ x, y, options, onClose, priorityConfig, dateConfig }) {
   return (
     <div
       ref={menuRef}
-      className="absolute bg-white shadow-lg rounded-lg py-2 z-50 min-w-[200px] sm:min-w-[280px] border border-gray-200 animate-scaleIn"
+      className="absolute bg-white shadow-lg rounded-lg py-2 z-50 min-w-[200px] sm:min-w-[280px] border border-slate-200 animate-scaleIn"
       style={{ top: y, left: x }}
     >
       {/* [추가] 우선순위 선택 섹션 - 케밥 메뉴 내 통합 */}
       {priorityConfig && (
-        <div className="px-4 py-3 border-b border-gray-200">
-          <p className="text-xs text-gray-500 mb-2">우선순위</p>
+        <div className="px-4 py-3 border-b border-slate-100">
+          <p className="text-xs text-slate-500 mb-2">우선순위</p>
           <PrioritySelector 
             value={priorityConfig.currentPriority}
             onChange={(newPriority) => {
@@ -73,7 +73,7 @@ function ContextMenu({ x, y, options, onClose, priorityConfig, dateConfig }) {
       {/* [추가] 마감일 설정 섹션 - 날짜/시간 선택기 통합 */}
       {/* [수정] 시간 입력 선택 사항으로 변경 (showTime prop 제거) */}
       {dateConfig && (
-        <div className="px-4 py-3 border-b border-gray-200">
+        <div className="px-4 py-3 border-b border-slate-100">
           <DateTimePicker
             label="마감일"
             value={dateConfig.dueDate}
@@ -89,7 +89,7 @@ function ContextMenu({ x, y, options, onClose, priorityConfig, dateConfig }) {
         {options.map((option, index) => (
           <li
             key={index}
-            className="px-4 py-2.5 sm:py-2 hover:bg-gray-100 active:bg-gray-200 cursor-pointer text-sm sm:text-base touch-manipulation transition-all hover:pl-5"
+            className="px-4 py-2.5 sm:py-2 hover:bg-slate-50 active:bg-slate-100 cursor-pointer text-sm sm:text-base touch-manipulation transition-all hover:pl-5 text-slate-700"
             onClick={() => {
               if (option.onClick) {
                 option.onClick();

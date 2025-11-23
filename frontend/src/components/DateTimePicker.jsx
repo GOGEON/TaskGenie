@@ -75,14 +75,14 @@ const DateTimePicker = ({ value, onChange, label = "마감일", showTime: showTi
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-gray-700">{label}</label>
+        <label className="text-sm font-medium text-slate-700">{label}</label>
         {/* [추가] 시간 추가/제거 토글 버튼 */}
         {showTimeProp === undefined && (
           <button
             type="button"
             onClick={handleTimeToggle}
             disabled={disabled}
-            className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-xs text-indigo-600 hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {showTime ? '⏰ 시간 제거' : '⏰ 시간 추가'}
           </button>
@@ -96,14 +96,14 @@ const DateTimePicker = ({ value, onChange, label = "마감일", showTime: showTi
           value={toLocalDateTimeString(value)}
           onChange={handleChange}
           disabled={disabled}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+          className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 disabled:bg-slate-100 disabled:cursor-not-allowed text-sm text-slate-700"
         />
         {/* [추가] 날짜 제거 버튼 - 마감일 해제 기능 */}
         {value && (
           <button
             onClick={handleClear}
             disabled={disabled}
-            className="px-3 py-2 text-gray-600 hover:text-red-600 transition-colors disabled:opacity-50"
+            className="px-3 py-2 text-slate-500 hover:text-red-600 transition-colors disabled:opacity-50"
             title="날짜 제거"
           >
             ✕

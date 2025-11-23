@@ -1,31 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
-import { IoIosArrowDown, IoIosArrowForward } from 'react-icons/io';
+import { 
+  RiDraggable, 
+  RiMore2Fill, 
+  RiArrowDownSLine, 
+  RiArrowRightSLine, 
+  RiCheckLine,
+  RiCalendarLine
+} from 'react-icons/ri';
 import SkeletonToDoItem from './SkeletonToDoItem';
 
 const ItemType = 'TODO_ITEM';
-
-/* [수정] 드래그 핸들 아이콘 - 6개 점 형태 */
-const DragHandleIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-gray-400 cursor-grab">
-    <circle cx="9" cy="12" r="1"></circle>
-    <circle cx="9" cy="5" r="1"></circle>
-    <circle cx="9" cy="19" r="1"></circle>
-    <circle cx="15" cy="12" r="1"></circle>
-    <circle cx="15" cy="5" r="1"></circle>
-    <circle cx="15" cy="19" r="1"></circle>
-  </svg>
-);
-
-/* [추가] 케밥 메뉴 아이콘 - 3개 세로 점 */
-const KebabMenuIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-gray-500">
-    <circle cx="12" cy="12" r="1"></circle>
-    <circle cx="12" cy="5" r="1"></circle>
-    <circle cx="12" cy="19" r="1"></circle>
-  </svg>
-);
 
 const ToDoItem = ({
   item,
@@ -37,7 +23,7 @@ const ToDoItem = ({
   onGenerateSubtasks,
   onEditItem,
   onDeleteItem,
-  onUpdatePriority, /* [추가] 우선순위 업데이트 핸들러 */
+  onUpdatePriority,
   isPreview = false,
   parentId = null,
   isGenerating = false,
@@ -79,7 +65,6 @@ const ToDoItem = ({
   const [{ isDragging }, drag, dragPreview] = useDrag({
     type: ItemType,
     item: () => {
-      // 드래그 시작 시 현재 상태를 저장하고 하위 항목을 접습니다
       wasChildrenVisibleBeforeDrag.current = isChildrenVisible;
       if (hasChildren && isChildrenVisible) {
         setIsChildrenVisible(false);
@@ -112,36 +97,28 @@ const ToDoItem = ({
   const handleMenuClick = (event) => {
     event.stopPropagation();
     const rect = event.currentTarget.getBoundingClientRect();
-    // 버튼 중심에서 메뉴가 열리도록 계산
     const x = rect.left + rect.width / 2;
     const y = rect.bottom;
     onOpenContextMenu(x, y, item.id, item.priority || 'none', item.due_date);
   };
 
-  /* [개선] 완료 토글 처리 */
   const handleToggleComplete = (e) => {
     e.stopPropagation();
     onToggleItemComplete(item.id, !item.is_completed);
   };
 
-
-
-  /* [추가] 우선순위 변경 핸들러 */
   const handlePriorityChange = (newPriority) => {
     if (onUpdatePriority) {
       onUpdatePriority(item.id, newPriority);
     }
   };
 
-  /* [추가] 우선순위별 색상 및 아이콘 설정 */
-  /* none: 회색, low: 파란색(Todoist 스타일), medium: 주황색, high: 빨간색 */
-  /* 가시성을 위해 배경색(bg)과 테두리색(border)을 분리하여 설정 */
-  /* [수정] 완료 시에도 우선순위 색상을 유지하기 위해 completed 스타일 추가 */
+  /* [수정] Indigo 테마 적용 */
   const priorityConfig = {
-    none: { border: 'border-gray-300', bg: 'bg-transparent', completed: 'bg-gray-400 border-gray-400', icon: '○' },
-    low: { border: 'border-blue-500', bg: 'bg-blue-50', completed: 'bg-blue-400 border-blue-400', icon: '⚪' },
-    medium: { border: 'border-orange-500', bg: 'bg-orange-50', completed: 'bg-orange-400 border-orange-400', icon: '🟡' },
-    high: { border: 'border-red-600', bg: 'bg-red-50', completed: 'bg-red-400 border-red-400', icon: '🔴' }
+    none: { border: 'border-slate-300', bg: 'bg-transparent', completed: 'bg-slate-400 border-slate-400' },
+    low: { border: 'border-indigo-500', bg: 'bg-indigo-50', completed: 'bg-indigo-400 border-indigo-400' },
+    medium: { border: 'border-orange-500', bg: 'bg-orange-50', completed: 'bg-orange-400 border-orange-400' },
+    high: { border: 'border-red-600', bg: 'bg-red-50', completed: 'bg-red-400 border-red-400' }
   };
   const currentPriorityConfig = priorityConfig[item.priority || 'none'];
 
@@ -155,15 +132,15 @@ const ToDoItem = ({
           transform: isDragging ? 'scale(1.02)' : 'scale(1)',
         }}
         className={`
-          flex items-center justify-between py-2 sm:py-1 border-b border-gray-100 
+          flex items-center justify-between py-2 sm:py-1 border-b border-slate-100 
           group bg-white touch-manipulation item-fade-in
           ${isDeleting ? 'item-slide-out' : ''}
         `}
       >
         <div className="flex items-center flex-grow min-w-0">
-          {/* [추가] 드래그 핸들 - 모바일에서 항상 표시, 데스크톱에서 호버 시 표시 */}
-          <div ref={drag} className="p-1 sm:invisible sm:group-hover:visible flex-shrink-0">
-            <DragHandleIcon />
+          {/* 드래그 핸들 */}
+          <div ref={drag} className="p-1 sm:invisible sm:group-hover:visible flex-shrink-0 text-slate-400 cursor-grab hover:text-slate-600">
+            <RiDraggable className="text-lg" />
           </div>
 
           <div className="w-8 sm:w-8 text-center flex-shrink-0">
@@ -173,15 +150,14 @@ const ToDoItem = ({
                   e.stopPropagation();
                   setIsChildrenVisible(!isChildrenVisible);
                 }}
-                className="text-gray-500 hover:text-gray-800 active:text-gray-900 p-1.5 sm:p-1 rounded-full min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                className="text-slate-500 hover:text-slate-800 active:text-slate-900 p-1.5 sm:p-1 rounded-full min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
               >
-                {isChildrenVisible ? <IoIosArrowDown className="text-lg sm:text-base" /> : <IoIosArrowForward className="text-lg sm:text-base" />}
+                {isChildrenVisible ? <RiArrowDownSLine className="text-lg" /> : <RiArrowRightSLine className="text-lg" />}
               </button>
             )}
           </div>
 
-          {/* [수정] Todoist 스타일 우선순위 체크박스 */}
-          {/* 우선순위에 따른 테두리 색상 적용, 완료 시 채워짐 */}
+          {/* 우선순위 체크박스 */}
           <div 
             className="relative flex items-center justify-center p-1 cursor-pointer group/checkbox"
             onClick={handleToggleComplete}
@@ -189,75 +165,61 @@ const ToDoItem = ({
             <div className={`
               w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
               ${item.is_completed 
-                ? currentPriorityConfig.completed /* [수정] 완료 시 우선순위별 색상 적용 */
+                ? currentPriorityConfig.completed 
                 : `${currentPriorityConfig.border} ${currentPriorityConfig.bg} hover:bg-opacity-80`
               }
             `}>
-              {/* 체크 표시 아이콘 (완료되었거나 호버 시 표시) */}
-              <svg 
+              <RiCheckLine 
                 className={`
-                  w-3 h-3 text-white transition-opacity duration-200
+                  w-3.5 h-3.5 text-white transition-opacity duration-200
                   ${item.is_completed ? 'opacity-100' : 'opacity-0 group-hover/checkbox:opacity-100'}
                   ${!item.is_completed && currentPriorityConfig.border.includes('red') ? 'text-red-600' : ''}
                   ${!item.is_completed && currentPriorityConfig.border.includes('orange') ? 'text-orange-500' : ''}
-                  ${!item.is_completed && currentPriorityConfig.border.includes('blue') ? 'text-blue-500' : ''}
-                  ${!item.is_completed && currentPriorityConfig.border.includes('gray') ? 'text-gray-400' : ''}
+                  ${!item.is_completed && currentPriorityConfig.border.includes('indigo') ? 'text-indigo-500' : ''}
+                  ${!item.is_completed && currentPriorityConfig.border.includes('slate') ? 'text-slate-400' : ''}
                 `} 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor" 
-                strokeWidth="3"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
+              />
             </div>
           </div>
 
-          {/* [삭제] 항목 텍스트 앞 우선순위 아이콘 제거 (이전: 🔴🟡⚪ 이모지 표시) */}
-          <span className={`flex-grow p-1 pr-2 ml-2 break-words ${item.is_completed ? 'text-gray-400 line-through' : 'text-gray-800'} text-sm sm:text-base`}>
+          <span className={`flex-grow p-1 pr-2 ml-2 break-words ${item.is_completed ? 'text-slate-400 line-through' : 'text-slate-800'} text-sm sm:text-base`}>
             {item.description}
           </span>
           
-          {/* [추가] 마감일 배지 표시 - 색상 코드로 긴급도 표시 */}
-          {/* 빨강: 마감일 지남, 주황: 24시간 이내, 파랑: 여유 있음 */}
-          {/* [수정] 날짜 전용과 날짜+시간 형식을 모두 지원 */}
+          {/* 마감일 배지 */}
           {item.due_date && (() => {
             const dueDate = new Date(item.due_date);
             const now = new Date();
             const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
             
-            // 날짜만 있는지 (시간이 00:00:00인지) 확인
             const isDateOnly = dueDate.getHours() === 0 && dueDate.getMinutes() === 0 && dueDate.getSeconds() === 0;
             
-            // 날짜 형식 결정: 날짜 전용이면 시간 제외, 아니면 시간 포함
             const dateFormat = isDateOnly
               ? { month: 'short', day: 'numeric' }
               : { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
             
-            // 색상 결정
             const colorClass = dueDate < now && !item.is_completed
-              ? 'bg-red-100 text-red-700'
+              ? 'bg-red-50 text-red-700'
               : dueDate < tomorrow && !item.is_completed
-              ? 'bg-orange-100 text-orange-700'
-              : 'bg-blue-100 text-blue-700';
+              ? 'bg-orange-50 text-orange-700'
+              : 'bg-indigo-50 text-indigo-700';
             
             return (
               <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex items-center gap-1 ${colorClass}`}>
-                📅 {dueDate.toLocaleDateString('ko-KR', dateFormat)}
+                <RiCalendarLine /> {dueDate.toLocaleDateString('ko-KR', dateFormat)}
               </span>
             );
           })()}
         </div>
 
-        {/* [수정] 케밥 메뉴로 액션 통합 (이전: 개별 수정/삭제 버튼) */}
-        {/* 우선순위 선택, 마감일 설정, 수정, 삭제, AI 하위 항목 생성 모두 포함 */}
+        {/* 케밥 메뉴 */}
         <div className="flex-shrink-0 ml-2 sm:invisible sm:group-hover:visible">
           <button 
             onClick={handleMenuClick}
             disabled={isPreview}
-            className="p-2 sm:p-1 rounded-full hover:bg-gray-200 active:bg-gray-300 disabled:cursor-default min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center touch-manipulation"
+            className="p-2 sm:p-1 rounded-full hover:bg-slate-100 active:bg-slate-200 disabled:cursor-default min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center touch-manipulation text-slate-500"
           >
-            <KebabMenuIcon />
+            <RiMore2Fill />
           </button>
         </div>
       </li>
@@ -285,7 +247,6 @@ const ToDoItem = ({
         </ul>
       )}
       
-      {/* [수정] 스켈레톤 UI가 실제 UI와 일치하도록 level prop 제거 */}
       {isGenerating && generatingItemId === item.id && (
         <ul className="list-none p-0 pl-6 sm:pl-8">
           {[...Array(3)].map((_, i) => (

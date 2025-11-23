@@ -4,7 +4,7 @@ import React from 'react';
 const SkeletonToDoItem = () => {
   return (
     <li 
-      className="flex items-center justify-between py-2 sm:py-1 border-t border-b border-l-4 border-gray-100 bg-white animate-pulse"
+      className="flex items-center justify-between py-2 sm:py-1 border-t border-b border-l-4 border-slate-100 bg-white animate-pulse"
     >
       <div className="flex items-center flex-grow min-w-0">
         {/* 드래그 핸들 스페이서 */}
@@ -18,12 +18,12 @@ const SkeletonToDoItem = () => {
         </div>
         
         {/* 체크박스 스켈레톤 */}
-        <div className="w-5 h-5 bg-gray-200 rounded-full mx-2 flex-shrink-0"></div>
+        <div className="w-5 h-5 bg-slate-200 rounded-full mx-2 flex-shrink-0"></div>
         
         {/* 텍스트 스켈레톤 */}
         <div className="p-1 flex-grow">
             <div 
-              className="h-4 bg-gray-200 rounded"
+              className="h-4 bg-slate-200 rounded"
               style={{ width: `${Math.random() * 40 + 30}%` }}
             ></div>
         </div>
