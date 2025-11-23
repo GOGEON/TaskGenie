@@ -1,12 +1,14 @@
-import React, { useEffect, useRef } from 'react';
-import PrioritySelector from './PrioritySelector'; /* [추가] 우선순위 선택 컴포넌트 */
-import DateTimePicker from './DateTimePicker'; /* [추가] 날짜/시간 선택 컴포넌트 */
+import React, { useEffect, useRef, useState } from 'react';
+import PrioritySelector from './PrioritySelector';
+import CustomDatePicker from './CustomDatePicker';
 
 /* [개선] 케밥 메뉴 컴포넌트 - 우선순위, 마감일, 액션 메뉴 통합 */
 /* 이전: 단순 수정/삭제/AI 생성 액션만 제공 */
 /* 현재: 우선순위 선택, 마감일 설정, 기존 액션 모두 포함 */
 function ContextMenu({ x, y, options, onClose, priorityConfig, dateConfig }) {
   const menuRef = useRef(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   /* [추가] 메뉴 외부 클릭 시 닫기 */
   useEffect(() => {
@@ -74,13 +76,50 @@ function ContextMenu({ x, y, options, onClose, priorityConfig, dateConfig }) {
       {/* [수정] 시간 입력 선택 사항으로 변경 (showTime prop 제거) */}
       {dateConfig && (
         <div className="px-4 py-3 border-b border-slate-100">
-          <DateTimePicker
-            label="마감일"
-            value={dateConfig.dueDate}
-            onChange={(newDate) => {
-              dateConfig.onDueDateChange(newDate);
-            }}
-          />
+          <p className="text-xs text-slate-500 mb-2">마감일</p>
+          <div className="relative">
+            <button
+              onClick={() => setShowDatePicker(!showDatePicker)}
+              className={`w-full px-3 py-2 text-sm text-left border rounded-md flex items-center justify-between transition-colors ${
+                showDatePicker 
+                  ? 'bg-indigo-50 border-indigo-300 ring-2 ring-indigo-100 text-indigo-700' 
+                  : dateConfig.dueDate 
+                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-medium' 
+                    : 'border-slate-300 hover:bg-slate-50 text-slate-600'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <i className="ri-calendar-line"></i>
+                {dateConfig.dueDate ? new Date(dateConfig.dueDate).toLocaleDateString() : '마감일 설정'}
+              </span>
+              {dateConfig.dueDate && (
+                <span 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dateConfig.onDueDateChange(null);
+                  }}
+                  className="hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors"
+                >
+                  <i className="ri-close-line"></i>
+                </span>
+              )}
+            </button>
+
+            {showDatePicker && (
+              <div className="absolute left-0 top-full mt-2 z-50">
+                <CustomDatePicker
+                  selectedDate={dateConfig.dueDate ? new Date(dateConfig.dueDate) : null}
+                  onChange={(date) => {
+                    dateConfig.onDueDateChange(date ? date.toISOString() : null);
+                    if (!showTimePicker) setShowDatePicker(false);
+                  }}
+                  onClose={() => setShowDatePicker(false)}
+                  showTime={showTimePicker}
+                  onToggleTime={() => setShowTimePicker(!showTimePicker)}
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
       

@@ -23,7 +23,7 @@ function EditModal({ item, onSave, onClose }) {
 
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center z-60 p-4"
+      className="fixed inset-0 flex items-center justify-center z-[60] p-4"
       style={{ backgroundColor: 'rgba(15, 23, 42, 0.1)' }}
     >
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-md mx-4 animate-scaleIn">

@@ -238,7 +238,7 @@ function App() {
                       onAction={handleAddNewProject}
                     />
                   ) : (
-                    <div className="p-8 text-center text-gray-500">
+                    <div className="p-8 text-center text-slate-500">
                       <p>프로젝트를 선택하거나 새로 만들어주세요.</p>
                     </div>
                   )}

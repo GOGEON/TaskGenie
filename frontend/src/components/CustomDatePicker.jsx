@@ -91,7 +91,7 @@ const CustomDatePicker = ({
           onClick={() => handleQuickSelect('today')}
           className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700"
         >
-          <RiCalendarLine className="text-green-600 text-lg" />
+          <RiCalendarLine className="text-emerald-600 text-lg" />
           <span className="flex-1">오늘</span>
           <span className="text-xs text-slate-400">{format(new Date(), 'EEE', { locale: ko })}</span>
         </button>
@@ -100,7 +100,7 @@ const CustomDatePicker = ({
           onClick={() => handleQuickSelect('tomorrow')}
           className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700"
         >
-          <RiSunLine className="text-orange-500 text-lg" />
+          <RiSunLine className="text-amber-500 text-lg" />
           <span className="flex-1">내일</span>
           <span className="text-xs text-slate-400">{format(addDays(new Date(), 1), 'EEE', { locale: ko })}</span>
         </button>

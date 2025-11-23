@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { getParserExamples, parseNaturalLanguage } from '../utils/nlpParser';
 import CustomDatePicker from './CustomDatePicker';
 import ProjectSelector from './ProjectSelector';
-import { FaRegCalendarAlt } from 'react-icons/fa';
+import { RiCalendarLine, RiFlag2Fill } from 'react-icons/ri';
 import "react-datepicker/dist/react-datepicker.css";
 import "../datepicker.css";
 import { ko } from 'date-fns/locale';
@@ -223,10 +223,10 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
   const finalPriority = manualPriority !== 'none' ? manualPriority : parsedData?.priority;
 
   const priorities = [
-    { value: 'high', label: '높음', color: 'text-red-600', icon: '🔴' },
-    { value: 'medium', label: '보통', color: 'text-orange-600', icon: '🟡' },
-    { value: 'low', label: '낮음', color: 'text-indigo-600', icon: '🟢' },
-    { value: 'none', label: '없음', color: 'text-slate-500', icon: '○' }
+    { value: 'high', label: '높음', color: 'text-red-600', icon: <RiFlag2Fill /> },
+    { value: 'medium', label: '보통', color: 'text-orange-600', icon: <RiFlag2Fill /> },
+    { value: 'low', label: '낮음', color: 'text-indigo-600', icon: <RiFlag2Fill /> },
+    { value: 'none', label: '없음', color: 'text-slate-500', icon: <RiFlag2Fill /> }
   ];
 
   const currentPriority = priorities.find(p => p.value === (finalPriority || 'none'));
@@ -280,7 +280,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
                         : 'border-slate-300 hover:bg-slate-50 text-slate-600'
                   }`}
                 >
-                  <FaRegCalendarAlt />
+                  <RiCalendarLine />
                   {finalDueDate ? formatDueDate(finalDueDate) : '날짜'}
                 </button>
                 

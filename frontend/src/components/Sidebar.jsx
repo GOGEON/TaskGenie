@@ -145,7 +145,7 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
                   </span>
                   {/* [추가] 완료 체크 표시 - 진행률 100% 달성 시 시각적 피드백 */}
                   {weightedProgress >= 99.9 && (
-                    <span className="text-green-500 flex-shrink-0">✓</span>
+                    <span className="text-emerald-500 flex-shrink-0">✓</span>
                   )}
                 </div>
 

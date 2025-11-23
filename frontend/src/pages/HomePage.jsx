@@ -562,7 +562,7 @@ function HomePage({ project, setProjects, triggerRefetch, onOpenQuickAdd }) {
   ] : [];
 
   if (!currentProject) {
-    return <div className="p-8 text-center text-gray-500">프로젝트를 불러오는 중...</div>;
+    return <div className="p-8 text-center text-slate-500">프로젝트를 불러오는 중...</div>;
   }
 
   return (
