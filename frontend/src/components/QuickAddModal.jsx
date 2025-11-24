@@ -80,6 +80,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
   const [manualPriority, setManualPriority] = useState('none');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showPriorityPicker, setShowPriorityPicker] = useState(false);
   const [openUpwards, setOpenUpwards] = useState(false);
   
   const inputRef = useRef(null);
@@ -110,6 +111,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
       setSelectedParentId(null); // 초기화
       setShowDatePicker(false);
       setShowTimePicker(false);
+      setShowPriorityPicker(false);
       setPlaceholder(getParserExamples('ko'));
       
       if (activeProjectId) {
@@ -321,14 +323,52 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
               </div>
 
             {/* 우선순위 버튼 */}
-            <button
-              type="button"
-              onClick={handlePriorityChange}
-              className={`px-3 py-1.5 text-xs border border-slate-300 rounded-md hover:bg-slate-50 transition-colors flex items-center gap-1.5 ${currentPriority.color}`}
-            >
-              <span>{currentPriority.icon}</span>
-              <span>{currentPriority.label}</span>
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowPriorityPicker(!showPriorityPicker)}
+                className={`px-3 py-1.5 text-xs border rounded-md transition-colors flex items-center gap-1.5 ${
+                  showPriorityPicker 
+                    ? 'bg-slate-100 border-slate-300' 
+                    : 'border-slate-300 hover:bg-slate-50'
+                } ${currentPriority.color}`}
+              >
+                <span>{currentPriority.icon}</span>
+                <span>{currentPriority.label}</span>
+              </button>
+
+              {showPriorityPicker && (
+                <div className="absolute left-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-slate-100 py-1 z-50 animate-scaleIn origin-top-left">
+                  {priorities.map((p) => (
+                    <button
+                      key={p.value}
+                      type="button"
+                      onClick={() => {
+                        setManualPriority(p.value);
+                        setShowPriorityPicker(false);
+                        
+                        // 텍스트 필드에도 우선순위 추가
+                        if (p.value !== 'none') {
+                          const priorityText = `#${p.label}`;
+                          const withoutPriority = text.replace(/#(높음|보통|낮음|긴급|중요)/g, '').trim();
+                          setText(withoutPriority ? `${withoutPriority} ${priorityText}` : priorityText);
+                        } else {
+                           // 없음 선택 시 태그 제거
+                           const withoutPriority = text.replace(/#(높음|보통|낮음|긴급|중요)/g, '').trim();
+                           setText(withoutPriority);
+                        }
+                      }}
+                      className={`w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2 ${
+                        (finalPriority || 'none') === p.value ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700'
+                      }`}
+                    >
+                      <span className={p.color}>{p.icon}</span>
+                      <span>{p.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 프로젝트 선택 */}

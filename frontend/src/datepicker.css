@@ -46,10 +46,14 @@
   background-color: #f1f5f9 !important; /* slate-100 */
 }
 
-.react-datepicker__day--selected,
-.react-datepicker__day--keyboard-selected {
+.react-datepicker__day--selected {
   background-color: #4f46e5 !important; /* indigo-600 */
   color: white !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: rgba(79, 70, 229, 0.1) !important; /* indigo-600 with opacity */
+  color: #4f46e5 !important; /* indigo-600 */
 }
 
 .react-datepicker__day--today {
@@ -114,7 +118,12 @@
   padding-top: 0 !important;
 }
 
-.custom-datepicker-inline-container .react-datepicker__month-container {
-  width: 100% !important;
-  float: none !important;
+
+/* Hide Scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
