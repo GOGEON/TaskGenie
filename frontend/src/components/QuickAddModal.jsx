@@ -91,7 +91,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
     if (showDatePicker && datePickerContainerRef.current) {
       const rect = datePickerContainerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      const datePickerHeight = 450; // 달력 + 시간 선택 영역 예상 높이
+      const datePickerHeight = 600; // 달력 + 시간 선택 영역 예상 높이 (확장됨)
       
       if (spaceBelow < datePickerHeight) {
         setOpenUpwards(true);
@@ -178,9 +178,9 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
       setText(prev => {
         // 기존 날짜 표현 제거 (오늘, 내일, X월 X일 패턴 등)
         const withoutDate = prev
-          .replace(/오늘(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시)?/g, '')
-          .replace(/내일(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시)?/g, '')
-          .replace(/모레(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시)?/g, '')
+          .replace(/오늘(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
+          .replace(/내일(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
+          .replace(/모레(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
           .replace(/(이번|다음|지난)\s*주(\s*말)?/g, '')
           .replace(/(이번|다음|지난)\s*달(\s*말)?/g, '')
           .replace(/\d{1,2}월\s+\d{1,2}일(\s+(오전|오후)\s+\d{1,2}시(\s+\d{1,2}분)?)?/g, '')
@@ -196,8 +196,8 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
     // 텍스트에서 날짜 표현 제거
     setText(prev => {
       return prev
-        .replace(/오늘(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시)?/g, '')
-        .replace(/내일(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시)?/g, '')
+        .replace(/오늘(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
+        .replace(/내일(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
         .replace(/\d{1,2}월\s+\d{1,2}일(\s+(오전|오후)\s+\d{1,2}시(\s+\d{1,2}분)?)?/g, '')
         .trim();
     });
@@ -301,9 +301,9 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
                           const formattedDate = formatDueDate(isoDate);
                           setText(prev => {
                             const withoutDate = prev
-                              .replace(/오늘(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시)?/g, '')
-                              .replace(/내일(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시)?/g, '')
-                              .replace(/모레(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시)?/g, '')
+                              .replace(/오늘(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
+                              .replace(/내일(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
+                              .replace(/모레(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
                               .replace(/(이번|다음|지난)\s*주(\s*말)?/g, '')
                               .replace(/(이번|다음|지난)\s*달(\s*말)?/g, '')
                               .replace(/\d{1,2}월\s+\d{1,2}일(\s+(오전|오후)\s+\d{1,2}시(\s+\d{1,2}분)?)?/g, '')

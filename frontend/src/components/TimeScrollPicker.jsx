@@ -1,13 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 
+// 시간 데이터 생성 (컴포넌트 외부로 이동하여 불필요한 재생성 방지)
+const AMPM_ITEMS = ['오전', '오후'];
+const HOUR_ITEMS = Array.from({ length: 12 }, (_, i) => i + 1);
+const MINUTE_ITEMS = Array.from({ length: 12 }, (_, i) => i * 5);
+
 const TimeScrollPicker = ({ selectedDate, onChange }) => {
   const date = selectedDate || new Date();
   
-  // 시간 데이터 생성
-  const ampm = ['오전', '오후'];
-  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
-  const minutes = Array.from({ length: 12 }, (_, i) => i * 5); // 0, 5, 10, ... 55
-
   // 현재 값 추출
   const currentHours = date.getHours();
   const currentAmPm = currentHours < 12 ? '오전' : '오후';
@@ -52,19 +52,28 @@ const TimeScrollPicker = ({ selectedDate, onChange }) => {
   // 스크롤 아이템 컴포넌트
   const ScrollColumn = ({ items, selectedValue, onSelect, formatItem = (i) => i, infinite = true }) => {
     const containerRef = useRef(null);
-    const itemHeight = 32; // h-8
+    const itemHeight = 48; // h-12
     const timeoutRef = useRef(null);
+    const [localSelected, setLocalSelected] = React.useState(selectedValue);
 
-    // 무한 스크롤일 때만 데이터 3배 뻥튀기
-    const displayItems = infinite ? [...items, ...items, ...items] : items;
+    // 무한 스크롤일 때만 데이터 3배 뻥튀기 (Memoization)
+    const displayItems = React.useMemo(() => 
+      infinite ? [...items, ...items, ...items] : items
+    , [items, infinite]);
     
     useEffect(() => {
+      setLocalSelected(selectedValue);
       if (containerRef.current) {
         const selectedIndex = items.indexOf(selectedValue);
         if (selectedIndex !== -1) {
           // 무한 스크롤이면 중앙 세트, 아니면 그냥 해당 인덱스
           const targetIndex = infinite ? items.length + selectedIndex : selectedIndex;
-          containerRef.current.scrollTop = targetIndex * itemHeight;
+          // 스크롤이 튀는 것을 방지하기 위해 현재 스크롤 위치와 차이가 클 때만 이동하거나
+          // 초기 로딩 시에만 이동하도록 할 수 있지만, 여기서는 단순화
+          // 사용자가 스크롤 중이 아닐 때만 위치 보정
+          if (!timeoutRef.current) {
+             containerRef.current.scrollTop = targetIndex * itemHeight;
+          }
         }
       }
     }, [items, selectedValue, infinite]);
@@ -74,7 +83,7 @@ const TimeScrollPicker = ({ selectedDate, onChange }) => {
       
       if (infinite) {
         const totalHeight = items.length * itemHeight;
-        // 무한 스크롤 로직: 범위를 벗어나면 중앙으로 점프
+        // 무한 스크롤 로직
         if (scrollTop < itemHeight) {
           e.currentTarget.scrollTop += totalHeight;
         } else if (scrollTop >= totalHeight * 2) {
@@ -82,30 +91,33 @@ const TimeScrollPicker = ({ selectedDate, onChange }) => {
         }
       }
 
+      // 즉각적인 시각적 피드백을 위해 로컬 상태 업데이트
+      const centerIndex = Math.round(e.currentTarget.scrollTop / itemHeight);
+      const actualIndex = infinite ? centerIndex % items.length : Math.min(Math.max(centerIndex, 0), items.length - 1);
+      const newItem = items[actualIndex];
+      
+      if (newItem !== undefined) {
+        setLocalSelected(newItem);
+      }
+
       // 선택 로직 (Debounce)
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       
       timeoutRef.current = setTimeout(() => {
-        const centerIndex = Math.round(e.currentTarget.scrollTop / itemHeight);
-        // 무한일 때는 모듈러 연산, 유한일 때는 인덱스 그대로 (범위 체크)
-        const actualIndex = infinite ? centerIndex % items.length : Math.min(Math.max(centerIndex, 0), items.length - 1);
-        
-        const newItem = items[actualIndex];
-        
         if (newItem !== undefined && newItem !== selectedValue) {
           onSelect(newItem);
         }
+        timeoutRef.current = null;
       }, 100);
     };
 
     return (
       <div 
-        className="flex-1 h-32 overflow-y-auto no-scrollbar relative snap-y snap-mandatory scroll-smooth" 
+        className="flex-1 h-[240px] overflow-y-auto no-scrollbar relative snap-y snap-mandatory" 
         ref={containerRef}
         onScroll={handleScroll}
-        style={{ scrollBehavior: 'smooth' }}
       >
-        <div className="py-12">
+        <div className="py-24">
           {displayItems.map((item, index) => (
             <div
               key={`${item}-${index}`}
@@ -118,8 +130,8 @@ const TimeScrollPicker = ({ selectedDate, onChange }) => {
                     });
                  }
               }}
-              className={`h-8 flex items-center justify-center text-sm cursor-pointer snap-center transition-all ${
-                item === selectedValue 
+              className={`h-12 flex items-center justify-center text-sm cursor-pointer snap-center transition-all ${
+                item === localSelected 
                   ? 'font-bold text-indigo-600 scale-110' 
                   : 'text-slate-400 scale-100 opacity-50'
               }`}
@@ -134,29 +146,25 @@ const TimeScrollPicker = ({ selectedDate, onChange }) => {
 
   return (
     <div className="flex items-center justify-center gap-2 bg-white rounded-lg border border-slate-200 p-2 relative overflow-hidden">
-      {/* 선택 영역 하이라이트 바 (배경) */}
-      <div className="absolute top-1/2 left-2 right-2 h-8 -mt-4 bg-slate-50 rounded-md -z-10 pointer-events-none" />
+      {/* 선택 영역 하이라이트 바 (배경 + 라인) */}
+      <div className="absolute top-1/2 left-0 right-0 h-12 -mt-6 bg-slate-50/30 border-t border-b border-indigo-100 pointer-events-none" />
       
       <ScrollColumn 
-        items={ampm} 
+        items={AMPM_ITEMS} 
         selectedValue={currentAmPm} 
         onSelect={handleAmPmChange}
         infinite={false}
       />
-      
-      <div className="h-4 w-[1px] bg-slate-200" />
-      
+
       <ScrollColumn 
-        items={hours} 
+        items={HOUR_ITEMS} 
         selectedValue={currentDisplayHour} 
         onSelect={handleHourChange} 
-        formatItem={(h) => String(h).padStart(2, '0')}
+        formatItem={(h) => String(h)}
       />
       
-      <div className="text-slate-300 font-bold">:</div>
-      
       <ScrollColumn 
-        items={minutes} 
+        items={MINUTE_ITEMS} 
         selectedValue={currentMinute} 
         onSelect={handleMinuteChange} 
         formatItem={(m) => String(m).padStart(2, '0')}

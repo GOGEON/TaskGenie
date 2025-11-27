@@ -120,7 +120,7 @@ const CustomDatePicker = ({
       </div>
 
       {/* 컨텐츠 영역 */}
-      <div className="relative h-[320px] overflow-y-auto custom-scrollbar">
+      <div className="relative">
         {!showTime ? (
           /* 날짜 선택 뷰 */
           <div className="animate-fadeIn">
@@ -212,6 +212,7 @@ const CustomDatePicker = ({
                 />
                 
                 <button
+                    type="button"
                     onClick={onToggleTime}
                     className="mt-2 w-full py-2 text-xs text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center gap-1"
                 >
