@@ -22,6 +22,7 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 # Social Login Schema
+# [추가] 소셜 로그인 요청 스키마
 class SocialLoginRequest(BaseModel):
     """소셜 로그인 요청"""
     provider: str  # 'google' or 'naver' or 'kakao'

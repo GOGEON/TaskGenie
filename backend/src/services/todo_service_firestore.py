@@ -13,6 +13,7 @@ from ..services.ai_service import generate_todo_items_from_keyword, generate_sub
 def _build_item_tree(all_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     모든 아이템 목록을 받아 메모리에서 트리 구조를 구축합니다.
+    # [추가] 트리 구조 빌드 로직 – Firestore 플랫 데이터 구조화
     """
     items_by_id = {}
     for item in all_items:
@@ -306,6 +307,7 @@ def delete_todo_list(list_id: str, user: Any) -> bool:
 def create_todo_item_from_parsed_data(user: Any, list_id: str, parsed_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Creates a new ToDo item from data parsed by the AI service.
+    # [추가] 자연어 파싱 데이터 기반 아이템 생성 – AI 분석 결과 활용
     """
     db = get_firestore_db()
     from zoneinfo import ZoneInfo

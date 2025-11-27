@@ -3,13 +3,14 @@ import google.generativeai as genai
 import os
 import re
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+import json
 
 # .env 파일에서 환경 변수 로드
 load_dotenv()
 
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
-
-import json
 
 def generate_todo_items_from_keyword(keyword: str) -> List[dict]:
     """
@@ -136,13 +137,12 @@ def analyze_task_from_natural_language(natural_language_text: str) -> dict:
     """
     Analyzes a natural language string to extract structured task information
     using the Gemini API.
+    # [추가] 자연어 문장 파싱 및 속성 추출 – Gemini API 활용
     """
     try:
         model = genai.GenerativeModel('gemini-flash-latest')
         
         # Get current date and time to provide context to the AI
-        from datetime import datetime, timedelta
-        from zoneinfo import ZoneInfo
         
         # Set timezone to Seoul
         kst = ZoneInfo("Asia/Seoul")

@@ -106,6 +106,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 @router.post("/social-login", response_model=Token)
+# [추가] 소셜 로그인(Google, GitHub) 엔드포인트 – OAuth 인증 지원
 def social_login(social_login_req: SocialLoginRequest):
     """소셜 로그인 (Google, GitHub)"""
     if not USE_FIRESTORE:
@@ -158,6 +159,7 @@ def social_login(social_login_req: SocialLoginRequest):
 
 
 @router.post("/naver-callback", response_model=Token)
+# [추가] 네이버 로그인 콜백 처리 – OAuth 2.0 인증 흐름
 def naver_callback(callback_req: NaverCallbackRequest):
     """네이버 OAuth 콜백 처리"""
     if not USE_FIRESTORE:
@@ -244,6 +246,7 @@ def naver_callback(callback_req: NaverCallbackRequest):
 
 
 @router.post("/kakao-callback", response_model=Token)
+# [추가] 카카오 로그인 콜백 처리 – OAuth 2.0 인증 흐름
 def kakao_callback(callback_req: KakaoCallbackRequest):
     """카카오 OAuth 콜백 처리"""
     if not USE_FIRESTORE:

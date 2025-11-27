@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Firestore 초기화
+# [수정] SQLite → Firestore 전환 – 클라우드 데이터베이스 도입
 def initialize_firestore():
     """
     Firestore 초기화 함수
