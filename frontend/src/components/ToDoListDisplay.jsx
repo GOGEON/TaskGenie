@@ -1,3 +1,17 @@
+/**
+ * 할 일 목록 표시 컴포넌트
+ * 
+ * 프로젝트의 전체 할 일 목록을 렌더링하고 관리하는 컨테이너 컴포넌트.
+ * 진행률 계산, 목록 제목 수정, 개별 아이템 렌더링을 담당.
+ * 
+ * 주요 기능:
+ * - 계층적 진행률 계산 (가중치 기반)
+ * - 프로젝트 제목 인라인 수정
+ * - 할 일 아이템 목록 렌더링
+ * - 빈 상태(EmptyState) 처리
+ * 
+ * @module ToDoListDisplay
+ */
 import React, { useState } from 'react';
 import { useDragLayer } from 'react-dnd';
 import ToDoItem from './ToDoItem';
@@ -5,10 +19,14 @@ import ProgressBar from './ProgressBar';
 import SkeletonToDoItem from './SkeletonToDoItem';
 import EmptyState from './EmptyState';
 
-/* [개선] 가중치 기반 진행률 계산 - 계층 구조를 고려한 정확한 진행률 측정 */
-/* 이전: 단순 카운트 방식 (완료된 항목 수 / 전체 항목 수 * 100) */
-/* 현재: 재귀적 가중치 방식 - 각 레벨의 모든 항목이 동등한 비중을 가짐 */
-/* 예: 부모 1개(자식 2개) + 부모 1개(자식 없음) → 각 최상위 항목이 50% 비중 */
+
+/**
+ * 가중치 기반 재귀적 진행률 계산 함수.
+ * 각 계층(Level)의 항목들이 동등한 가중치를 갖도록 계산.
+ * 
+ * @param {Array} items - 할 일 항목 배열
+ * @returns {number} 계산된 진행률 (0~100)
+ */
 const calculateRecursiveProgress = (items) => {
   if (!items || items.length === 0) {
     return 100;
@@ -29,7 +47,13 @@ const calculateRecursiveProgress = (items) => {
   return totalProgress;
 };
 
-/* [추가] 재귀적으로 모든 항목 카운트 - 통계 표시용 */
+
+/**
+ * 전체 항목 수 카운트 (재귀).
+ * 
+ * @param {Array} items - 할 일 항목 배열
+ * @returns {number} 전체 항목 수
+ */
 export const countAllItems = (items) => {
   if (!items || items.length === 0) return 0;
   return items.reduce((total, item) => {
@@ -37,7 +61,13 @@ export const countAllItems = (items) => {
   }, 0);
 };
 
-/* [추가] 재귀적으로 완료된 항목 카운트 - 통계 표시용 */
+
+/**
+ * 완료된 항목 수 카운트 (재귀).
+ * 
+ * @param {Array} items - 할 일 항목 배열
+ * @returns {number} 완료된 항목 수
+ */
 export const countCompletedItems = (items) => {
   if (!items || items.length === 0) return 0;
   return items.reduce((total, item) => {
@@ -46,6 +76,26 @@ export const countCompletedItems = (items) => {
   }, 0);
 };
 
+
+/**
+ * ToDoListDisplay 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Object} props.todoList - 표시할 프로젝트 객체 (items, keyword 포함)
+ * @param {Function} props.moveItem - 아이템 이동 핸들러 (DnD)
+ * @param {Function} props.onDropItem - 아이템 드롭 핸들러
+ * @param {Function} props.onToggleItemComplete - 완료 상태 토글 핸들러
+ * @param {Function} props.onGenerateSubtasks - 서브태스크 생성 핸들러
+ * @param {Function} props.onOpenContextMenu - 컨텍스트 메뉴 오픈 핸들러
+ * @param {Function} props.onEditItem - 아이템 수정 핸들러
+ * @param {Function} props.onDeleteItem - 아이템 삭제 핸들러
+ * @param {Function} props.onUpdatePriority - 우선순위 업데이트 핸들러
+ * @param {boolean} props.isGenerating - AI 생성 중 여부
+ * @param {string} props.generatingItemId - 생성 중인 아이템 ID
+ * @param {Function} props.onUpdateKeyword - 프로젝트 제목 수정 핸들러
+ * @param {Function} props.onOpenQuickAdd - 빠른 추가 모달 오픈 핸들러
+ * @returns {JSX.Element} 할 일 목록 뷰
+ */
 function ToDoListDisplay({
   todoList,
   moveItem,

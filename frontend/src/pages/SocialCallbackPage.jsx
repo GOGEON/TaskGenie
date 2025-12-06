@@ -1,8 +1,30 @@
+/**
+ * 소셜 로그인 콜백 페이지 컴포넌트
+ * 
+ * OAuth 2.0 인증 흐름에서 리다이렉트 URI로 사용되는 페이지.
+ * 인증 코드를 받아 백엔드에 전달하고 액세스 토큰을 발급받음.
+ * 
+ * 주요 기능:
+ * - URL에서 인증 코드(code) 및 상태(state) 파싱
+ * - 소셜 제공자(Naver, Kakao) 식별 및 API 호출
+ * - 중복 실행 방지 (useRef 사용)
+ * - 로그인 성공/실패 처리 및 리다이렉트
+ * 
+ * @module SocialCallbackPage
+ */
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { handleNaverCallback, handleKakaoCallback } from '../services/socialAuthService';
 import toast from 'react-hot-toast';
 
+
+/**
+ * SocialCallbackPage 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Function} props.onLoginSuccess - 로그인 성공 콜백
+ * @returns {JSX.Element} 로딩 스피너가 있는 콜백 처리 페이지
+ */
 function SocialCallbackPage({ onLoginSuccess }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

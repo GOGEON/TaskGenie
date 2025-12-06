@@ -1,5 +1,13 @@
 """
-Firestore 기반 인증 서비스
+인증 서비스 모듈 (Firestore)
+
+사용자 인증 관련 비즈니스 로직을 담당.
+
+주요 기능:
+- 비밀번호 해싱 및 검증 (pbkdf2_sha256, bcrypt)
+- JWT 액세스 토큰 생성 및 검증
+- 사용자 조회 및 생성
+- 현재 로그인 사용자 추출 (FastAPI Dependency)
 """
 import os
 import uuid
@@ -14,28 +22,56 @@ from fastapi.security import OAuth2PasswordBearer
 
 from ..firestore_db import get_firestore_db
 
-# JWT 설정
+# ==================== JWT 설정 ====================
 SECRET_KEY = os.getenv("SECRET_KEY", "a_default_secret_key_for_testing")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7일
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7일 유효
 
+# 비밀번호 해싱 컨텍스트 (pbkdf2_sha256 우선, bcrypt 호환)
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"])
 
+# OAuth2 토큰 URL 설정
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
-def verify_password(plain_password, hashed_password):
-    """비밀번호 검증"""
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    평문 비밀번호와 해시 비밀번호 일치 여부 확인.
+    
+    Args:
+        plain_password: 사용자 입력 평문 비밀번호
+        hashed_password: DB에 저장된 해시 비밀번호
+    
+    Returns:
+        일치 시 True, 불일치 시 False
+    """
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def get_password_hash(password):
-    """비밀번호 해싱"""
+def get_password_hash(password: str) -> str:
+    """
+    평문 비밀번호를 해시로 변환.
+    
+    Args:
+        password: 해싱할 평문 비밀번호
+    
+    Returns:
+        해시된 비밀번호 문자열
+    """
     return pwd_context.hash(password)
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    """JWT 액세스 토큰 생성"""
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """
+    JWT 액세스 토큰 생성.
+    
+    Args:
+        data: 토큰에 포함할 데이터 (예: {"sub": username})
+        expires_delta: 토큰 만료 시간 (기본값: 7일)
+    
+    Returns:
+        인코딩된 JWT 토큰 문자열
+    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta

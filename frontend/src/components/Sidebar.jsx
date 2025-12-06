@@ -1,16 +1,53 @@
+/**
+ * 사이드바 컴포넌트
+ * 
+ * 앱 좌측에 위치한 네비게이션 사이드바.
+ * 사용자 정보, 프로젝트 목록, 진행률을 표시.
+ * 
+ * 주요 기능:
+ * - 사용자 정보 표시 및 로그아웃
+ * - 프로젝트 목록 및 선택
+ * - 가중치 기반 진행률 계산 (계층 구조 고려)
+ * - 완료/전체 항목 통계 표시
+ * - 리사이즈 가능한 너비 (데스크톱)
+ * 
+ * @module Sidebar
+ */
 import React, { useState, useEffect, useRef } from 'react';
 
+
+/**
+ * 사이드바 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Object} props.user - 현재 로그인 사용자 정보
+ * @param {Array} props.projects - 프로젝트 목록
+ * @param {string} props.activeProjectId - 현재 선택된 프로젝트 ID
+ * @param {Function} props.onSelectProject - 프로젝트 선택 콜백
+ * @param {Function} props.onAddNewProject - 새 프로젝트 추가 콜백
+ * @param {Function} props.onLogout - 로그아웃 콜백
+ * @returns {JSX.Element} 사이드바 요소
+ */
 const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewProject, onLogout }) => {
-  const [width, setWidth] = useState(320);
-  const [isResizing, setIsResizing] = useState(false);
+  // ==================== 컴포넌트 상태 ====================
+  const [width, setWidth] = useState(320);        // 사이드바 너비 (픽셀)
+  const [isResizing, setIsResizing] = useState(false);  // 리사이즈 중 여부
   const sidebarRef = useRef(null);
 
   const userName = user?.username || '사용자';
   const userInitial = userName.charAt(0).toUpperCase();
 
-  /* [개선] 가중치 기반 진행률 계산 - 계층 구조를 고려한 정확한 진행률 표시 */
-  /* 이전: 단순 카운트 방식 (완료 항목 / 전체 항목 * 100) */
-  /* 현재: 가중치 방식 (각 레벨의 항목이 동등한 비중을 가짐) */
+
+  /**
+   * 가중치 기반 진행률 계산.
+   * 
+   * 계층 구조를 고려하여 각 레벨의 항목이 동등한 비중을 가지도록 계산.
+   * 단순 완료/전체 카운트 방식과 달리, 자식 항목의 깊이에 관계없이
+   * 루트 항목 기준으로 공정하게 진행률 반영.
+   * 
+   * @param {Array} items - 할 일 항목 목록
+   * @returns {number} 진행률 (0-100)
+   */
   const calculateWeightedProgress = (items) => {
     if (!items || items.length === 0) return 100;
 
@@ -28,7 +65,14 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
     return totalProgress;
   };
 
-  /* [추가] 재귀적으로 모든 하위 항목까지 카운트 - 통계 정보 표시용 */
+
+  /**
+   * 모든 항목 수 재귀 카운트.
+   * 자식 항목까지 포함한 전체 항목 수 계산.
+   * 
+   * @param {Array} items - 할 일 항목 목록
+   * @returns {number} 전체 항목 수
+   */
   const countAllItems = (items) => {
     if (!items || items.length === 0) return 0;
     return items.reduce((total, item) => {
@@ -36,7 +80,14 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
     }, 0);
   };
 
-  /* [추가] 재귀적으로 완료된 모든 하위 항목까지 카운트 - 통계 정보 표시용 */
+
+  /**
+   * 완료된 항목 수 재귀 카운트.
+   * 자식 항목까지 포함한 완료 항목 수 계산.
+   * 
+   * @param {Array} items - 할 일 항목 목록
+   * @returns {number} 완료된 항목 수
+   */
   const countCompletedItems = (items) => {
     if (!items || items.length === 0) return 0;
     return items.reduce((total, item) => {
@@ -45,6 +96,8 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
     }, 0);
   };
 
+
+  // ==================== 리사이즈 이벤트 핸들러 ====================
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isResizing) return;
@@ -70,6 +123,8 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
     };
   }, [isResizing]);
 
+
+  /** 리사이즈 시작 핸들러 */
   const handleMouseDown = (e) => {
     e.preventDefault();
     setIsResizing(true);

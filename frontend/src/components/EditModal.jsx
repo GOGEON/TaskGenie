@@ -1,5 +1,23 @@
+/**
+ * 항목 수정 모달 컴포넌트
+ * 
+ * 할 일 항목의 내용을 수정하는 간단한 모달 창.
+ * Ctrl+Enter 단축키로 저장, ESC로 취소 지원.
+ * 
+ * @module EditModal
+ */
 import React, { useState, useEffect } from 'react';
 
+
+/**
+ * EditModal 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Object} props.item - 수정할 아이템 객체
+ * @param {Function} props.onSave - 저장 콜백 (id, text)
+ * @param {Function} props.onClose - 닫기 콜백
+ * @returns {JSX.Element} 수정 모달
+ */
 function EditModal({ item, onSave, onClose }) {
   const [text, setText] = useState(item.description);
 

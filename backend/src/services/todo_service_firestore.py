@@ -1,5 +1,14 @@
 """
-Firestore를 사용한 Todo Service
+할 일 서비스 모듈 (Firestore)
+
+할 일(Todo) 관련 비즈니스 로직을 담당.
+
+주요 기능:
+- 프로젝트(Todo List) CRUD
+- 할 일 아이템(Todo Item) CRUD
+- AI 기반 할 일 자동 생성
+- 계층적(트리) 구조 관리
+- 자연어 파싱 기반 아이템 생성
 """
 from typing import List, Dict, Any
 import uuid
@@ -10,11 +19,25 @@ from ..firestore_db import get_firestore_db
 from ..schemas import ToDoItemUpdate, ToDoListUpdate
 from ..services.ai_service import generate_todo_items_from_keyword, generate_sub_tasks_from_main_task
 
+
 def _build_item_tree(all_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    모든 아이템 목록을 받아 메모리에서 트리 구조를 구축합니다.
-    # [추가] 트리 구조 빌드 로직 – Firestore 플랫 데이터 구조화
+    플랫 데이터를 트리 구조로 변환.
+    
+    Firestore의 평면 구조 데이터를 parent_id를 기준으로
+    중첩된 계층 구조로 재구성.
+    
+    Args:
+        all_items: 모든 할 일 아이템 목록 (플랫 구조)
+    
+    Returns:
+        루트 아이템 목록 (각 아이템에 children 필드 포함)
+    
+    Note:
+        - order 필드 기준으로 정렬
+        - SERVER_TIMESTAMP는 현재 시간으로 변환
     """
+    # 아이템 ID를 키로 하는 딕셔너리 생성 (빠른 조회용)
     items_by_id = {}
     for item in all_items:
         for key, value in item.items():
@@ -25,6 +48,7 @@ def _build_item_tree(all_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         item['children'] = []
         items_by_id[item['id']] = item
 
+    # 부모-자식 관계 구축
     root_items = []
     for item in all_items:
         parent_id = item.get('parent_id')
@@ -35,15 +59,26 @@ def _build_item_tree(all_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         else:
             root_items.append(item)
 
+    # order 필드 기준 정렬
     for item in all_items:
         item['children'].sort(key=lambda x: x.get('order', 0))
     root_items.sort(key=lambda x: x.get('order', 0))
 
     return root_items
 
+
 def _fetch_and_build_tree_for_list(list_id: str) -> List[Dict[str, Any]]:
     """
-    특정 리스트의 모든 아이템을 한 번에 가져와 트리 구조를 만듭니다.
+    특정 프로젝트의 전체 트리 구조 조회.
+    
+    프로젝트에 속한 모든 아이템을 한 번에 가져와
+    트리 구조로 변환.
+    
+    Args:
+        list_id: 프로젝트(Todo List) ID
+    
+    Returns:
+        계층 구조로 정렬된 루트 아이템 목록
     """
     db = get_firestore_db()
     items_ref = db.collection('todo_items').where('todo_list_id', '==', list_id).stream()

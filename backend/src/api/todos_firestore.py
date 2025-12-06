@@ -1,5 +1,19 @@
 """
-Firestore 기반 Todo API 라우터
+할 일 API 라우터 모듈 (Firestore)
+
+할 일 관련 REST API 엔드포인트를 정의.
+
+주요 엔드포인트:
+- POST /todos/items: 빠른 작업 추가 (AI 파싱 없음)
+- POST /todos/parse-and-create-item: 자연어 파싱 기반 작업 생성
+- POST /todos/generate: AI 기반 프로젝트 생성
+- POST /todos/items/{id}/generate-subtasks: 서브태스크 AI 생성
+- GET /todos: 전체 프로젝트 목록 조회
+- GET /todos/{id}: 특정 프로젝트 조회
+- PUT /todos/{id}: 프로젝트 업데이트
+- PUT /todos/items/{id}: 아이템 업데이트
+- DELETE /todos/items/{id}: 아이템 삭제
+- DELETE /todos/{id}: 프로젝트 삭제
 """
 from typing import List, Any
 import os
@@ -18,18 +32,33 @@ from ..schemas import (
 router = APIRouter()
 
 
+# ==================== 아이템 생성 엔드포인트 ====================
 @router.post("/items", response_model=ToDoItemResponse)
 def create_todo_item_fast(
     description: str = Body(...),
     list_id: str = Body(...),
     priority: str = Body("none"),
     due_date: str = Body(None),
-    parent_id: str = Body(None),  # [추가] 하위 작업 생성을 위한 parent_id
+    parent_id: str = Body(None),
     current_user: Any = Depends(get_current_user),
 ):
     """
-    빠른 작업 추가 (AI 파싱 없이 직접 생성)
-    Quick Add 모달에서 사용 - AI 응답 대기 없이 즉시 작업 생성
+    빠른 작업 추가 (AI 파싱 없이 직접 생성).
+    
+    Quick Add 모달에서 사용. AI 응답 대기 없이 즉시 작업 생성.
+    
+    Args:
+        description: 작업 내용
+        list_id: 프로젝트 ID
+        priority: 우선순위 (high/medium/low/none)
+        due_date: 마감일 (ISO 형식)
+        parent_id: 상위 작업 ID (하위 작업 생성 시)
+    
+    Returns:
+        생성된 작업 아이템
+    
+    Raises:
+        404: 프로젝트를 찾을 수 없거나 권한 없음
     """
     from datetime import datetime
     from zoneinfo import ZoneInfo

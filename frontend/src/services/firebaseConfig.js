@@ -1,3 +1,16 @@
+/**
+ * Firebase 설정 모듈
+ * 
+ * Firebase 앱 초기화 및 인증 서비스 구성.
+ * 환경 변수(.env)에서 설정값을 로드하여 보안 유지.
+ * 
+ * 주요 기능:
+ * - Firebase App 초기화
+ * - Auth 서비스 내보내기
+ * - Google Auth Provider 설정
+ * 
+ * @module firebaseConfig
+ */
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 

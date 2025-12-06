@@ -1,3 +1,19 @@
+/**
+ * 할 일 아이템 컴포넌트
+ * 
+ * 개별 할 일 항목을 렌더링하고 상호작용을 처리.
+ * 계층 구조(자식 항목)와 드래그 앤 드롭을 지원.
+ * 
+ * 주요 기능:
+ * - 드래그 앤 드롭으로 순서 변경 (react-dnd)
+ * - 체크박스로 완료 상태 토글
+ * - 우선순위 표시 (색상으로 구분)
+ * - 마감일 표시 (색상 코딩: 과기/임박/일반)
+ * - 자식 항목 접기/펼치기
+ * - 컨텍스트 메뉴 (수정/삭제/서브태스크 생성)
+ * 
+ * @module ToDoItem
+ */
 import React, { useState, useRef, useEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
@@ -11,8 +27,30 @@ import {
 } from 'react-icons/ri';
 import SkeletonToDoItem from './SkeletonToDoItem';
 
+// 드래그 앤 드롭 아이템 타입 상수
 const ItemType = 'TODO_ITEM';
 
+
+/**
+ * 할 일 아이템 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Object} props.item - 할 일 아이템 데이터
+ * @param {number} props.index - 현재 항목의 인덱스
+ * @param {Function} props.moveItem - 드래그로 순서 변경 콜백
+ * @param {Function} props.onDropItem - 드래그 완료 후 저장 콜백
+ * @param {Function} props.onToggleItemComplete - 완료 상태 토글 콜백
+ * @param {Function} props.onOpenContextMenu - 컨텍스트 메뉴 열기 콜백
+ * @param {Function} props.onGenerateSubtasks - AI 서브태스크 생성 콜백
+ * @param {Function} props.onEditItem - 항목 수정 콜백
+ * @param {Function} props.onDeleteItem - 항목 삭제 콜백
+ * @param {Function} props.onUpdatePriority - 우선순위 변경 콜백
+ * @param {boolean} props.isPreview - 드래그 미리보기 여부
+ * @param {string} props.parentId - 부모 항목 ID (null이면 루트)
+ * @param {boolean} props.isGenerating - AI 생성 중 여부
+ * @param {string} props.generatingItemId - AI 생성 중인 항목 ID
+ * @returns {JSX.Element} 할 일 아이템 요소
+ */
 const ToDoItem = ({
   item,
   index,
@@ -29,10 +67,11 @@ const ToDoItem = ({
   isGenerating = false,
   generatingItemId = null,
 }) => {
+  // ==================== 컴포넌트 상태 ====================
   const ref = useRef(null);
-  const [isChildrenVisible, setIsChildrenVisible] = useState(true);
-  const wasChildrenVisibleBeforeDrag = useRef(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isChildrenVisible, setIsChildrenVisible] = useState(true);   // 자식 표시 여부
+  const wasChildrenVisibleBeforeDrag = useRef(false);                 // 드래그 전 자식 표시 상태
+  const [isDeleting, setIsDeleting] = useState(false);                // 삭제 애니메이션 중
 
   const hasChildren = item.children && item.children.length > 0;
 

@@ -1,5 +1,16 @@
 """
-Firestore 데이터베이스 연결 및 초기화
+Firestore 데이터베이스 모듈
+
+Google Cloud Firestore 연결 및 초기화를 담당.
+
+주요 기능:
+- Firebase Admin SDK 초기화
+- Firestore 클라이언트 생성 및 관리
+- 환경별 인증 정보 처리 (로컬/클라우드)
+
+환경 변수:
+- GOOGLE_APPLICATION_CREDENTIALS_JSON: 클라우드 배포용 JSON 문자열
+- FIRESTORE_KEY_PATH: 로컬 개발용 키 파일 경로
 """
 import os
 import json
@@ -9,18 +20,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Firestore 초기화
-# [수정] SQLite → Firestore 전환 – 클라우드 데이터베이스 도입
+
 def initialize_firestore():
     """
-    Firestore 초기화 함수
+    Firebase Admin SDK 및 Firestore 초기화.
+    
+    배포 환경에 따라 다른 인증 방식 사용:
+    - 클라우드(Render/Railway): 환경 변수의 JSON 문자열
+    - 로컬: firestore-key.json 파일
+    
+    Returns:
+        Firestore 클라이언트 인스턴스
+    
+    Raises:
+        FileNotFoundError: 인증 정보를 찾을 수 없을 때
     """
     if not firebase_admin._apps:
         # 환경변수에서 JSON 문자열 먼저 확인 (Render/Railway용)
         credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
         
         if credentials_json:
-            # JSON 문자열을 파싱하여 credential 생성
+            # 클라우드 환경: JSON 문자열 파싱
             cred_dict = json.loads(credentials_json)
             cred = credentials.Certificate(cred_dict)
         else:
@@ -40,20 +60,34 @@ def initialize_firestore():
     
     return firestore.client()
 
-# Firestore 클라이언트 인스턴스
+
+# 싱글톤 Firestore 클라이언트 인스턴스
 db = None
+
 
 def get_firestore_db():
     """
-    Firestore 데이터베이스 인스턴스 반환
+    Firestore 클라이언트 인스턴스 반환.
+    
+    싱글톤 패턴으로 한 번 생성된 클라이언트를 재사용.
+    
+    Returns:
+        Firestore 클라이언트
     """
     global db
     if db is None:
         db = initialize_firestore()
     return db
 
+
 def get_db():
     """
-    FastAPI dependency로 사용할 함수
+    FastAPI Dependency용 Firestore 클라이언트 반환.
+    
+    FastAPI의 Depends()와 함께 사용하여
+    엔드포인트에서 DB 인스턴스 주입.
+    
+    Returns:
+        Firestore 클라이언트
     """
     return get_firestore_db()

@@ -1,10 +1,35 @@
+/**
+ * 컨텍스트 메뉴 컴포넌트
+ * 
+ * 마우스 우클릭 시 나타나는 팝업 메뉴.
+ * 항목에 대한 빠른 액션(우선순위 변경, 마감일 설정, 수정/삭제 등)을 제공.
+ * 화면 경계를 벗어나지 않도록 위치 자동 조정 기능 포함.
+ * 
+ * 주요 기능:
+ * - 메뉴 위치 자동 보정 (화면 이탈 방지)
+ * - 우선순위 선택기 통합
+ * - 마감일 선택기(DatePicker) 통합
+ * - 커스텀 액션 실행
+ * 
+ * @module ContextMenu
+ */
 import React, { useEffect, useRef, useState } from 'react';
 import PrioritySelector from './PrioritySelector';
 import CustomDatePicker from './CustomDatePicker';
 
-/* [개선] 케밥 메뉴 컴포넌트 - 우선순위, 마감일, 액션 메뉴 통합 */
-/* 이전: 단순 수정/삭제/AI 생성 액션만 제공 */
-/* 현재: 우선순위 선택, 마감일 설정, 기존 액션 모두 포함 */
+
+/**
+ * ContextMenu 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {number} props.x - 메뉴 표시 X 좌표
+ * @param {number} props.y - 메뉴 표시 Y 좌표
+ * @param {Array} props.options - 메뉴 항목 배열 ({ label, onClick/action })
+ * @param {Function} props.onClose - 메뉴 닫기 콜백
+ * @param {Object} props.priorityConfig - 우선순위 설정 객체 (선택사항)
+ * @param {Object} props.dateConfig - 마감일 설정 객체 (선택사항)
+ * @returns {JSX.Element} 컨텍스트 메뉴 팝업
+ */
 function ContextMenu({ x, y, options, onClose, priorityConfig, dateConfig }) {
   const menuRef = useRef(null);
   const [showDatePicker, setShowDatePicker] = useState(false);

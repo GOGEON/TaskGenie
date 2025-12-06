@@ -1,9 +1,26 @@
+/**
+ * 온보딩 가이드 컴포넌트
+ * 
+ * 신규 사용자에게 앱의 핵심 기능과 사용법을 단계별로 안내.
+ * 로컬 스토리지에 'hasSeenOnboarding' 플래그를 저장하여 최초 1회만 표시.
+ * 
+ * 주요 기능:
+ * - 단계별 기능 소개 (슬라이더 형식)
+ * - 진행률 표시줄
+ * - 건너뛰기 및 다시 보지 않기 처리
+ * 
+ * @module OnboardingGuide
+ */
 import React, { useState, useEffect } from 'react';
 import { RiRocketLine, RiTaskLine, RiLightbulbLine, RiArrowRightLine, RiCheckDoubleLine, RiBarChartLine } from 'react-icons/ri';
 
 /**
- * OnboardingGuide 컴포넌트
- * 첫 방문 사용자를 위한 온보딩 가이드
+ * OnboardingGuide 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Function} props.onClose - 가이드 닫기 콜백
+ * @param {Function} props.onSkip - 건너뛰기 콜백
+ * @returns {JSX.Element|null} 온보딩 모달 또는 null (이미 본 경우)
  */
 const OnboardingGuide = ({ onClose, onSkip }) => {
   const [currentStep, setCurrentStep] = useState(0);

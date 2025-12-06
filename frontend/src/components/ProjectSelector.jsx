@@ -1,6 +1,30 @@
+/**
+ * 프로젝트 선택 컴포넌트
+ * 
+ * 프로젝트 및 하위 작업(계층 구조)을 검색하고 선택할 수 있는 드롭다운 컴포넌트.
+ * 
+ * 주요 기능:
+ * - 프로젝트 검색 및 필터링
+ * - 계층적 작업 구조 표시 (트리 형태)
+ * - 현재 선택된 경로(프로젝트 > 작업) 표시
+ * - 외부 클릭 감지하여 닫기
+ * 
+ * @module ProjectSelector
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { RiSearchLine, RiHashtag, RiCheckLine, RiArrowDownSLine, RiCornerDownRightLine } from 'react-icons/ri';
 
+
+/**
+ * ProjectSelector 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Array} props.projects - 전체 프로젝트 목록 (계층 구조 포함)
+ * @param {string} props.selectedProjectId - 현재 선택된 프로젝트 ID
+ * @param {string} props.selectedParentId - 현재 선택된 상위 작업 ID (선택사항)
+ * @param {Function} props.onSelect - 선택 완료 콜백 (projectId, parentId)
+ * @returns {JSX.Element} 프로젝트 선택기 요소
+ */
 const ProjectSelector = ({ projects, selectedProjectId, selectedParentId, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');

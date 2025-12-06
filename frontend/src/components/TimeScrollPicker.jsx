@@ -1,3 +1,12 @@
+/**
+ * 시간 선택 스크롤 피커 컴포넌트
+ * 
+ * iOS 스타일의 스크롤 가능한 시간 선택 UI를 제공.
+ * 오전/오후, 시(1-12), 분(5분 단위) 컬럼으로 구성됨.
+ * 무한 스크롤 효과와 스냅(Snap) 스크롤 지원.
+ * 
+ * @module TimeScrollPicker
+ */
 import React, { useEffect, useRef } from 'react';
 
 // 시간 데이터 생성 (컴포넌트 외부로 이동하여 불필요한 재생성 방지)
@@ -5,6 +14,15 @@ const AMPM_ITEMS = ['오전', '오후'];
 const HOUR_ITEMS = Array.from({ length: 12 }, (_, i) => i + 1);
 const MINUTE_ITEMS = Array.from({ length: 12 }, (_, i) => i * 5);
 
+
+/**
+ * TimeScrollPicker 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Date} props.selectedDate - 현재 선택된 날짜/시간
+ * @param {Function} props.onChange - 시간 변경 콜백 (Date 객체 반환)
+ * @returns {JSX.Element} 시간 선택 컴포넌트
+ */
 const TimeScrollPicker = ({ selectedDate, onChange }) => {
   const date = selectedDate || new Date();
   

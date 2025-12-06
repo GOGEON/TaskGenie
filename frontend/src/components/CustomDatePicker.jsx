@@ -1,3 +1,17 @@
+/**
+ * 사용자 정의 날짜 선택 컴포넌트
+ * 
+ * react-datepicker를 래핑하여 커스텀 UI와 기능을 추가한 컴포넌트.
+ * Google Calendar 스타일의 날짜/시간 선택 UX 제공.
+ * 
+ * 주요 기능:
+ * - 날짜 선택 (인라인 캘린더)
+ * - 시간 선택 (iOS 스타일 스크롤 피커 + 스마트 프리셋)
+ * - 빠른 선택 옵션 (오늘, 내일, 다음 주, 이번 주말 등)
+ * - 날짜 포맷팅 및 시각적 피드백
+ * 
+ * @module CustomDatePicker
+ */
 import React, { useState } from 'react';
 import DatePicker from 'react-datepicker';
 import { ko } from 'date-fns/locale';
@@ -17,6 +31,18 @@ import TimeScrollPicker from './TimeScrollPicker';
 import "react-datepicker/dist/react-datepicker.css";
 import '../datepicker.css';
 
+
+/**
+ * CustomDatePicker 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Date|null} props.selectedDate - 현재 선택된 날짜 객체
+ * @param {Function} props.onChange - 날짜 변경 콜백
+ * @param {Function} props.onClose - 컴포넌트 닫기 콜백
+ * @param {boolean} props.showTime - 시간 선택 모드 활성화 여부
+ * @param {Function} props.onToggleTime - 시간 선택 모드 토글 콜백
+ * @returns {JSX.Element} 날짜 선택기 요소
+ */
 const CustomDatePicker = ({ 
   selectedDate, 
   onChange, 

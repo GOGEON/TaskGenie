@@ -1,5 +1,20 @@
 """
-Firestore 기반 인증 API
+인증 API 라우터 모듈 (Firestore)
+
+사용자 인증 관련 REST API 엔드포인트를 정의.
+
+주요 엔드포인트:
+- POST /auth/register: 사용자 등록
+- POST /auth/login: 로그인 및 토큰 발급
+- POST /auth/social-login: 소셜 로그인 (Google, GitHub)
+- POST /auth/naver-callback: 네이버 OAuth 콜백
+- POST /auth/kakao-callback: 카카오 OAuth 콜백
+
+지원되는 인증 방식:
+- 기본 인증 (username/password)
+- Google Firebase 인증
+- 네이버 OAuth 2.0
+- 카카오 OAuth 2.0
 """
 import os
 import requests
@@ -11,7 +26,7 @@ from firebase_admin import auth as firebase_auth
 
 from ..schemas import Token, UserCreate, SocialLoginRequest, NaverCallbackRequest, KakaoCallbackRequest
 
-# Firestore 사용 여부 확인
+# 환경 변수에서 DB 타입 확인
 USE_FIRESTORE = os.getenv("USE_FIRESTORE", "false").lower() == "true"
 
 if USE_FIRESTORE:
@@ -24,15 +39,28 @@ else:
 
 router = APIRouter()
 
-# 환경 변수에서 OAuth 설정 가져오기
+# ==================== OAuth 설정 ====================
 NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
 NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET")
 KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID")
 KAKAO_CLIENT_SECRET = os.getenv("KAKAO_CLIENT_SECRET")
 
 
+# ==================== 기본 인증 엔드포인트 ====================
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register_user(user_create: UserCreate):
+    """
+    사용자 등록.
+    
+    Args:
+        user_create: 사용자 정보 (username, password, email)
+    
+    Returns:
+        등록 성공 메시지
+    
+    Raises:
+        400: 이미 등록된 username
+    """
     """사용자 등록"""
     if USE_FIRESTORE:
         # Firestore 버전

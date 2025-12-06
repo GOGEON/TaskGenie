@@ -1,9 +1,27 @@
+/**
+ * 빈 상태 표시 컴포넌트
+ * 
+ * 데이터가 없을 때 사용자에게 표시되는 안내 UI.
+ * 프로젝트 목록이 비었거나, 할 일 목록이 비었을 때 사용됨.
+ * 
+ * @module EmptyState
+ */
 import React from 'react';
 import { RiRocketLine, RiTaskLine, RiLightbulbLine, RiArrowRightLine } from 'react-icons/ri';
 
+
 /**
- * EmptyState 컴포넌트
- * 프로젝트나 할 일 항목이 없을 때 표시되는 빈 상태 UI
+ * EmptyState 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {string} [props.type='projects'] - 빈 상태 유형 ('projects' | 'tasks')
+ * @param {Function} props.onAction - 액션 버튼 클릭 핸들러
+ * @param {string} props.actionLabel - 액션 버튼 텍스트
+ * @param {JSX.Element} props.icon - 사용자 정의 아이콘
+ * @param {string} props.title - 사용자 정의 제목
+ * @param {string} props.description - 사용자 정의 설명
+ * @param {boolean} [props.showAction=true] - 액션 버튼 표시 여부
+ * @returns {JSX.Element} 빈 상태 뷰
  */
 const EmptyState = ({ 
   type = 'projects', // 'projects' | 'tasks'

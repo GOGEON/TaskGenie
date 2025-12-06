@@ -1,3 +1,16 @@
+/**
+ * 소셜 인증 서비스 모듈
+ * 
+ * 소셜 로그인(Google, 네이버, 카카오) 관련 함수들을 제공.
+ * 
+ * 주요 기능:
+ * - Google 로그인 (Firebase Auth 팝업/리다이렉트)
+ * - 네이버 로그인 (OAuth 2.0)
+ * - 카카오 로그인 (REST API)
+ * - 로그아웃
+ * 
+ * @module socialAuthService
+ */
 import { 
   signInWithPopup, 
   signInWithRedirect,
@@ -8,9 +21,13 @@ import { auth, googleProvider } from './firebaseConfig';
 import api from './api';
 import { saveToken } from './localStorageService';
 
+
 /**
- * Google 로그인 (팝업 방식)
- * 로컬 개발 환경에서는 팝업이 안정적 (CORS 경고는 무시 가능)
+ * Google 로그인 (팝업 방식).
+ * 로컬 개발 환경에서는 팝업이 안정적 (CORS 경고는 무시 가능).
+ * 
+ * @returns {Promise<Object>} 로그인 결과 (access_token 포함)
+ * @throws {Error} 로그인 실패 시
  */
 export const signInWithGoogle = async () => {
   try {

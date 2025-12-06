@@ -1,9 +1,31 @@
+/**
+ * 인증 페이지 컴포넌트
+ * 
+ * 사용자 로그인 및 회원가입을 처리하는 페이지.
+ * 이메일/비밀번호 인증과 소셜 로그인(Google, Kakao)을 모두 지원.
+ * 
+ * 주요 기능:
+ * - 이메일/비밀번호 로그인 및 회원가입
+ * - 소셜 로그인 (Google, Kakao) 연동
+ * - 인증 상태 관리 및 에러 처리
+ * - 로그인 성공 시 토큰 저장 및 콜백 호출
+ * 
+ * @module AuthPage
+ */
 import React, { useState } from 'react';
 import api from '../services/api';
 import { saveToken } from '../services/localStorageService';
 import { signInWithGoogle, signInWithKakao } from '../services/socialAuthService'; //, signInWithNaver
 import toast from 'react-hot-toast';
 
+
+/**
+ * AuthPage 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Function} props.onLoginSuccess - 로그인 성공 콜백 (토큰 전달)
+ * @returns {JSX.Element} 인증 페이지 요소
+ */
 function AuthPage({ onLoginSuccess }) {
   const [isRegister, setIsRegister] = useState(false); // 기본값을 false로 변경 (로그인 먼저)
   const [email, setEmail] = useState('');

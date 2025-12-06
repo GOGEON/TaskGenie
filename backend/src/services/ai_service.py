@@ -1,3 +1,13 @@
+"""
+AI 서비스 모듈
+
+Google Gemini AI를 활용한 작업 생성 및 자연어 파싱 기능 제공.
+
+주요 기능:
+- 키워드 기반 할 일 목록 자동 생성
+- 메인 작업에서 세부 작업(서브태스크) 분해
+- 자연어 문장에서 작업 속성 추출 (날짜, 우선순위 등)
+"""
 from typing import List
 import google.generativeai as genai
 import os
@@ -7,18 +17,32 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import json
 
-# .env 파일에서 환경 변수 로드
+# 환경 변수 로드 및 Gemini API 키 설정
 load_dotenv()
-
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
+
 
 def generate_todo_items_from_keyword(keyword: str) -> List[dict]:
     """
-    Integrates with Google Gemini API to generate a nested list of todo items.
-    Returns a list of dictionaries, where each dictionary can have a 'children' key.
+    키워드 기반 계층적 할 일 목록 생성.
+    
+    Gemini AI를 호출하여 주어진 키워드에 대한
+    상위/하위 구조의 할 일 목록을 자동 생성.
+    
+    Args:
+        keyword: 프로젝트 또는 작업의 핵심 키워드 (예: "웹사이트 개발")
+    
+    Returns:
+        계층적 할 일 목록. 각 항목은 description과 선택적 children 포함.
+        예: [{"description": "기획", "children": [{"description": "목표 정의"}]}]
+    
+    Note:
+        API 오류 시 기본 폴백 응답 반환
     """
     try:
-        model = genai.GenerativeModel('gemini-flash-latest')
+        model = genai.GenerativeModel('gemini-2.5-flash')  # [수정] 모델 버전 명시화
+        
+        # AI 프롬프트: 한국어로 계층적 할 일 목록 생성 요청
         prompt = f"""Generate a hierarchical list of to-do items for the keyword '{keyword}'.
 
 IMPORTANT RULES:
@@ -53,15 +77,15 @@ Example for keyword 'Build a website':
 """
         response = model.generate_content(prompt)
         
-        # Clean the response to get only the JSON part
+        # 응답에서 JSON 부분만 추출 (마크다운 코드 블록 제거)
         json_str = response.text.strip().replace('```json', '').replace('```', '').strip()
         
-        # Parse the JSON string into a Python list of dictionaries
+        # JSON 문자열을 Python 객체로 파싱
         todo_items_json = json.loads(json_str)
         return todo_items_json
     except Exception as e:
         print(f"Error calling Gemini API or parsing JSON: {e}")
-        # Fallback to a generic nested response
+        # API 오류 시 기본 폴백 응답 반환
         return [
             {
                 "description": f"{keyword} 관련 작업 브레인스토밍",
@@ -79,17 +103,26 @@ def generate_sub_tasks_from_main_task(
     context_path: List[str] = None
 ) -> List[str]:
     """
-    Generates sub-tasks based on a main task description with full context.
+    메인 작업에서 세부 작업(서브태스크) 목록 생성.
+    
+    상위 작업의 맥락을 고려하여 3~5개의 구체적이고
+    실행 가능한 세부 작업을 AI로 생성.
     
     Args:
-        main_task_description: The current task to break down
-        project_keyword: The main project keyword for overall context
-        context_path: List of parent task descriptions leading to this task
+        main_task_description: 분해할 현재 작업의 설명
+        project_keyword: 전체 프로젝트의 핵심 키워드 (맥락 제공용)
+        context_path: 현재 작업까지의 상위 작업 경로 목록
+    
+    Returns:
+        세부 작업 문자열 목록 (3~5개)
+    
+    Note:
+        API 오류 시 기본 폴백 응답 반환
     """
     try:
-        model = genai.GenerativeModel('gemini-flash-latest')
+        model = genai.GenerativeModel('gemini-2.5-flash')  # [수정] 모델 버전 명시화
         
-        # 맥락 정보 구성
+        # 맥락 정보 구성: 프로젝트명과 상위 작업 경로
         context_info = ""
         if project_keyword:
             context_info += f"프로젝트: {project_keyword}\n"
@@ -120,27 +153,43 @@ Return the list as a numbered list, e.g.,
         
         response = model.generate_content(prompt)
         
-        # Use the same robust parsing logic
+        # 번호 목록 형식 응답 파싱 (1. 2. 3. 형식)
         parts = re.split(r'\d+\.\s*', response.text)
         sub_tasks = [part.strip() for part in parts[1:] if part.strip()]
         return sub_tasks
     except Exception as e:
         print(f"Error calling Gemini API for sub-tasks: {e}")
-        # Fallback response
+        # API 오류 시 기본 폴백 응답 반환
         return [
             f"'{main_task_description}'에 대한 첫 번째 세부 계획",
             f"'{main_task_description}'에 대한 두 번째 세부 계획",
             f"'{main_task_description}'에 대한 세 번째 세부 계획"
         ]
 
+
 def analyze_task_from_natural_language(natural_language_text: str) -> dict:
     """
-    Analyzes a natural language string to extract structured task information
-    using the Gemini API.
-    # [추가] 자연어 문장 파싱 및 속성 추출 – Gemini API 활용
+    자연어 문장에서 작업 속성 추출.
+    
+    사용자가 입력한 자연어 문장(예: "내일까지 보고서 제출")을
+    분석하여 구조화된 작업 정보로 변환.
+    
+    Args:
+        natural_language_text: 사용자가 입력한 자연어 작업 문장
+    
+    Returns:
+        추출된 작업 속성 딕셔너리:
+        - description: 핵심 작업 내용
+        - due_date: 마감일 (ISO 8601 형식 또는 None)
+        - priority: 우선순위 (high/medium/low/none)
+        - estimated_time_minutes: 예상 소요 시간 (분)
+        - category: 카테고리 (업무/개인/운동/학습 등)
+    
+    Note:
+        API 오류 시 원본 텍스트를 description으로 반환
     """
     try:
-        model = genai.GenerativeModel('gemini-flash-latest')
+        model = genai.GenerativeModel('gemini-2.5-flash')  # [수정] 모델 버전 명시화
         
         # Get current date and time to provide context to the AI
         

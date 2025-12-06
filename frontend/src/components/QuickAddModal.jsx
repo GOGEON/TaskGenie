@@ -1,6 +1,18 @@
-/* [추가] 전역 빠른 추가 모달 컴포넌트 */
-/* 목적: 어디서나 Ctrl/Cmd + K로 빠르게 작업을 추가할 수 있는 모달 */
-/* [개선] Google Calendar 스타일의 심플한 UI */
+/**
+ * 빠른 추가 모달 컴포넌트
+ * 
+ * 전역 단축키(Ctrl/Cmd + K)로 어디서나 빠르게 작업을 추가할 수 있는 모달.
+ * Google Calendar 스타일의 심플한 UI로 설계.
+ * 
+ * 주요 기능:
+ * - 자연어 텍스트 입력 및 실시간 파싱
+ * - 날짜/시간 선택 (CustomDatePicker)
+ * - 우선순위 선택 (high/medium/low/none)
+ * - 프로젝트 및 상위 작업 선택 (계층적 작업 추가)
+ * - 스마트 포지셔닝 (화면 하단 공간 부족시 위로 열림)
+ * 
+ * @module QuickAddModal
+ */
 import React, { useState, useRef, useEffect } from 'react';
 import { getParserExamples, parseNaturalLanguage } from '../utils/nlpParser';
 import CustomDatePicker from './CustomDatePicker';
@@ -10,7 +22,15 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../datepicker.css";
 import { ko } from 'date-fns/locale';
 
-/* [추가] Helper 함수들 - 날짜 포맷팅 */
+
+// ==================== 헬퍼 함수 ====================
+
+/**
+ * ISO 날짜 문자열을 사용자 친화적 형식으로 변환.
+ * 
+ * @param {string} isoDateString - ISO 8601 형식 날짜 문자열
+ * @returns {string|null} 포맷된 날짜 (예: "오늘", "내일", "3월 15일 오후 2시")
+ */
 const formatDueDate = (isoDateString) => {
   if (!isoDateString) return null;
   
@@ -45,6 +65,13 @@ const formatDueDate = (isoDateString) => {
   return dateStr;
 };
 
+
+/**
+ * ISO 문자열을 input[type="datetime-local"] 형식으로 변환.
+ * 
+ * @param {string} isoString - ISO 8601 형식 문자열
+ * @returns {string} datetime-local 입력 형식 문자열
+ */
 const formatDateForInput = (isoString) => {
   if (!isoString) return '';
   const date = new Date(isoString);
@@ -54,6 +81,13 @@ const formatDateForInput = (isoString) => {
   return localDate.toISOString().slice(0, hasTime ? 16 : 10);
 };
 
+
+/**
+ * 로컬 날짜 문자열을 ISO 8601 형식으로 변환.
+ * 
+ * @param {string} localString - 로컬 날짜/시간 문자열
+ * @returns {string|null} ISO 8601 형식 문자열
+ */
 const toISOString = (localString) => {
   if (!localString) return null;
   if (localString.length === 10) {
@@ -63,9 +97,17 @@ const toISOString = (localString) => {
   return new Date(localString).toISOString();
 };
 
+
 /**
- * QuickAddModal 컴포넌트
- * 전역 단축키(Ctrl/Cmd + K)로 빠르게 작업을 추가하는 모달
+ * 빠른 추가 모달 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {boolean} props.isOpen - 모달 열림 상태
+ * @param {Function} props.onClose - 모달 닫기 콜백
+ * @param {Function} props.onSubmit - 작업 제출 콜백 (text, projectId, parentId)
+ * @param {Array} props.projects - 프로젝트 목록
+ * @param {string} props.activeProjectId - 현재 활성 프로젝트 ID
+ * @returns {JSX.Element|null} 빠른 추가 모달
  */
 const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProjectId = null }) => {
   const [text, setText] = useState('');

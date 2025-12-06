@@ -1,3 +1,15 @@
+/**
+ * 앱 루트 컴포넌트
+ * 
+ * TaskGenie 앱의 최상위 컴포넌트로 다음을 담당:
+ * - 라우팅 설정 (React Router)
+ * - 인증 상태 관리 (JWT 토큰)
+ * - 프로젝트 목록 상태 관리
+ * - 전역 모달 관리 (키워드 입력, 빠른 추가)
+ * - 전역 키보드 단축키 (Ctrl/Cmd + K)
+ * 
+ * @module App
+ */
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster, toast } from 'react-hot-toast';
@@ -7,43 +19,49 @@ import AuthPage from './pages/AuthPage';
 import HomePage from './pages/HomePage';
 import SocialCallbackPage from './pages/SocialCallbackPage';
 import MainLayout from './components/MainLayout';
-/* [추가] 최초 방문 사용자를 위한 온보딩 가이드 컴포넌트 추가 */
 import OnboardingGuide from './components/OnboardingGuide';
-/* [추가] 프로젝트/작업 없을 때 표시할 빈 상태 컴포넌트 추가 */
 import EmptyState from './components/EmptyState';
-/* [추가] 기본 prompt() 대신 사용할 전문적인 키워드 입력 모달 컴포넌트 추가 */
 import KeywordInputModal from './components/KeywordInputModal';
-/* [추가] 전역 빠른 추가 모달 컴포넌트 추가 (Ctrl/Cmd + K) - AI 파싱 없이 즉시 생성 */
 import QuickAddModal from './components/QuickAddModal';
 
 import { loadToken, removeToken } from './services/localStorageService';
 import { getToDos, generateToDoList, deleteToDoList } from './services/todoApiService';
-/* [추가] 전역 키보드 단축키 훅 추가 */
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 
 import './App.css';
 
-function App() {
-  const [token, setToken] = useState(loadToken());
-  const [user, setUser] = useState(null);
-  const [projects, setProjects] = useState([]);
-  const [activeProjectId, setActiveProjectId] = useState(null);
-  const [refetchTrigger, setRefetchTrigger] = useState(0);
-  /* [추가] 키워드 입력 모달의 열림/닫힘 상태 관리 (이전: prompt() 사용) */
-  const [isKeywordModalOpen, setIsKeywordModalOpen] = useState(false);
-  /* [추가] 빠른 추가 모달의 열림/닫힘 상태 관리 (Ctrl/Cmd + K) */
-  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
+/**
+ * 앱 최상위 컴포넌트.
+ * 
+ * 앱 전역 상태 및 라우팅을 관리.
+ * 
+ * @returns {JSX.Element} 앱 루트 요소
+ */
+function App() {
+  // ==================== 상태 관리 ====================
+  const [token, setToken] = useState(loadToken());        // JWT 인증 토큰
+  const [user, setUser] = useState(null);                 // 디코딩된 사용자 정보
+  const [projects, setProjects] = useState([]);           // 프로젝트 목록
+  const [activeProjectId, setActiveProjectId] = useState(null);  // 현재 선택된 프로젝트
+  const [refetchTrigger, setRefetchTrigger] = useState(0);       // 데이터 재조회 트리거
+  const [isKeywordModalOpen, setIsKeywordModalOpen] = useState(false);  // AI 프로젝트 생성 모달
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);          // 빠른 추가 모달
+
+  /** 프로젝트 목록 재조회 트리거 */
   const triggerRefetch = () => setRefetchTrigger(c => c + 1);
 
-  /* [추가] Quick Add 모달을 여는 함수 - 단축키 외에 버튼으로도 호출 가능 */
+  /**
+   * 빠른 추가 모달 열기.
+   * 로그인 상태이고 프로젝트가 있을 때만 동작.
+   */
   const handleOpenQuickAdd = () => {
     if (user && projects.length > 0) {
       setIsQuickAddOpen(true);
     }
   };
 
-  /* [추가] Ctrl/Cmd + K 단축키로 빠른 추가 모달 열기 */
+  // Ctrl/Cmd + K 단축키로 빠른 추가 모달 열기
   useKeyboardShortcuts('k', handleOpenQuickAdd, { ctrl: true });
 
   useEffect(() => {

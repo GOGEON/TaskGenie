@@ -1,3 +1,12 @@
+/**
+ * 메인 레이아웃 컴포넌트
+ * 
+ * 애플리케이션의 전체 레이아웃 구조를 정의.
+ * React DnD Provider를 설정하고, 사이드바, 헤더, 메인 콘텐츠 영역을 배치.
+ * 모바일 반응형 사이드바 처리를 포함.
+ * 
+ * @module MainLayout
+ */
 import React from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -6,6 +15,22 @@ import Header from './Header';
 import CustomDragLayer from './CustomDragLayer';
 
 /* [추가] Quick Add 모달을 열기 위한 onOpenQuickAdd prop 추가 */
+
+/**
+ * MainLayout 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Object} props.user - 로그인한 사용자 정보
+ * @param {Array} props.projects - 프로젝트 목록
+ * @param {Object} props.activeProject - 현재 활성화된 프로젝트
+ * @param {Function} props.onSelectProject - 프로젝트 선택 핸들러
+ * @param {Function} props.onAddNewProject - 새 프로젝트 추가 핸들러
+ * @param {Function} props.onLogout - 로그아웃 핸들러
+ * @param {Function} props.onDeleteProject - 프로젝트 삭제 핸들러
+ * @param {Function} props.onOpenQuickAdd - 빠른 추가 모달 열기 핸들러
+ * @param {React.ReactNode} props.children - 자식 컴포넌트 (페이지 내용)
+ * @returns {JSX.Element} 앱 레이아웃
+ */
 const MainLayout = ({ 
   user, 
   projects, 

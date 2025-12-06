@@ -1,3 +1,18 @@
+/**
+ * 홈 페이지 컴포넌트
+ * 
+ * 프로젝트의 할 일 목록을 표시하고 관리하는 메인 페이지.
+ * 
+ * 주요 기능:
+ * - 할 일 목록 트리 구조 표시
+ * - 드래그 앤 드롭으로 순서 변경
+ * - 체크박스로 완료 상태 토글
+ * - 컨텍스트 메뉴로 수정/삭제/서브태스크 생성
+ * - AI 기반 서브태스크 자동 생성
+ * - 자연어 입력으로 작업 추가
+ * 
+ * @module HomePage
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import update from 'immutability-helper';
@@ -5,7 +20,6 @@ import ToDoListDisplay from '../components/ToDoListDisplay';
 import ContextMenu from '../components/ContextMenu';
 import EditModal from '../components/EditModal';
 import SkeletonToDoItem from '../components/SkeletonToDoItem';
-/* [삭제] KeywordInput 컴포넌트 제거 (이전: 메인 화면 상단 키워드 입력 영역) */
 import {
   generateSubtasks,
   updateToDoItem,
@@ -15,6 +29,19 @@ import {
   createTodoItemFromNaturalLanguage,
 } from '../services/todoApiService';
 
+
+// ==================== 헬퍼 함수 ====================
+
+/**
+ * 특정 부모의 자식 항목들 순서 재정렬.
+ * 드래그 앤 드롭 시 사용.
+ * 
+ * @param {Array} items - 전체 항목 배열
+ * @param {string} parentId - 부모 항목 ID
+ * @param {number} dragIndex - 드래그 시작 인덱스
+ * @param {number} hoverIndex - 드랍 위치 인덱스
+ * @returns {Array} 재정렬된 항목 배열
+ */
 const reorderChildren = (items, parentId, dragIndex, hoverIndex) => {
   return items.map(item => {
     if (item.id === parentId) {
@@ -34,7 +61,14 @@ const reorderChildren = (items, parentId, dragIndex, hoverIndex) => {
   });
 };
 
-// Helper functions
+
+/**
+ * 트리 구조에서 특정 ID의 항목 검색.
+ * 
+ * @param {Array} items - 검색할 항목 배열
+ * @param {string} itemId - 찾을 항목 ID
+ * @returns {Object|null} 찾은 항목 또는 null
+ */
 const findItemRecursive = (items, itemId) => {
   for (let item of items) {
     if (item.id === itemId) return item;
@@ -46,6 +80,14 @@ const findItemRecursive = (items, itemId) => {
   return null;
 };
 
+
+/**
+ * 트리 구조에서 특정 항목 업데이트.
+ * 
+ * @param {Array} items - 전체 항목 배열
+ * @param {Object} updatedItem - 업데이트할 항목 (id 포함)
+ * @returns {Array} 업데이트된 항목 배열
+ */
 const updateItemInArray = (items, updatedItem) => {
   return items.map(item => {
     if (item.id === updatedItem.id) return updatedItem;
@@ -56,6 +98,15 @@ const updateItemInArray = (items, updatedItem) => {
   });
 };
 
+
+/**
+ * 트리 구조에서 특정 항목의 설명 수정.
+ * 
+ * @param {Array} items - 전체 항목 배열
+ * @param {string} itemId - 수정할 항목 ID
+ * @param {string} newDescription - 새 설명
+ * @returns {Array} 수정된 항목 배열
+ */
 const editItemRecursive = (items, itemId, newDescription) => {
   return items.map(item => {
     if (item.id === itemId) return { ...item, description: newDescription };
@@ -66,6 +117,14 @@ const editItemRecursive = (items, itemId, newDescription) => {
   });
 };
 
+
+/**
+ * 트리 구조에서 특정 항목 삭제 (자식 포함).
+ * 
+ * @param {Array} items - 전체 항목 배열
+ * @param {string} itemId - 삭제할 항목 ID
+ * @returns {Array} 삭제된 항목이 제외된 배열
+ */
 const deleteItemRecursive = (items, itemId) => {
   console.log('Deleting item:', itemId);
   return items
@@ -78,6 +137,14 @@ const deleteItemRecursive = (items, itemId) => {
     });
 };
 
+
+/**
+ * 모든 자식 항목의 완료 상태 일괄 설정.
+ * 
+ * @param {Array} items - 처리할 항목 배열
+ * @param {boolean} isCompleted - 설정할 완료 상태
+ * @returns {Array} 완료 상태가 변경된 항목 배열
+ */
 const setChildrenCompletionRecursive = (items, isCompleted) => {
   return items.map(item => {
     let newChildren = item.children;
@@ -88,6 +155,15 @@ const setChildrenCompletionRecursive = (items, isCompleted) => {
   });
 };
 
+
+/**
+ * 특정 항목과 모든 자식의 완료 상태 토글.
+ * 
+ * @param {Array} items - 전체 항목 배열
+ * @param {string} itemId - 토글할 항목 ID
+ * @param {boolean} isCompleted - 새 완료 상태
+ * @returns {Array} 토글된 항목 배열
+ */
 const toggleItemAndChildren = (items, itemId, isCompleted) => {
   return items.map(item => {
     if (item.id === itemId) {
@@ -104,6 +180,14 @@ const toggleItemAndChildren = (items, itemId, isCompleted) => {
   });
 };
 
+
+/**
+ * 부모 항목의 완료 상태를 자식 상태에 맞게 동기화.
+ * 모든 자식이 완료되면 부모도 완료로 설정.
+ * 
+ * @param {Array} items - 동기화할 항목 배열
+ * @returns {Array} 동기화된 항목 배열
+ */
 const synchronizeParentStates = (items) => {
   let changed = false;
   const newItems = items.map(item => {
@@ -124,18 +208,30 @@ const synchronizeParentStates = (items) => {
   return newItems;
 };
 
+
+/**
+ * 홈 페이지 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {Object} props.project - 현재 활성 프로젝트
+ * @param {Function} props.setProjects - 전역 프로젝트 상태 설정 함수
+ * @param {Function} props.triggerRefetch - 데이터 재조회 트리거 함수
+ * @param {Function} props.onOpenQuickAdd - 빠른 추가 모달 열기 함수
+ * @returns {JSX.Element} 홈 페이지 요소
+ */
 function HomePage({ project, setProjects, triggerRefetch, onOpenQuickAdd }) {
+  // ==================== 컴포넌트 상태 ====================
   const [currentProject, setCurrentProject] = useState(project);
-  const [contextMenu, setContextMenu] = useState(null);
-  const [editingItem, setEditingItem] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatingItemId, setGeneratingItemId] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);       // 컨텍스트 메뉴 상태
+  const [editingItem, setEditingItem] = useState(null);       // 수정 중인 항목 ID
+  const [isGenerating, setIsGenerating] = useState(false);    // AI 생성 중 여부
+  const [generatingItemId, setGeneratingItemId] = useState(null);  // AI 생성 중인 항목 ID
   const taskInputRef = React.useRef(null);
-  /* [추가] 빠른 클릭 시 경쟁 상태 방지를 위한 최신 프로젝트 상태 참조 */
+  
+  // 낙관적 업데이트를 위한 참조
   const projectRef = React.useRef(currentProject);
-  /* [추가] 체크박스 토글 요청 큐 - 모든 클릭을 순차 처리 */
-  const toggleQueueRef = React.useRef([]);
-  const isProcessingQueueRef = React.useRef(false);
+  const toggleQueueRef = React.useRef([]);          // 체크박스 토글 요청 큐
+  const isProcessingQueueRef = React.useRef(false); // 큐 처리 중 여부
 
   useEffect(() => {
     setCurrentProject(project);

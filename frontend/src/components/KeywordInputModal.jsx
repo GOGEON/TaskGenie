@@ -1,11 +1,26 @@
 /* [추가] 키워드 입력 모달 컴포넌트 */
 /* 이전: 브라우저 기본 prompt() 사용 - 단순하지만 스타일링 불가 */
 /* 현재: 커스텀 모달 - 유효성 검증, 추천 키워드, 문자 수 제한 표시 */
+
+/**
+ * 키워드 입력 모달 컴포넌트
+ * 
+ * 새 프로젝트 생성 시 키워드를 입력받는 모달.
+ * 유효성 검사(길이 제한)와 추천 키워드 기능을 제공.
+ * 
+ * @module KeywordInputModal
+ */
 import React, { useState, useRef, useEffect } from 'react';
 
 /**
- * KeywordInputModal 컴포넌트
- * 프로젝트 키워드 입력을 위한 모달
+ * KeywordInputModal 컴포넌트.
+ * 
+ * @param {Object} props - 컴포넌트 속성
+ * @param {boolean} props.isOpen - 모달 표시 여부
+ * @param {Function} props.onClose - 모달 닫기 콜백
+ * @param {Function} props.onSubmit - 키워드 제출 콜백
+ * @param {string} [props.title="새 프로젝트 만들기"] - 모달 제목
+ * @returns {JSX.Element|null} 키워드 입력 모달
  */
 const KeywordInputModal = ({ isOpen, onClose, onSubmit, title = "새 프로젝트 만들기" }) => {
   const [keyword, setKeyword] = useState('');

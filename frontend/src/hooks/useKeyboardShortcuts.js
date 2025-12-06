@@ -1,21 +1,25 @@
-/* [추가] 전역 키보드 단축키 훅 */
-/* 목적: Ctrl/Cmd + K 등의 전역 단축키를 감지하고 처리 */
-import { useEffect } from 'react';
-
 /**
- * useKeyboardShortcuts 훅
- * 전역 키보드 단축키를 감지하고 콜백 함수를 실행
+ * useKeyboardShortcuts 커스텀 훅
  * 
- * @param {string} key - 감지할 키 (예: 'k', 'n', 's')
- * @param {function} callback - 단축키 감지 시 실행할 콜백 함수
- * @param {object} options - 옵션 { ctrl: boolean, shift: boolean, alt: boolean }
+ * 전역 키보드 이벤트를 감지하여 단축키 기능을 구현.
+ * 입력 필드(input, textarea)에서의 이벤트는 기본적으로 무시하나,
+ * 모달 등 특정 상황에서는 예외적으로 동작하도록 처리.
+ * 
+ * 주요 기능:
+ * - 조합 키 지원 (Ctrl, Shift, Alt)
+ * - 입력 필드 포커스 시 단축키 무시 처리
+ * - 이벤트 리스너 자동 등록 및 해제
+ * 
+ * @param {string} key - 감지할 키 값 (예: 'k', 'Enter')
+ * @param {Function} callback - 단축키 발생 시 실행할 콜백
+ * @param {Object} [options] - 옵션 객체
+ * @param {boolean} [options.ctrl=false] - Ctrl (Mac은 Cmd) 키 필요 여부
+ * @param {boolean} [options.shift=false] - Shift 키 필요 여부
+ * @param {boolean} [options.alt=false] - Alt 키 필요 여부
  * 
  * @example
- * // Ctrl/Cmd + K 감지
- * useKeyboardShortcuts('k', () => setModalOpen(true), { ctrl: true });
- * 
- * // Ctrl/Cmd + Shift + N 감지
- * useKeyboardShortcuts('n', () => createNew(), { ctrl: true, shift: true });
+ * // Ctrl+K로 검색 모달 열기
+ * useKeyboardShortcuts('k', () => setIsOpen(true), { ctrl: true });
  */
 const useKeyboardShortcuts = (key, callback, options = {}) => {
   const {
