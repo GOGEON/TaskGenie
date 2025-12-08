@@ -21,6 +21,8 @@
  * // Ctrl+K로 검색 모달 열기
  * useKeyboardShortcuts('k', () => setIsOpen(true), { ctrl: true });
  */
+import { useEffect } from 'react';
+
 const useKeyboardShortcuts = (key, callback, options = {}) => {
   const {
     ctrl = false,
