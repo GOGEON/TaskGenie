@@ -252,6 +252,32 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
           </div>
           <span className="text-sm sm:text-base text-slate-700">도움말 & 리소스</span>
         </div>
+        {/* [추가] 회원탈퇴 버튼 */}
+        <div 
+          onClick={async () => {
+            const confirmFirst = window.confirm('정말로 회원탈퇴를 하시겠습니까?\n\n모든 프로젝트와 할 일 데이터가 영구적으로 삭제됩니다.');
+            if (!confirmFirst) return;
+            
+            const confirmSecond = window.confirm('⚠️ 최종 확인\n\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?');
+            if (!confirmSecond) return;
+            
+            try {
+              const api = (await import('../services/api')).default;
+              await api.delete('/auth/me');
+              alert('회원탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.');
+              onLogout();
+            } catch (error) {
+              console.error('Failed to delete account:', error);
+              alert('회원탈퇴에 실패했습니다. 다시 시도해주세요.');
+            }
+          }}
+          className="flex items-center space-x-3 py-2.5 sm:py-2 px-3 rounded hover:bg-red-50 active:bg-red-100 cursor-pointer min-h-[44px] sm:min-h-0 touch-manipulation group"
+        >
+          <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+            <i className="ri-user-unfollow-line text-slate-400 group-hover:text-red-500 text-lg sm:text-base"></i>
+          </div>
+          <span className="text-sm sm:text-base text-slate-500 group-hover:text-red-600">회원탈퇴</span>
+        </div>
       </div>
       
       {/* Resize Handle - 데스크톱에서만 표시 */}

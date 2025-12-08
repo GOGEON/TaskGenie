@@ -143,3 +143,39 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
             self.updated_at = data.get('updated_at')
     
     return UserObject(user)
+
+
+# [추가] 회원탈퇴 - 사용자 및 관련 데이터 삭제
+def delete_user(user_id: str) -> bool:
+    """
+    사용자 계정 삭제.
+    
+    사용자 정보와 해당 사용자의 모든 프로젝트, 할 일 항목을 삭제.
+    
+    Args:
+        user_id: 삭제할 사용자 ID
+    
+    Returns:
+        삭제 성공 시 True
+    """
+    db = get_firestore_db()
+    
+    # 1. 사용자의 모든 할 일 목록(프로젝트) 조회
+    todo_lists = db.collection('todo_lists').where('user_id', '==', user_id).stream()
+    
+    for todo_list in todo_lists:
+        list_id = todo_list.id
+        
+        # 2. 해당 프로젝트의 모든 할 일 항목 삭제
+        todo_items = db.collection('todo_items').where('todo_list_id', '==', list_id).stream()
+        for item in todo_items:
+            db.collection('todo_items').document(item.id).delete()
+        
+        # 3. 프로젝트 삭제
+        db.collection('todo_lists').document(list_id).delete()
+    
+    # 4. 사용자 삭제
+    db.collection('users').document(user_id).delete()
+    
+    return True
+

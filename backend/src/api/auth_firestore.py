@@ -364,3 +364,31 @@ def kakao_callback(callback_req: KakaoCallbackRequest):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Kakao login failed: {str(e)}"
         )
+
+
+# [추가] 회원탈퇴 엔드포인트
+@router.delete("/me", status_code=status.HTTP_200_OK)
+def delete_my_account(current_user = Depends(auth_service.get_current_user)):
+    """
+    현재 로그인한 사용자의 계정 삭제 (회원탈퇴).
+    
+    사용자 정보와 해당 사용자의 모든 프로젝트, 할 일 항목이 삭제됨.
+    
+    Returns:
+        삭제 성공 메시지
+    """
+    if not USE_FIRESTORE:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Account deletion is only supported with Firestore"
+        )
+    
+    try:
+        auth_service.delete_user(current_user.id)
+        return {"message": "Account deleted successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete account: {str(e)}"
+        )
+
