@@ -98,7 +98,8 @@ const OnboardingGuide = ({ onClose, onSkip }) => {
   const currentStepData = steps[currentStep];
 
   return (
-    <div className="fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+    // <!-- [수정] 온보딩 가이드 배경색을 흰색으로 변경 -->
+    <div className="fixed inset-0 bg-white flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-fade-in border border-slate-200">
         {/* 진행률 표시 */}
         <div className="h-1 bg-slate-100">

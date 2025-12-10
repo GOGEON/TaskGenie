@@ -124,6 +124,8 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showPriorityPicker, setShowPriorityPicker] = useState(false);
   const [openUpwards, setOpenUpwards] = useState(false);
+  // <!-- [추가] AI 하위 항목 자동 생성 체크박스 기능 추가 -->
+  const [generateSubtasksEnabled, setGenerateSubtasksEnabled] = useState(false);
   
   const inputRef = useRef(null);
   const datePickerContainerRef = useRef(null);
@@ -154,6 +156,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
       setShowDatePicker(false);
       setShowTimePicker(false);
       setShowPriorityPicker(false);
+      setGenerateSubtasksEnabled(false); // <!-- [추가] 체크박스 초기화 -->
       setPlaceholder(getParserExamples('ko'));
       
       if (activeProjectId) {
@@ -186,13 +189,15 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
       return;
     }
     
-    onSubmit(trimmedText, selectedProjectId, selectedParentId);
+    // <!-- [수정] AI 하위 항목 생성 체크박스 상태 전달 -->
+    onSubmit(trimmedText, selectedProjectId, selectedParentId, generateSubtasksEnabled);
     
     setText('');
     setError('');
     setParsedData(null);
     setManualPriority('none');
     setSelectedParentId(null);
+    setGenerateSubtasksEnabled(false); // <!-- [추가] 체크박스 초기화 -->
   };
 
   const handleKeyDown = (e) => {
@@ -424,6 +429,21 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
                 setSelectedParentId(parentId);
               }}
             />
+          </div>
+
+          {/* <!-- [추가] AI 하위 항목 자동 생성 체크박스 --> */}
+          <div className="mb-4">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={generateSubtasksEnabled}
+                onChange={(e) => setGenerateSubtasksEnabled(e.target.checked)}
+                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
+              />
+              <span className="text-sm text-slate-600 group-hover:text-slate-800 transition-colors">
+                하위 항목 생성
+              </span>
+            </label>
           </div>
 
           {/* 버튼 */}

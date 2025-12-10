@@ -164,62 +164,58 @@ function ToDoListDisplay({
   const progress = calculateRecursiveProgress(todoList.items);
 
   return (
-    <>
-      <div className="bg-white rounded-lg p-3 sm:p-4 md:p-6 text-left w-full">
-        {/* [수정] 프로젝트 제목 드롭다운 아이콘 제거 (이전: 제목 옆에 ▼ 아이콘 표시) */}
-        {/* [추가] 클릭 시 인라인 수정 가능한 제목 입력 필드 */}
-        <div className="flex justify-between items-center">
-          {isEditingKeyword ? (
-            <input
-              type="text"
-              value={editedKeyword}
-              onChange={(e) => setEditedKeyword(e.target.value)}
-              onKeyDown={handleKeywordKeyDown}
-              onBlur={handleKeywordSave}
-              autoFocus
-              style={{ fontWeight: 700 }}
-              className="flex-1 text-2xl sm:text-3xl border border-slate-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 px-2 py-1 rounded-lg transition-all text-slate-800"
-            />
-          ) : (
-            <h2 
-              style={{ fontWeight: 700 }}
-              className="text-2xl sm:text-3xl truncate cursor-pointer hover:bg-slate-50 px-2 py-1 rounded-lg transition-all text-slate-800"
-              onClick={handleKeywordClick}
-              title="클릭하여 수정"
-            >
-              {todoList.keyword}
-            </h2>
-          )}
-        </div>
-
-        <>
-          <div className="mt-3 sm:mt-4 mb-3 sm:mb-4">
-            <ProgressBar progress={progress} />
-          </div>
-          <ul className="list-none p-0">
-            {todoList.items.map((item, index) => (
-              <ToDoItem
-                key={item.id}
-                index={index}
-                item={item}
-                parentId={null}
-                moveItem={moveItem}
-                onDropItem={onDropItem}
-                onToggleItemComplete={onToggleItemComplete}
-                onGenerateSubtasks={onGenerateSubtasks}
-                onOpenContextMenu={onOpenContextMenu}
-                onEditItem={onEditItem}
-                onDeleteItem={onDeleteItem}
-                onUpdatePriority={onUpdatePriority}
-                isGenerating={isGenerating}
-                generatingItemId={generatingItemId}
-              />
-            ))}
-          </ul>
-        </>
-        {/* [삭제] 하단 '목록 삭제' 버튼 제거 (이전: 리스트 하단에 명시적 삭제 버튼) */}
+    // <!-- [수정] 모바일 패딩 줄이기 -->
+    <div className="bg-white rounded-lg p-2 sm:p-4 md:p-6 text-left w-full">
+      {/* [수정] 프로젝트 제목 드롭다운 아이콘 제거 (이전: 제목 옆에 ▼ 아이콘 표시) */}
+      {/* [추가] 클릭 시 인라인 수정 가능한 제목 입력 필드 */}
+      <div className="flex justify-between items-center">
+        {isEditingKeyword ? (
+          <input
+            type="text"
+            value={editedKeyword}
+            onChange={(e) => setEditedKeyword(e.target.value)}
+            onKeyDown={handleKeywordKeyDown}
+            onBlur={handleKeywordSave}
+            autoFocus
+            style={{ fontWeight: 700 }}
+            className="flex-1 text-xl sm:text-2xl md:text-3xl border border-slate-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 px-2 py-1 rounded-lg transition-all text-slate-800"
+          />
+        ) : (
+          <h2 
+            style={{ fontWeight: 700 }}
+            className="text-xl sm:text-2xl md:text-3xl truncate cursor-pointer hover:bg-slate-50 px-2 py-1 rounded-lg transition-all text-slate-800"
+            onClick={handleKeywordClick}
+            title="클릭하여 수정"
+          >
+            {todoList.keyword}
+          </h2>
+        )}
       </div>
-    </>
+
+      <div className="mt-2 sm:mt-3 mb-2 sm:mb-3">
+        <ProgressBar progress={progress} />
+      </div>
+      <ul className="list-none p-0">
+        {todoList.items.map((item, index) => (
+          <ToDoItem
+            key={item.id}
+            index={index}
+            item={item}
+            parentId={null}
+            moveItem={moveItem}
+            onDropItem={onDropItem}
+            onToggleItemComplete={onToggleItemComplete}
+            onGenerateSubtasks={onGenerateSubtasks}
+            onOpenContextMenu={onOpenContextMenu}
+            onEditItem={onEditItem}
+            onDeleteItem={onDeleteItem}
+            onUpdatePriority={onUpdatePriority}
+            isGenerating={isGenerating}
+            generatingItemId={generatingItemId}
+          />
+        ))}
+      </ul>
+    </div>
   );
 }
 

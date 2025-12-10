@@ -313,39 +313,34 @@ function HomePage({ project, setProjects, triggerRefetch, onOpenQuickAdd }) {
     }
   };
 
-  /* [수정] 체크박스 토글 실제 실행 함수 - 현재 상태에서 영향받은 모든 항목 저장 */
-  const executeToggle = async (itemId, isCompleted) => {
+  /* [수정] 체크박스 토글 실제 실행 함수 - 변경된 모든 항목(부모 포함) 저장 */
+  const executeToggle = async (itemId, isCompleted, originalItems) => {
     try {
-      // projectRef.current에서 해당 항목과 그 자식들의 현재 상태를 찾아서 저장
-      const collectItemAndChildren = (items, targetId) => {
+      // <!-- [수정] 부모 항목 완료 상태도 DB에 저장되도록 수정 - 토글 전후 상태 비교하여 변경된 모든 항목 저장 -->
+      // 토글 전후 상태를 비교하여 변경된 모든 항목 수집 (부모 포함)
+      const collectChangedItems = (origItems, updItems) => {
         const result = [];
-        const findAndCollect = (itemsList) => {
-          for (const item of itemsList) {
-            if (item.id === targetId) {
-              // 이 항목과 모든 자식 수집
-              const collectAll = (i) => {
-                result.push({ id: i.id, is_completed: i.is_completed });
-                if (i.children?.length) {
-                  i.children.forEach(collectAll);
-                }
-              };
-              collectAll(item);
-              return true;
+        const compare = (origList, updList) => {
+          for (const updItem of updList) {
+            const origItem = origList?.find(o => o.id === updItem.id);
+            // 원래 없었거나 is_completed 상태가 변경된 경우
+            if (!origItem || origItem.is_completed !== updItem.is_completed) {
+              result.push({ id: updItem.id, is_completed: updItem.is_completed });
             }
-            if (item.children?.length && findAndCollect(item.children)) {
-              return true;
+            // 자식들도 재귀적으로 비교
+            if (updItem.children?.length) {
+              compare(origItem?.children || [], updItem.children);
             }
           }
-          return false;
         };
-        findAndCollect(items);
+        compare(origItems, updItems);
         return result;
       };
       
-      const affectedItems = collectItemAndChildren(projectRef.current.items, itemId);
+      const changedItems = collectChangedItems(originalItems, projectRef.current.items);
       
-      // 영향받은 모든 항목 업데이트
-      const promises = affectedItems.map(item =>
+      // 변경된 모든 항목 업데이트 (부모 포함)
+      const promises = changedItems.map(item =>
         updateToDoItem(item.id, { is_completed: item.is_completed })
       );
       await Promise.all(promises);
@@ -367,8 +362,9 @@ function HomePage({ project, setProjects, triggerRefetch, onOpenQuickAdd }) {
     isProcessingQueueRef.current = true;
     
     while (toggleQueueRef.current.length > 0) {
-      const { itemId, isCompleted } = toggleQueueRef.current.shift();
-      await executeToggle(itemId, isCompleted);
+      // <!-- [수정] 토글 전 상태를 큐에 저장하여 executeToggle에서 부모 상태 변경도 감지 -->
+      const { itemId, isCompleted, originalItems } = toggleQueueRef.current.shift();
+      await executeToggle(itemId, isCompleted, originalItems);
     }
     
     // [추가] 모든 토글 완료 후 최종 order 동기화
@@ -406,7 +402,9 @@ function HomePage({ project, setProjects, triggerRefetch, onOpenQuickAdd }) {
 
   const handleToggleItemComplete = (itemId, isCompleted) => {
     /* [수정] 큐에 요청 추가하고 즉시 낙관적 UI 업데이트 */
-    toggleQueueRef.current.push({ itemId, isCompleted });
+    // <!-- [수정] 토글 전 상태를 저장하여 나중에 변경된 항목(부모 포함) 감지 -->
+    const originalItems = JSON.parse(JSON.stringify(projectRef.current.items));
+    toggleQueueRef.current.push({ itemId, isCompleted, originalItems });
     
     // 즉시 낙관적 UI 업데이트
     const baseProject = projectRef.current;
@@ -662,7 +660,8 @@ function HomePage({ project, setProjects, triggerRefetch, onOpenQuickAdd }) {
   }
 
   return (
-    <div className="container p-8 max-w-5xl mx-auto" style={{ textAlign: 'left' }}>
+    // <!-- [수정] 모바일 화면 답답함 해소 - 패딩 줄이고 여백 최적화 -->
+    <div className="container p-2 sm:p-4 md:p-8 max-w-5xl mx-auto" style={{ textAlign: 'left' }}>
       {contextMenu && (() => {
         /* [수정] 컨텍스트 메뉴가 열려있을 때 실시간으로 최신 항목 데이터를 조회 */
         /* 이를 통해 우선순위나 마감일 변경 시 메뉴 내에서도 즉시 반영됨 */

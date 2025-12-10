@@ -148,14 +148,15 @@ function App() {
   };
 
   /* [수정] 빠른 추가 모달에서 작업 추가 처리 - 클라이언트 사이드 자연어 파싱 (AI 없음) */
-  const handleQuickAddSubmit = async (text, projectId, parentId = null) => {
+  // <!-- [수정] AI 하위 항목 생성 체크박스 활성화 시 generateSubtasks API 호출 -->
+  const handleQuickAddSubmit = async (text, projectId, parentId = null, generateSubtasksFlag = false) => {
     try {
       // 클라이언트 사이드에서 정규식으로 파싱 (AI 호출 없음)
       const { parseNaturalLanguage } = await import('./utils/nlpParser');
       const parsed = parseNaturalLanguage(text);
       
       const api = (await import('./services/api')).default;
-      await api.post('/todos/items', {
+      const response = await api.post('/todos/items', {
         description: parsed.description,
         list_id: projectId,
         parent_id: parentId, // [추가] 하위 작업 생성을 위한 parent_id 전달
@@ -163,7 +164,20 @@ function App() {
         due_date: parsed.due_date
       });
       
-      toast.success('작업이 추가되었습니다!');
+      // <!-- [추가] AI 하위 항목 생성 체크박스 활성화 시 서브태스크 생성 -->
+      if (generateSubtasksFlag && response?.data?.id) {
+        await toast.promise(
+          (await import('./services/todoApiService')).generateSubtasks(response.data.id),
+          {
+            loading: 'AI가 하위 항목을 생성하는 중...',
+            success: '하위 항목이 생성되었습니다!',
+            error: '하위 항목 생성에 실패했습니다.'
+          }
+        );
+      } else {
+        toast.success('작업이 추가되었습니다!');
+      }
+      
       triggerRefetch();
       setIsQuickAddOpen(false);
     } catch (error) {
