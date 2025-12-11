@@ -73,7 +73,8 @@ const CustomDatePicker = ({
         newDate = addDays(today, 1);
         break;
       case 'nextWeek':
-        newDate = nextMonday(today);
+        // <!-- [수정] '다음 주' 버튼을 7일 뒤로 변경 (기존: 다음주 월요일) -->
+        newDate = addDays(today, 7);
         break;
       case 'weekend':
         newDate = nextSaturday(today);
@@ -176,7 +177,8 @@ const CustomDatePicker = ({
               >
                 <RiCalendarEventLine className="text-purple-600 text-lg" />
                 <span className="flex-1">다음 주</span>
-                <span className="text-xs text-slate-400">{format(nextMonday(new Date()), 'M월 d일', { locale: ko })}</span>
+                {/* <!-- [수정] 7일 뒤 날짜 표시 --> */}
+                <span className="text-xs text-slate-400">{format(addDays(new Date(), 7), 'M월 d일', { locale: ko })}</span>
               </button>
 
               <button 
