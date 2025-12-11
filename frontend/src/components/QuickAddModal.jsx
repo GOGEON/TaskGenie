@@ -131,11 +131,19 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
   const datePickerContainerRef = useRef(null);
 
   /* [추가] 스마트 포지셔닝: 화면 아래 공간이 부족하면 위로 열림 */
+  /* <!-- [수정] 모바일에서는 항상 하단으로만 열림 --> */
   useEffect(() => {
     if (showDatePicker && datePickerContainerRef.current) {
+      // 모바일(640px 이하)에서는 항상 하단으로 열림
+      const isMobile = window.innerWidth < 640;
+      if (isMobile) {
+        setOpenUpwards(false);
+        return;
+      }
+      
       const rect = datePickerContainerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      const datePickerHeight = 600; // 달력 + 시간 선택 영역 예상 높이 (확장됨)
+      const datePickerHeight = 600;
       
       if (spaceBelow < datePickerHeight) {
         setOpenUpwards(true);
