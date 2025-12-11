@@ -441,7 +441,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
                 className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
               />
               <span className="text-sm text-slate-600 group-hover:text-slate-800 transition-colors">
-                하위 항목 생성
+                AI로 하위 항목 생성
               </span>
             </label>
           </div>
