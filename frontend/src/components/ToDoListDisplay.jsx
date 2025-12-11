@@ -183,7 +183,7 @@ function ToDoListDisplay({
         ) : (
           <h2 
             style={{ fontWeight: 700 }}
-            className="text-xl sm:text-2xl md:text-3xl truncate cursor-pointer hover:bg-slate-50 px-2 py-1 rounded-lg transition-all text-slate-800"
+            className="text-lg sm:text-xl md:text-2xl lg:text-3xl truncate cursor-pointer hover:bg-slate-50 px-2 py-1 rounded-lg transition-all text-slate-800"
             onClick={handleKeywordClick}
             title="클릭하여 수정"
           >

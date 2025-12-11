@@ -171,7 +171,7 @@ const ToDoItem = ({
           transform: isDragging ? 'scale(1.02)' : 'scale(1)',
         }}
         className={`
-          flex items-center justify-between py-2 sm:py-1 border-b border-slate-100 
+          flex items-center justify-between py-1.5 sm:py-2 border-b border-slate-100 
           group bg-white touch-manipulation item-fade-in
           ${isDeleting ? 'item-slide-out' : ''}
         `}
@@ -231,7 +231,8 @@ const ToDoItem = ({
             </div>
           </button>
 
-          <span className={`flex-grow p-1 pr-2 ml-2 break-words ${item.is_completed ? 'text-slate-400 line-through' : 'text-slate-800'} text-sm sm:text-base`}>
+          {/* <!-- [수정] 모바일에서 더 컴팩트한 폰트 --> */}
+          <span className={`flex-grow p-1 pr-2 ml-1.5 sm:ml-2 break-words ${item.is_completed ? 'text-slate-400 line-through' : 'text-slate-800'} text-xs sm:text-sm md:text-base`}>
             {item.description}
           </span>
           
