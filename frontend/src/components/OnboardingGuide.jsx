@@ -137,10 +137,11 @@ const OnboardingGuide = ({ onClose, onSkip }) => {
           </div>
 
           {/* 버튼 그룹 */}
-          <div className="flex items-center justify-between">
+          {/* <!-- [수정] 모바일에서 글자 줄바꿈 방지를 위해 whitespace-nowrap 및 flex-wrap 적용 --> */}
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <button
               onClick={handleSkipAll}
-              className="text-slate-500 hover:text-slate-700 text-sm font-medium transition-colors"
+              className="text-slate-500 hover:text-slate-700 text-sm font-medium transition-colors whitespace-nowrap"
             >
               건너뛰기
             </button>
@@ -167,14 +168,14 @@ const OnboardingGuide = ({ onClose, onSkip }) => {
                 {currentStep > 0 && (
                   <button
                     onClick={handlePrevious}
-                    className="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium transition-colors"
+                    className="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium transition-colors whitespace-nowrap"
                   >
                     이전
                   </button>
                 )}
                 <button
                   onClick={handleNext}
-                  className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-1"
+                  className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-1 whitespace-nowrap"
                 >
                   {currentStep === steps.length - 1 ? '시작하기' : '다음'}
                   <RiArrowRightLine />
