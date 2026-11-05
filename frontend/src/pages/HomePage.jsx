@@ -332,13 +332,8 @@ function HomePage({ project, setProjects, onOpenQuickAdd }) {
           moveItem={moveItem}
           onDropItem={handleDropAndSave}
           onToggleItemComplete={handleToggleItemComplete}
-          onEditItem={handleEditItem}
-          onDeleteItem={handleDeleteItem}
-          onGenerateSubtasks={handleGenerateSubtasks}
           onOpenContextMenu={handleOpenContextMenu}
           onUpdateKeyword={handleUpdateKeyword}
-          onUpdatePriority={handleUpdatePriority}
-          isGenerating={generatingItemId !== null}
           generatingItemId={generatingItemId}
           onOpenQuickAdd={onOpenQuickAdd}
         />

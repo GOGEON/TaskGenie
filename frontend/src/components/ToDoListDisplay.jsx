@@ -28,12 +28,7 @@ import { calculateProgress } from '../utils/treeUtils';
  * @param {Function} props.moveItem - 아이템 이동 핸들러 (DnD)
  * @param {Function} props.onDropItem - 아이템 드롭 핸들러
  * @param {Function} props.onToggleItemComplete - 완료 상태 토글 핸들러
- * @param {Function} props.onGenerateSubtasks - 서브태스크 생성 핸들러
  * @param {Function} props.onOpenContextMenu - 컨텍스트 메뉴 오픈 핸들러
- * @param {Function} props.onEditItem - 아이템 수정 핸들러
- * @param {Function} props.onDeleteItem - 아이템 삭제 핸들러
- * @param {Function} props.onUpdatePriority - 우선순위 업데이트 핸들러
- * @param {boolean} props.isGenerating - AI 생성 중 여부
  * @param {string} props.generatingItemId - 생성 중인 아이템 ID
  * @param {Function} props.onUpdateKeyword - 프로젝트 제목 수정 핸들러
  * @param {Function} props.onOpenQuickAdd - 빠른 추가 모달 오픈 핸들러
@@ -44,12 +39,7 @@ function ToDoListDisplay({
   moveItem,
   onDropItem,
   onToggleItemComplete,
-  onGenerateSubtasks,
   onOpenContextMenu,
-  onEditItem,
-  onDeleteItem,
-  onUpdatePriority, /* [추가] 우선순위 업데이트 핸들러 */
-  isGenerating,
   generatingItemId,
   onUpdateKeyword, /* [추가] 프로젝트 키워드 수정 핸들러 */
   onOpenQuickAdd, /* [추가] 빠른 추가 모달 열기 핸들러 */
@@ -145,12 +135,7 @@ function ToDoListDisplay({
             moveItem={moveItem}
             onDropItem={onDropItem}
             onToggleItemComplete={onToggleItemComplete}
-            onGenerateSubtasks={onGenerateSubtasks}
             onOpenContextMenu={onOpenContextMenu}
-            onEditItem={onEditItem}
-            onDeleteItem={onDeleteItem}
-            onUpdatePriority={onUpdatePriority}
-            isGenerating={isGenerating}
             generatingItemId={generatingItemId}
           />
         ))}

@@ -8,18 +8,58 @@ Google Gemini AI를 활용한 작업 생성 및 자연어 파싱 기능 제공.
 - 메인 작업에서 세부 작업(서브태스크) 분해
 - 자연어 문장에서 작업 속성 추출 (날짜, 우선순위 등)
 """
-from typing import List
-import google.generativeai as genai
-import os
-import re
-from dotenv import load_dotenv
 from datetime import datetime, timedelta
+from typing import Any, List, Optional
 from zoneinfo import ZoneInfo
 import json
+import logging
+import os
+import re
+
+import google.generativeai as genai
+from dotenv import load_dotenv
 
 # 환경 변수 로드 및 Gemini API 키 설정
 load_dotenv()
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
+
+logger = logging.getLogger(__name__)
+
+MODEL_NAME = 'gemini-2.5-flash'
+KST = ZoneInfo("Asia/Seoul")
+
+
+# ==================== 내부 헬퍼 ====================
+
+def _generate(prompt: str) -> str:
+    """Gemini 모델에 프롬프트를 보내고 응답 텍스트 반환."""
+    return genai.GenerativeModel(MODEL_NAME).generate_content(prompt).text
+
+
+def _parse_json_response(text: str) -> Any:
+    """마크다운 코드 블록(```json ... ```)을 제거하고 JSON 파싱."""
+    return json.loads(text.strip().replace('```json', '').replace('```', '').strip())
+
+
+_NUMBERED_LINE = re.compile(r'^\s*\d+[.)]\s+(.*\S)')
+
+
+def _parse_numbered_list(text: str) -> List[str]:
+    """
+    "1. 할 일" 형식의 번호 목록에서 항목만 추출.
+    줄 단위로 파싱하므로 항목 안의 숫자("1.5km 달리기")는 그대로 유지된다.
+    """
+    return [m.group(1).strip() for m in map(_NUMBERED_LINE.match, text.splitlines()) if m]
+
+
+def _round_up_to_half_hour(dt: datetime) -> datetime:
+    """30분 단위로 올림 (초 이하 버림)."""
+    if dt.minute % 30:
+        dt += timedelta(minutes=30 - dt.minute % 30)
+    return dt.replace(second=0, microsecond=0)
+
+
+# ==================== 공개 함수 ====================
 
 
 def generate_todo_items_from_keyword(keyword: str) -> List[dict]:
@@ -39,11 +79,8 @@ def generate_todo_items_from_keyword(keyword: str) -> List[dict]:
     Note:
         API 오류 시 기본 폴백 응답 반환
     """
-    try:
-        model = genai.GenerativeModel('gemini-2.5-flash')  # [수정] 모델 버전 명시화
-        
-        # AI 프롬프트: 한국어로 계층적 할 일 목록 생성 요청
-        prompt = f"""Generate a hierarchical list of to-do items for the keyword '{keyword}'.
+    # AI 프롬프트: 한국어로 계층적 할 일 목록 생성 요청
+    prompt = f"""Generate a hierarchical list of to-do items for the keyword '{keyword}'.
 
 IMPORTANT RULES:
 - All descriptions must be in Korean (한국어)
@@ -75,16 +112,10 @@ Example for keyword 'Build a website':
   {{ "description": "배포" }}
 ]
 """
-        response = model.generate_content(prompt)
-        
-        # 응답에서 JSON 부분만 추출 (마크다운 코드 블록 제거)
-        json_str = response.text.strip().replace('```json', '').replace('```', '').strip()
-        
-        # JSON 문자열을 Python 객체로 파싱
-        todo_items_json = json.loads(json_str)
-        return todo_items_json
-    except Exception as e:
-        print(f"Error calling Gemini API or parsing JSON: {e}")
+    try:
+        return _parse_json_response(_generate(prompt))
+    except Exception:
+        logger.exception("Gemini 할 일 목록 생성 실패 (keyword=%s)", keyword)
         # API 오류 시 기본 폴백 응답 반환
         return [
             {
@@ -99,8 +130,8 @@ Example for keyword 'Build a website':
 
 def generate_sub_tasks_from_main_task(
     main_task_description: str, 
-    project_keyword: str = None,
-    context_path: List[str] = None
+    project_keyword: Optional[str] = None,
+    context_path: Optional[List[str]] = None
 ) -> List[str]:
     """
     메인 작업에서 세부 작업(서브태스크) 목록 생성.
@@ -119,21 +150,14 @@ def generate_sub_tasks_from_main_task(
     Note:
         API 오류 시 기본 폴백 응답 반환
     """
-    try:
-        model = genai.GenerativeModel('gemini-2.5-flash')  # [수정] 모델 버전 명시화
-        
-        # 맥락 정보 구성: 프로젝트명과 상위 작업 경로
-        context_info = ""
-        if project_keyword:
-            context_info += f"프로젝트: {project_keyword}\n"
-        
-        if context_path and len(context_path) > 1:
-            # 현재 작업을 제외한 상위 항목들
-            parent_items = context_path[:-1]
-            if parent_items:
-                context_info += f"상위 작업: {' > '.join(parent_items)}\n"
-        
-        prompt = f"""Given the following context, generate a list of 3 to 5 detailed, actionable sub-tasks for the current task.
+    # 맥락 정보 구성: 프로젝트명과 상위 작업 경로 (현재 작업 제외)
+    context_info = ""
+    if project_keyword:
+        context_info += f"프로젝트: {project_keyword}\n"
+    if context_path and len(context_path) > 1:
+        context_info += f"상위 작업: {' > '.join(context_path[:-1])}\n"
+
+    prompt = f"""Given the following context, generate a list of 3 to 5 detailed, actionable sub-tasks for the current task.
 
 {context_info}
 현재 작업: {main_task_description}
@@ -150,21 +174,19 @@ Return the list as a numbered list, e.g.,
 1. 첫 번째 세부 작업
 2. 두 번째 세부 작업
 ..."""
-        
-        response = model.generate_content(prompt)
-        
-        # 번호 목록 형식 응답 파싱 (1. 2. 3. 형식)
-        parts = re.split(r'\d+\.\s*', response.text)
-        sub_tasks = [part.strip() for part in parts[1:] if part.strip()]
-        return sub_tasks
-    except Exception as e:
-        print(f"Error calling Gemini API for sub-tasks: {e}")
-        # API 오류 시 기본 폴백 응답 반환
-        return [
-            f"'{main_task_description}'에 대한 첫 번째 세부 계획",
-            f"'{main_task_description}'에 대한 두 번째 세부 계획",
-            f"'{main_task_description}'에 대한 세 번째 세부 계획"
-        ]
+    try:
+        sub_tasks = _parse_numbered_list(_generate(prompt))
+        if sub_tasks:
+            return sub_tasks
+        logger.warning("Gemini 하위 작업 응답에서 항목을 찾지 못함: %s", main_task_description)
+    except Exception:
+        logger.exception("Gemini 하위 작업 생성 실패: %s", main_task_description)
+    # API 오류 또는 빈 응답 시 기본 폴백 응답 반환
+    return [
+        f"'{main_task_description}'에 대한 첫 번째 세부 계획",
+        f"'{main_task_description}'에 대한 두 번째 세부 계획",
+        f"'{main_task_description}'에 대한 세 번째 세부 계획"
+    ]
 
 
 def analyze_task_from_natural_language(natural_language_text: str) -> dict:
@@ -188,26 +210,13 @@ def analyze_task_from_natural_language(natural_language_text: str) -> dict:
     Note:
         API 오류 시 원본 텍스트를 description으로 반환
     """
-    try:
-        model = genai.GenerativeModel('gemini-2.5-flash')  # [수정] 모델 버전 명시화
-        
-        # Get current date and time to provide context to the AI
-        
-        # Set timezone to Seoul
-        kst = ZoneInfo("Asia/Seoul")
-        now = datetime.now(kst)
-        current_time_str = now.strftime("%Y-%m-%d %H:%M")
+    # AI에게 현재 시각(KST)을 맥락으로 제공
+    now = datetime.now(KST)
+    current_time_str = now.strftime("%Y-%m-%d %H:%M")
+    # 예시용 "내일까지": 지금부터 24시간 뒤를 30분 단위로 올림
+    tomorrow_due_date_str = _round_up_to_half_hour(now + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
 
-        # New rule for "by tomorrow": 24 hours from now, rounded up to the nearest 30 mins
-        target_time = now + timedelta(hours=24)
-        if target_time.minute % 30 != 0:
-            minutes_to_add = 30 - (target_time.minute % 30)
-            target_time += timedelta(minutes=minutes_to_add)
-        # Reset seconds for a clean time
-        target_time = target_time.replace(second=0, microsecond=0)
-        tomorrow_due_date_str = target_time.strftime("%Y-%m-%d %H:%M:%S")
-
-        prompt = f"""You are a sophisticated task parser. Analyze the following to-do item and return its components as a JSON object.
+    prompt = f"""You are a sophisticated task parser. Analyze the following to-do item and return its components as a JSON object.
 
 Current date and time for context: {current_time_str}
 
@@ -254,17 +263,11 @@ Output:
   "category": "개인"
 }}
 """
-        response = model.generate_content(prompt)
-        
-        # Clean the response to get only the JSON part
-        json_str = response.text.strip().replace('```json', '').replace('```', '').strip()
-        
-        parsed_data = json.loads(json_str)
-        return parsed_data
-
-    except Exception as e:
-        print(f"Error in analyze_task_from_natural_language: {e}")
-        # Fallback to a simple parsing
+    try:
+        return _parse_json_response(_generate(prompt))
+    except Exception:
+        logger.exception("Gemini 자연어 분석 실패")
+        # 폴백: 원문을 그대로 description으로 사용
         return {
             "description": natural_language_text,
             "due_date": None,
