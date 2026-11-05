@@ -16,6 +16,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { calculateProgress, countAllItems, countCompletedItems } from '../utils/treeUtils';
 import { deleteAccount } from '../services/authApiService';
+import { getDisplayName, getInitial } from '../utils/displayName';
 
 /** 진행률이 사실상 100%인지 (부동소수 오차 허용) */
 const isFullyComplete = (progress) => progress >= 99.9;
@@ -96,8 +97,8 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
   const [isResizing, setIsResizing] = useState(false);  // 리사이즈 중 여부
   const sidebarRef = useRef(null);
 
-  const userName = user?.username || '사용자';
-  const userInitial = userName.charAt(0).toUpperCase();
+  const userName = getDisplayName(user);
+  const userInitial = getInitial(userName);
 
 
   // ==================== 리사이즈 이벤트 핸들러 ====================
