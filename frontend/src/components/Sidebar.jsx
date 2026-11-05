@@ -14,6 +14,7 @@
  * @module Sidebar
  */
 import React, { useState, useEffect, useRef } from 'react';
+import { getDisplayName, getInitial } from '../utils/displayName';
 
 
 /**
@@ -34,8 +35,8 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
   const [isResizing, setIsResizing] = useState(false);  // 리사이즈 중 여부
   const sidebarRef = useRef(null);
 
-  const userName = user?.username || '사용자';
-  const userInitial = userName.charAt(0).toUpperCase();
+  const userName = getDisplayName(user);
+  const userInitial = getInitial(userName);
 
 
   /**
