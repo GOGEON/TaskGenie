@@ -27,6 +27,7 @@ import {
   findItem,
   patchItem,
   replaceItem,
+  markAncestorsIncomplete,
   removeItem,
   moveSibling,
   setItemCompletion,
@@ -152,10 +153,12 @@ function HomePage({ project, setProjects, onOpenQuickAdd }) {
         success: '세부 항목이 성공적으로 생성되었습니다!',
         error: '세부 항목 생성에 실패했습니다.',
       });
-      commitProject({
-        ...projectRef.current,
-        items: replaceItem(projectRef.current.items, updatedParentItem),
-      });
+      let items = replaceItem(projectRef.current.items, updatedParentItem);
+      if (!updatedParentItem.is_completed) {
+        // 서버가 완료된 조상들의 완료 상태를 해제하므로 로컬 상태도 맞춤
+        items = markAncestorsIncomplete(items, updatedParentItem.id);
+      }
+      commitProject({ ...projectRef.current, items });
     } catch {
       /* toast가 에러 표시 */
     } finally {

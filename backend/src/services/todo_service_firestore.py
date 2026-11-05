@@ -194,6 +194,39 @@ def _ancestor_path(db: firestore.Client, item: Dict[str, Any]) -> List[str]:
     return list(path)
 
 
+def _reopen_completed_ancestors(db: firestore.Client, parent_id: Optional[str], todo_list_id: str) -> None:
+    """
+    새 하위 항목이 추가된 부모와 그 조상들의 완료 상태 해제.
+
+    미완료 하위 항목이 생긴 부모는 더 이상 완료 상태일 수 없으므로,
+    parent_id를 따라 루트까지 올라가며 완료된 항목을 한 번의 batch로 미완료 처리한다.
+    다른 프로젝트의 항목을 만나면 중단하여 남의 항목을 수정하지 않는다.
+
+    Args:
+        parent_id: 새 항목의 부모 ID (None이면 아무것도 하지 않음)
+        todo_list_id: 새 항목의 프로젝트 ID
+    """
+    batch = db.batch()
+    has_updates = False
+    visited = set()
+    current_id = parent_id
+    while current_id and current_id not in visited:
+        visited.add(current_id)
+        doc_ref = db.collection(ITEMS).document(current_id)
+        doc = doc_ref.get()
+        if not doc.exists:
+            break
+        data = doc.to_dict()
+        if data.get('todo_list_id') != todo_list_id:
+            break
+        if data.get('is_completed'):
+            batch.update(doc_ref, {"is_completed": False, "updated_at": _now()})
+            has_updates = True
+        current_id = data.get('parent_id')
+    if has_updates:
+        batch.commit()
+
+
 # ==================== 생성 ====================
 
 def create_todo_list_with_ai_items(user: Any, keyword: str) -> Dict[str, Any]:
@@ -236,6 +269,8 @@ def create_subtasks_for_item(user: Any, parent_item_id: str) -> Optional[Dict[st
     )
     for order, description in enumerate(sub_task_descriptions):
         _save_item(db, _new_item_doc(list_id, description, order, parent_item_id))
+    if sub_task_descriptions:
+        _reopen_completed_ancestors(db, parent_item_id, list_id)
 
     return get_todo_item_by_id(parent_item_id)
 
@@ -270,6 +305,8 @@ def create_todo_item(
         due_date=_parse_kst_datetime(due_date),
     )
     _save_item(db, item_doc)
+    # 완료된 부모 아래에 작업이 추가되면 부모와 조상들의 완료 상태 해제
+    _reopen_completed_ancestors(db, parent_id, list_id)
     return get_todo_item_by_id(item_doc['id'])
 
 

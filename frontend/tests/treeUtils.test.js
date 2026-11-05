@@ -3,6 +3,7 @@ import {
   findItem,
   patchItem,
   replaceItem,
+  markAncestorsIncomplete,
   removeItem,
   moveSibling,
   setItemCompletion,
@@ -44,6 +45,22 @@ describe('treeUtils', () => {
   it('replaceItem swaps the whole item', () => {
     const result = replaceItem(tree(), { id: 'b', order: 1, children: [{ id: 'b1' }] });
     expect(findItem(result, 'b1')).toEqual({ id: 'b1' });
+  });
+
+  it('markAncestorsIncomplete reopens only the ancestors of the item', () => {
+    const items = [
+      {
+        id: 'a', is_completed: true,
+        children: [{ id: 'a1', is_completed: true, children: [{ id: 'a1x', is_completed: false, children: [] }] }],
+      },
+      { id: 'b', is_completed: true, children: [] },
+    ];
+    const result = markAncestorsIncomplete(items, 'a1x');
+    expect(findItem(result, 'a').is_completed).toBe(false);
+    expect(findItem(result, 'a1').is_completed).toBe(false);
+    expect(findItem(result, 'a1x').is_completed).toBe(false);
+    expect(result[1]).toBe(items[1]);
+    expect(findItem(items, 'a').is_completed).toBe(true);
   });
 
   it('removeItem removes item with its children', () => {
