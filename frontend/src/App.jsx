@@ -16,6 +16,7 @@ import { Toaster, toast } from 'react-hot-toast';
 import { jwtDecode } from 'jwt-decode';
 
 import AuthPage from './pages/AuthPage';
+import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
 import SocialCallbackPage from './pages/SocialCallbackPage';
 import MainLayout from './components/MainLayout';
@@ -47,6 +48,14 @@ function App() {
   const [refetchTrigger, setRefetchTrigger] = useState(0);       // 데이터 재조회 트리거
   const [isKeywordModalOpen, setIsKeywordModalOpen] = useState(false);  // AI 프로젝트 생성 모달
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);          // 빠른 추가 모달
+  // 온보딩: 처음 로그인했을 때 한 번 자동으로 열고, 사이드바 '도움말'로 다시 열 수 있음
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => {
+    try {
+      return !localStorage.getItem('hasSeenOnboarding');
+    } catch {
+      return false;
+    }
+  });
 
   /** 프로젝트 목록 재조회 트리거 */
   const triggerRefetch = () => setRefetchTrigger(c => c + 1);
@@ -210,9 +219,30 @@ function App() {
 
   return (
     <div>
-      <Toaster />
-      {/* [추가] 최초 방문 시 사용 방법을 안내하는 온보딩 가이드 표시 */}
-      <OnboardingGuide />
+      <Toaster
+        position="bottom-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: 'var(--color-ink)',
+            color: 'var(--color-paper)',
+            borderRadius: '4px',
+            fontSize: '14px',
+            padding: '10px 14px',
+            boxShadow: 'var(--shadow-pop)',
+          },
+          success: { iconTheme: { primary: '#8fbf9c', secondary: 'var(--color-ink)' } },
+          error: { iconTheme: { primary: '#ec7a62', secondary: 'var(--color-ink)' } },
+          loading: { iconTheme: { primary: 'var(--color-paper)', secondary: 'var(--color-ink-2)' } },
+        }}
+      />
+      {/* 온보딩 가이드 — 로그인한 사용자에게만 표시 */}
+      {token && (
+        <OnboardingGuide
+          isOpen={isOnboardingOpen}
+          onClose={() => setIsOnboardingOpen(false)}
+        />
+      )}
       <KeywordInputModal 
         isOpen={isKeywordModalOpen}
         onClose={() => setIsKeywordModalOpen(false)}
@@ -252,7 +282,8 @@ function App() {
                   onAddNewProject={handleAddNewProject}
                   onDeleteProject={handleDeleteProject}
                   onLogout={handleLogout}
-                  onOpenQuickAdd={handleOpenQuickAdd}
+                  onOpenQuickAdd={projects.length > 0 ? handleOpenQuickAdd : undefined}
+                  onOpenHelp={() => setIsOnboardingOpen(true)}
                   triggerRefetch={triggerRefetch}
                 >
                   {activeProject ? (
@@ -270,13 +301,13 @@ function App() {
                       onAction={handleAddNewProject}
                     />
                   ) : (
-                    <div className="p-8 text-center text-slate-500">
-                      <p>프로젝트를 선택하거나 새로 만들어주세요.</p>
+                    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-8">
+                      <p className="text-ink-3">왼쪽에서 프로젝트를 고르거나 새로 만드세요.</p>
                     </div>
                   )}
                 </MainLayout>
               ) : (
-                <Navigate to="/auth" />
+                <LandingPage />
               )
             }
           />

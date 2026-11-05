@@ -1,41 +1,45 @@
 import React from 'react';
-import { RiFlag2Line, RiFlag2Fill, RiCheckboxBlankCircleLine } from 'react-icons/ri';
 
-const PrioritySelector = ({ value = 'none', onChange, disabled = false }) => {
-  /* 우선순위 옵션 정의 - 아이콘, 레이블, 색상 */
-  const priorities = [
-    { value: 'none', label: '없음', text: 'text-slate-500', bg: 'bg-slate-100', hover: 'hover:bg-slate-100', icon: <RiCheckboxBlankCircleLine /> },
-    { value: 'low', label: '낮음', text: 'text-indigo-600', bg: 'bg-indigo-50', hover: 'hover:bg-indigo-50', icon: <RiFlag2Fill /> },
-    { value: 'medium', label: '보통', text: 'text-orange-600', bg: 'bg-orange-50', hover: 'hover:bg-orange-50', icon: <RiFlag2Fill /> },
-    { value: 'high', label: '높음', text: 'text-red-600', bg: 'bg-red-50', hover: 'hover:bg-red-50', icon: <RiFlag2Fill /> }
-  ];
+/** 우선순위 정의 — 색은 체크박스 테두리 색과 같다 */
+const PRIORITIES = [
+  { value: 'none', label: '없음', dot: 'border border-ink-4 bg-transparent' },
+  { value: 'low', label: '낮음', dot: 'bg-blueink' },
+  { value: 'medium', label: '보통', dot: 'bg-ochre' },
+  { value: 'high', label: '높음', dot: 'bg-accent' },
+];
 
-  const currentPriority = priorities.find(p => p.value === value) || priorities[0];
-
-  return (
-    /* [개선] 가로 배치 버튼 그룹 */
-    <div className="flex flex-row rounded-lg border border-slate-200 overflow-hidden">
-      {priorities.map((priority) => (
+/**
+ * 우선순위 선택 — 4칸짜리 분할 버튼.
+ *
+ * @param {Object} props
+ * @param {string} props.value - 현재 우선순위
+ * @param {Function} props.onChange - 변경 콜백
+ * @param {boolean} [props.disabled]
+ */
+const PrioritySelector = ({ value = 'none', onChange, disabled = false }) => (
+  <div className="grid grid-cols-4 overflow-hidden rounded border border-rule" role="radiogroup" aria-label="우선순위">
+    {PRIORITIES.map((priority, i) => {
+      const selected = value === priority.value;
+      return (
         <button
           key={priority.value}
           type="button"
+          role="radio"
+          aria-checked={selected}
           onClick={() => !disabled && onChange(priority.value)}
           disabled={disabled}
-          className={`
-            px-3 py-1.5 text-sm transition-colors whitespace-nowrap
-            ${priority.text} /* 항상 고유 텍스트 색상 적용 */
-            ${value === priority.value ? priority.bg : 'bg-white hover:bg-slate-50'}
-            ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-            flex flex-row items-center gap-1.5
-          `}
-          title={priority.label}
+          className={`flex items-center justify-center gap-1.5 whitespace-nowrap px-2 py-1.5 text-xs transition-colors ${
+            i > 0 ? 'border-l border-rule' : ''
+          } ${selected ? 'bg-ink font-medium text-paper' : 'bg-sheet text-ink-2 hover:bg-paper-2'} ${
+            disabled ? 'opacity-50' : ''
+          }`}
         >
-          <span className="text-lg">{priority.icon}</span>
-          <span className="font-medium">{priority.label}</span>
+          <span className={`h-2 w-2 flex-shrink-0 rounded-[2px] ${priority.dot}`} aria-hidden="true" />
+          {priority.label}
         </button>
-      ))}
-    </div>
-  );
-};
+      );
+    })}
+  </div>
+);
 
 export default PrioritySelector;

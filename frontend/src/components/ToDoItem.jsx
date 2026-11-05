@@ -152,53 +152,94 @@ const ToDoItem = ({
     }
   };
 
-  /* [수정] Indigo 테마 적용 */
+  /* 우선순위 = 체크박스 테두리 색. 완료되면 모두 먹색으로 채움 */
   const priorityConfig = {
-    none: { border: 'border-slate-300', bg: 'bg-transparent', completed: 'bg-slate-400 border-slate-400' },
-    low: { border: 'border-indigo-500', bg: 'bg-indigo-50', completed: 'bg-indigo-400 border-indigo-400' },
-    medium: { border: 'border-orange-500', bg: 'bg-orange-50', completed: 'bg-orange-400 border-orange-400' },
-    high: { border: 'border-red-600', bg: 'bg-red-50', completed: 'bg-red-400 border-red-400' }
+    none: { box: 'border-ink-4 bg-sheet', hoverCheck: 'group-hover/checkbox:text-ink-4' },
+    low: { box: 'border-blueink bg-blueink-wash/60', hoverCheck: 'group-hover/checkbox:text-blueink' },
+    medium: { box: 'border-ochre bg-ochre-wash/60', hoverCheck: 'group-hover/checkbox:text-ochre' },
+    high: { box: 'border-accent bg-accent-wash/70', hoverCheck: 'group-hover/checkbox:text-accent' },
   };
-  const currentPriorityConfig = priorityConfig[item.priority || 'none'];
+  const currentPriorityConfig = priorityConfig[item.priority || 'none'] || priorityConfig.none;
+
+  /* 마감일 표기 */
+  const renderDueDate = () => {
+    if (!item.due_date) return null;
+    const dueDate = new Date(item.due_date);
+    const now = new Date();
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const isDateOnly = dueDate.getHours() === 0 && dueDate.getMinutes() === 0 && dueDate.getSeconds() === 0;
+
+    const pad = (n) => String(n).padStart(2, '0');
+    const label = isDateOnly
+      ? `${dueDate.getMonth() + 1}.${dueDate.getDate()}`
+      : `${dueDate.getMonth() + 1}.${dueDate.getDate()} ${pad(dueDate.getHours())}:${pad(dueDate.getMinutes())}`;
+
+    let tone = 'bg-paper-2 text-ink-3';
+    let title = '마감일';
+    if (item.is_completed) {
+      tone = 'text-ink-4';
+    } else if (dueDate < now) {
+      tone = 'bg-accent-wash text-accent-ink';
+      title = '마감일 지남';
+    } else if (dueDate < tomorrow) {
+      tone = 'bg-ochre-wash text-ochre';
+      title = '마감 임박';
+    }
+
+    return (
+      <span
+        className={`mt-[3px] inline-flex flex-shrink-0 items-center gap-1 whitespace-nowrap rounded-sm px-1.5 py-0.5 font-mono text-[11px] leading-4 tabular ${tone}`}
+        title={title}
+      >
+        <RiCalendarLine aria-hidden="true" className="text-[11px]" />
+        {label}
+      </span>
+    );
+  };
 
   return (
     <>
       <li
         ref={ref}
-        style={{ 
-          opacity: isDeleting ? 0 : (isDragging ? 0 : 1),
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          transform: isDragging ? 'scale(1.02)' : 'scale(1)',
-        }}
+        style={{ opacity: isDeleting ? 0 : (isDragging ? 0 : 1) }}
         className={`
-          flex items-center justify-between py-1.5 sm:py-2 border-b border-slate-100 
-          group bg-white touch-manipulation item-fade-in
-          ${isDeleting ? 'item-slide-out' : ''}
+          group flex items-start justify-between border-b border-rule/70 py-1.5 pr-1 touch-manipulation
+          transition-colors animate-row-in
+          ${isPreview ? 'max-w-2xl rounded-md border border-rule bg-sheet shadow-pop' : 'hover:bg-paper-2/50'}
         `}
       >
-        <div className="flex items-center flex-grow min-w-0">
+        <div className="flex min-w-0 flex-grow items-start">
           {/* 드래그 핸들 */}
-          <div ref={drag} className="p-1 sm:invisible sm:group-hover:visible flex-shrink-0 text-slate-400 cursor-grab hover:text-slate-600">
-            <RiDraggable className="text-lg" />
+          <div
+            ref={drag}
+            className="mt-[3px] hidden flex-shrink-0 cursor-grab p-1 text-ink-4 hover:text-ink-2 sm:invisible sm:block sm:group-hover:visible"
+            aria-label="끌어서 순서 바꾸기"
+          >
+            <RiDraggable className="text-base" />
           </div>
 
-          <div className="w-8 sm:w-8 text-center flex-shrink-0">
+          {/* 펼치기/접기 */}
+          <div className="w-7 flex-shrink-0 text-center">
             {hasChildren && (
-              <button 
+              <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsChildrenVisible(!isChildrenVisible);
                 }}
-                className="text-slate-500 hover:text-slate-800 active:text-slate-900 p-1.5 sm:p-1 rounded-full min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                className="flex h-8 w-7 items-center justify-center rounded text-ink-3 hover:bg-paper-3/70 hover:text-ink"
+                aria-label={isChildrenVisible ? '하위 항목 접기' : '하위 항목 펼치기'}
+                aria-expanded={isChildrenVisible}
               >
                 {isChildrenVisible ? <RiArrowDownSLine className="text-lg" /> : <RiArrowRightSLine className="text-lg" />}
               </button>
             )}
           </div>
 
-          {/* 우선순위 체크박스 */}
-          <button 
-            className="relative flex items-center justify-center p-1 cursor-pointer group/checkbox focus:outline-none"
+          {/* 체크박스 (테두리 색 = 우선순위) */}
+          <button
+            type="button"
+            className="group/checkbox relative flex h-8 flex-shrink-0 items-center justify-center px-1 focus:outline-none"
             onClick={handleToggleComplete}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -206,68 +247,41 @@ const ToDoItem = ({
                 handleToggleComplete(e);
               }
             }}
-            aria-label={item.is_completed ? "할 일 완료 취소" : "할 일 완료"}
+            aria-label={item.is_completed ? '완료 취소' : '완료로 표시'}
             role="checkbox"
             aria-checked={item.is_completed}
           >
-            <div className={`
-              w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
-              ${item.is_completed 
-                ? currentPriorityConfig.completed 
-                : `${currentPriorityConfig.border} ${currentPriorityConfig.bg} hover:bg-opacity-80`
-              }
-              group-focus/checkbox:ring-2 group-focus/checkbox:ring-offset-2 group-focus/checkbox:ring-indigo-500
-            `}>
-              <RiCheckLine 
-                className={`
-                  w-3.5 h-3.5 text-white transition-opacity duration-200
-                  ${item.is_completed ? 'opacity-100' : 'opacity-0 group-hover/checkbox:opacity-100'}
-                  ${!item.is_completed && currentPriorityConfig.border.includes('red') ? 'text-red-600' : ''}
-                  ${!item.is_completed && currentPriorityConfig.border.includes('orange') ? 'text-orange-500' : ''}
-                  ${!item.is_completed && currentPriorityConfig.border.includes('indigo') ? 'text-indigo-500' : ''}
-                  ${!item.is_completed && currentPriorityConfig.border.includes('slate') ? 'text-slate-400' : ''}
-                `} 
-              />
-            </div>
+            <span
+              className={`
+                flex h-[18px] w-[18px] items-center justify-center rounded-[4px] border-[1.5px] transition-colors
+                group-focus-visible/checkbox:outline-2 group-focus-visible/checkbox:outline-offset-2 group-focus-visible/checkbox:outline-ink
+                ${item.is_completed ? 'border-ink-3 bg-ink-3 text-paper' : `${currentPriorityConfig.box} text-transparent ${currentPriorityConfig.hoverCheck}`}
+              `}
+            >
+              <RiCheckLine className="h-3.5 w-3.5" />
+            </span>
           </button>
 
-          {/* <!-- [수정] 모바일에서 더 컴팩트한 폰트 --> */}
-          <span className={`flex-grow p-1 pr-2 ml-1.5 sm:ml-2 break-words ${item.is_completed ? 'text-slate-400 line-through' : 'text-slate-800'} text-xs sm:text-sm md:text-base`}>
+          {/* 내용 */}
+          <span
+            className={`ml-1.5 min-w-0 flex-grow break-words py-[5px] pr-2 text-[15px] leading-[22px] ${
+              item.is_completed ? 'strike-pen text-ink-4' : 'text-ink'
+            }`}
+          >
             {item.description}
           </span>
-          
-          {/* 마감일 배지 */}
-          {item.due_date && (() => {
-            const dueDate = new Date(item.due_date);
-            const now = new Date();
-            const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-            
-            const isDateOnly = dueDate.getHours() === 0 && dueDate.getMinutes() === 0 && dueDate.getSeconds() === 0;
-            
-            const dateFormat = isDateOnly
-              ? { month: 'short', day: 'numeric' }
-              : { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            
-            const colorClass = dueDate < now && !item.is_completed
-              ? 'bg-red-50 text-red-700'
-              : dueDate < tomorrow && !item.is_completed
-              ? 'bg-orange-50 text-orange-700'
-              : 'bg-indigo-50 text-indigo-700';
-            
-            return (
-              <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex items-center gap-1 ${colorClass}`}>
-                <RiCalendarLine /> {dueDate.toLocaleDateString('ko-KR', dateFormat)}
-              </span>
-            );
-          })()}
+
+          {renderDueDate()}
         </div>
 
-        {/* 케밥 메뉴 */}
-        <div className="flex-shrink-0 ml-2 sm:invisible sm:group-hover:visible">
-          <button 
+        {/* 더보기 메뉴 */}
+        <div className="ml-1 flex-shrink-0 sm:invisible sm:group-hover:visible sm:group-focus-within:visible">
+          <button
+            type="button"
             onClick={handleMenuClick}
             disabled={isPreview}
-            className="p-2 sm:p-1 rounded-full hover:bg-slate-100 active:bg-slate-200 disabled:cursor-default min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center touch-manipulation text-slate-500"
+            className="flex h-8 w-8 items-center justify-center rounded text-ink-3 hover:bg-paper-3/70 hover:text-ink disabled:cursor-default touch-manipulation"
+            aria-label="항목 메뉴"
           >
             <RiMore2Fill />
           </button>
@@ -298,7 +312,7 @@ const ToDoItem = ({
       )}
       
       {isGenerating && generatingItemId === item.id && (
-        <ul className="list-none p-0 pl-6 sm:pl-8">
+        <ul className="list-none p-0 pl-6 sm:pl-8" aria-label="하위 항목 생성 중">
           {[...Array(3)].map((_, i) => (
             <SkeletonToDoItem key={`skeleton-${i}`} />
           ))}

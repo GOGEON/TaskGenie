@@ -148,10 +148,10 @@ const TimeScrollPicker = ({ selectedDate, onChange }) => {
                     });
                  }
               }}
-              className={`h-12 flex items-center justify-center text-sm cursor-pointer snap-center transition-all ${
+              className={`h-12 flex items-center justify-center font-mono text-sm cursor-pointer snap-center transition-colors ${
                 item === localSelected 
-                  ? 'font-bold text-indigo-600 scale-110' 
-                  : 'text-slate-400 scale-100 opacity-50'
+                  ? 'font-semibold text-ink' 
+                  : 'text-ink-4'
               }`}
             >
               {formatItem(item)}
@@ -163,9 +163,9 @@ const TimeScrollPicker = ({ selectedDate, onChange }) => {
   };
 
   return (
-    <div className="flex items-center justify-center gap-2 bg-white rounded-lg border border-slate-200 p-2 relative overflow-hidden">
-      {/* 선택 영역 하이라이트 바 (배경 + 라인) */}
-      <div className="absolute top-1/2 left-0 right-0 h-12 -mt-6 bg-slate-50/30 border-t border-b border-indigo-100 pointer-events-none" />
+    <div className="relative flex items-center justify-center gap-2 overflow-hidden rounded border border-rule bg-paper p-2">
+      {/* 선택 영역 표시 (괘선 두 줄) */}
+      <div className="pointer-events-none absolute left-0 right-0 top-1/2 -mt-6 h-12 border-y border-rule-strong bg-sheet/60" />
       
       <ScrollColumn 
         items={AMPM_ITEMS} 

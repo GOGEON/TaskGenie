@@ -74,18 +74,18 @@ const ProjectSelector = ({ projects, selectedProjectId, selectedParentId, onSele
       const parentItem = findItem(project.items || []);
       if (parentItem) {
         return (
-          <span className="flex items-center gap-1 truncate">
-            <span className="text-slate-500">{project.keyword}</span>
-            <span className="text-slate-400">/</span>
-            <span>{parentItem.description}</span>
+          <span className="flex min-w-0 items-center gap-1.5 truncate">
+            <span className="text-ink-3">{project.keyword}</span>
+            <span className="text-ink-4">/</span>
+            <span className="truncate text-ink">{parentItem.description}</span>
           </span>
         );
       }
     }
 
     return (
-      <span className="flex items-center gap-2 truncate">
-        <RiHashtag className="text-slate-400 text-sm" />
+      <span className="flex min-w-0 items-center gap-2 truncate text-ink">
+        <RiHashtag className="flex-shrink-0 text-sm text-ink-4" />
         {project.keyword}
       </span>
     );
@@ -135,14 +135,12 @@ const ProjectSelector = ({ projects, selectedProjectId, selectedParentId, onSele
             onSelect(projectId, item.id);
             setIsOpen(false);
           }}
-          className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-sm group"
-          style={{ paddingLeft: `${level * 16 + 36}px` }}
+          className="group flex w-full items-center gap-2 py-2 pr-3 text-left text-sm hover:bg-paper-2"
+          style={{ paddingLeft: `${level * 16 + 30}px` }}
         >
-          <div className="text-slate-400 group-hover:text-slate-600">
-            <RiCornerDownRightLine />
-          </div>
-          <span className="truncate flex-1 text-slate-600">{item.description}</span>
-          {selectedParentId === item.id && <RiCheckLine className="text-indigo-600 text-sm" />}
+          <RiCornerDownRightLine className="flex-shrink-0 text-ink-4 group-hover:text-ink-3" />
+          <span className="flex-1 truncate text-ink-2 group-hover:text-ink">{item.description}</span>
+          {selectedParentId === item.id && <RiCheckLine className="flex-shrink-0 text-sm text-ink" />}
         </button>
         {item.children && level < maxDepth && renderItems(item.children, projectId, level + 1)}
       </React.Fragment>
@@ -154,27 +152,32 @@ const ProjectSelector = ({ projects, selectedProjectId, selectedParentId, onSele
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-400 flex items-center justify-between bg-white transition-all"
+        className={`flex h-9 w-full items-center justify-between gap-2 rounded border bg-sheet px-2.5 text-sm transition-colors ${
+          isOpen ? 'border-ink' : 'border-rule hover:border-ink-3'
+        }`}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
-        <div className="flex items-center gap-2 overflow-hidden text-slate-700">
+        <span className="flex min-w-0 items-center gap-2 overflow-hidden">
+          <span className="flex-shrink-0 text-xs text-ink-3">위치</span>
           {getSelectedLabel()}
-        </div>
-        <RiArrowDownSLine className="text-slate-400 text-sm" />
+        </span>
+        <RiArrowDownSLine className="flex-shrink-0 text-sm text-ink-3" />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-lg shadow-xl border border-slate-200 z-50 max-h-80 overflow-hidden flex flex-col animate-scaleIn origin-top">
+        <div className="absolute left-0 top-full z-50 mt-1 flex max-h-80 w-full flex-col overflow-hidden rounded-md border border-rule bg-sheet shadow-pop animate-pop-in">
           {/* 검색창 */}
-          <div className="p-2 border-b border-slate-100">
+          <div className="border-b border-rule p-2">
             <div className="relative">
-              <RiSearchLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm" />
+              <RiSearchLine className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-ink-4" />
               <input
                 ref={inputRef}
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="프로젝트 또는 작업 검색..."
-                className="w-full pl-9 pr-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:border-indigo-300 focus:bg-white transition-colors text-slate-700"
+                className="w-full rounded border border-rule bg-paper py-1.5 pl-8 pr-3 text-sm text-ink transition-colors focus:border-ink focus:outline-none"
               />
             </div>
           </div>
@@ -191,12 +194,12 @@ const ProjectSelector = ({ projects, selectedProjectId, selectedParentId, onSele
                       onSelect(project.id, null);
                       setIsOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2 text-sm font-medium text-slate-800"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-ink hover:bg-paper-2"
                   >
-                    <RiHashtag className="text-slate-400 text-sm" />
+                    <RiHashtag className="flex-shrink-0 text-sm text-ink-4" />
                     <span className="flex-1 truncate">{project.keyword}</span>
                     {selectedProjectId === project.id && !selectedParentId && (
-                      <RiCheckLine className="text-indigo-600 text-sm" />
+                      <RiCheckLine className="flex-shrink-0 text-sm text-ink" />
                     )}
                   </button>
                   
@@ -205,7 +208,7 @@ const ProjectSelector = ({ projects, selectedProjectId, selectedParentId, onSele
                 </div>
               ))
             ) : (
-              <div className="p-4 text-center text-slate-400 text-xs">
+              <div className="p-4 text-center text-xs text-ink-3">
                 검색 결과가 없습니다.
               </div>
             )}

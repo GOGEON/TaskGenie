@@ -1,116 +1,174 @@
 @import "tailwindcss";
 
-/* Pretendard 폰트 추가 - npm CDN 사용 (가장 안정적) */
-@font-face {
-    font-family: 'Pretendard Variable';
-    font-weight: 45 920;
-    font-style: normal;
-    font-display: swap;
-    src: url('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/woff2/PretendardVariable.woff2') format('woff2-variations');
+/*
+ * TaskGenie 디자인 토큰
+ *
+ * 방향: "종이 위의 할 일 장부" — 따뜻한 종이색 배경, 먹색 텍스트, 빨간 교정펜 한 가지 강조색.
+ * - 그라데이션, 컬러 글로우 그림자, 바운스 애니메이션을 쓰지 않는다.
+ * - 강조색(vermilion)은 "체크/완료/긴급/현재 위치"에만 쓴다.
+ * - 숫자·날짜·단축키는 모노스페이스, 제목은 세리프, 본문/UI는 Pretendard.
+ */
+@theme {
+  /* 종이 */
+  --color-paper: #f4f1ea;
+  --color-paper-2: #ebe7dc;
+  --color-paper-3: #e1dccd;
+  --color-sheet: #fbfaf6;
+
+  /* 먹 */
+  --color-ink: #1b1a17;
+  --color-ink-2: #4b4840;
+  --color-ink-3: #6f6a5c;
+  --color-ink-4: #a39e8f;
+
+  /* 괘선 */
+  --color-rule: #dcd6c8;
+  --color-rule-strong: #c4bdab;
+
+  /* 강조: 교정펜 빨강 */
+  --color-accent: #d2462c;
+  --color-accent-ink: #a8361f;
+  --color-accent-wash: #f6e2da;
+
+  /* 보조 상태색 (우선순위/완료) */
+  --color-ochre: #b07316;
+  --color-ochre-wash: #f3e6cc;
+  --color-blueink: #34587f;
+  --color-blueink-wash: #dfe5ec;
+  --color-moss: #3d6a4b;
+  --color-moss-wash: #dde7dc;
+
+  /* 형광펜 */
+  --color-highlight: #f4d74b;
+
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+  --font-serif: "Hahmlet", "Noto Serif KR", "Apple Myungjo", serif;
+  --font-mono: "IBM Plex Mono", "Pretendard Variable", Pretendard, ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --shadow-pop: 0 1px 0 rgb(27 26 23 / 0.04), 0 16px 40px -16px rgb(27 26 23 / 0.32);
+  --shadow-sheet: 0 1px 0 rgb(27 26 23 / 0.05), 0 2px 6px -2px rgb(27 26 23 / 0.08);
+
+  --animate-pop-in: pop-in 140ms ease-out;
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-row-in: row-in 180ms ease-out;
 }
 
-@font-face {
-    font-family: 'Pretendard';
-    font-weight: 900;
-    font-style: normal;
-    font-display: swap;
-    src: url('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/woff2/Pretendard-Black.woff2') format('woff2');
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@font-face {
-    font-family: 'Pretendard';
-    font-weight: 800;
-    font-style: normal;
-    font-display: swap;
-    src: url('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/woff2/Pretendard-ExtraBold.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Pretendard';
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-    src: url('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/woff2/Pretendard-Bold.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Pretendard';
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-    src: url('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2');
-}
-
-.custom-checkbox {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  width: 1.25rem; /* 20px */
-  height: 1.25rem; /* 20px */
-  border: 2px solid #d1d5db; /* gray-300 */
-  border-radius: 50%; /* 완전한 동그라미 */
-  background-color: #ffffff; /* 흰색 배경 */
-  display: inline-block;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-/* 체크박스 선택 시 - 체크마크 표시 */
-.custom-checkbox:checked {
-  border-color: #d1d5db; /* 테두리 색상도 그대로 유지 */
-  background-color: #d1d5db; /* 배경 회색 */
-  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%23ffffff' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
-  background-size: 110%; /* 체크마크 크기 증가 */
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-/* 체크박스 호버 및 포커스 */
-.custom-checkbox:hover {
-
-  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%23d1d5db' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
-  background-size: 110%; /* 체크마크 크기 증가 */
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.custom-checkbox:checked:hover {
-  background-color: #d1d5db; /* 체크된 상태 유지 */
-}
-
-.custom-checkbox:focus {
-  outline: none;
-  box-shadow: none; /* 포커스 시 파란 테두리 제거 */
-}
-
-/* 기본 폰트 Pretendard로 설정 */
-* {
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-}
-
-body {
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden; /* 가로 스크롤 방지 */
-}
-
-/* 터치 디바이스 최적화 */
-@media (hover: none) and (pointer: coarse) {
-  /* 터치 디바이스에서 호버 효과 비활성화하고 active 효과로 대체 */
-  button:hover {
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
     opacity: 1;
   }
-  
-  button:active {
-    transform: scale(0.98);
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
-/* 드래그 중인 요소 스타일 */
+/* Pretendard (본문/UI) */
+@font-face {
+  font-family: "Pretendard Variable";
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url("https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/woff2/PretendardVariable.woff2") format("woff2-variations");
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    overflow-x: hidden;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-highlight);
+    color: var(--color-ink);
+  }
+
+  /* 키보드 사용자에게만 보이는 포커스 링 — 먹색 2px */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-ink-4);
+  }
+
+  kbd {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer components {
+  /* 숫자 정렬용 */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 완료 항목: 빨간 교정펜으로 그은 줄 */
+  .strike-pen {
+    text-decoration-line: line-through;
+    text-decoration-color: var(--color-accent);
+    text-decoration-thickness: 1.5px;
+  }
+
+  /* 단축키 표기 */
+  .kbd {
+    @apply inline-flex items-center rounded-sm border border-current/25 px-1 font-mono text-[11px] leading-[18px];
+  }
+
+  /* 스켈레톤 */
+  .skeleton {
+    background: var(--color-paper-2);
+    animation: skeleton-fade 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes skeleton-fade {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* 드래그 중인 요소 */
 li[draggable="true"] {
   cursor: grab;
 }
@@ -119,245 +177,10 @@ li[draggable="true"]:active {
   cursor: grabbing;
 }
 
-/* 드래그 중인 요소 불투명 유지 */
-li[draggable="true"].dragging {
-  opacity: 1 !important;
-  background-color: #e0e7ff !important; /* indigo-100 */
-  border: 2px solid #6366f1 !important; /* indigo-500 */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* 부드러운 애니메이션 - 항목 이동 및 정렬 시 */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideOut {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-}
-
-/* 체크박스 클릭 시 부드러운 애니메이션 */
-.custom-checkbox {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.custom-checkbox:active {
-  transform: scale(0.9);
-}
-
-/* 체크박스 체크 시 바운스 효과 */
-.custom-checkbox:checked {
-  animation: checkBounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-@keyframes checkBounce {
-  0% {
-    transform: scale(0.8);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* 항목이 완료 상태로 변경될 때 */
-/* 모달 페이드인 애니메이션 */
-
-/* 새로운 항목 추가 시 페이드인 */
-@keyframes itemFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.item-fade-in {
-  animation: itemFadeIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* 항목 삭제 시 슬라이드 아웃 */
-@keyframes itemSlideOut {
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-    max-height: 100px;
-  }
-  50% {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(30px);
-    max-height: 0;
-    padding: 0;
-    margin: 0;
-  }
-}
-
-.item-slide-out {
-  animation: itemSlideOut 0.4s ease-out forwards;
-}
-
-/* 버튼 클릭 시 리플 효과 */
-@keyframes ripple {
-  0% {
-    transform: scale(0);
-    opacity: 0.6;
-  }
-  100% {
-    transform: scale(2.5);
-    opacity: 0;
-  }
-}
-
-.btn-ripple {
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-ripple::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 20px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  pointer-events: none;
-}
-
-.btn-ripple:active::after {
-  animation: ripple 0.6s ease-out;
-}
-
-/* 호버 시 부드러운 상승 효과 */
-.hover-lift {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.hover-lift:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* 프로그레스 바 애니메이션 */
-@keyframes progressGrow {
-  from {
-    width: 0;
-    opacity: 0.5;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.progress-bar {
-  animation: progressGrow 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* [추가] Quick Add 버튼 애니메이션 - 주목도 향상 */
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); /* indigo-500 */
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); /* indigo-500 */
-  }
-}
-
-.quick-add-btn {
-  animation: pulse-glow 2s infinite;
-}
-
-.quick-add-btn:hover {
-  animation: none;
-}
-
-/* 모달 페이드인 애니메이션 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out;
-}
-
-/* 모달 스케일인 애니메이션 */
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-scaleIn {
-  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* 토스트 알림 슬라이드인 */
-@keyframes slideInFromTop {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.animate-slideInFromTop {
-  animation: slideInFromTop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* 입력 필드 포커스 효과 */
-input:focus, textarea:focus {
-  transform: scale(1.01);
-  transition: transform 0.2s ease-out;
-}
-
-/* 스크롤바 스타일링 */
-/* 스크롤바 스타일링 */
+/* 스크롤바 — 얇고 조용하게 */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -365,135 +188,41 @@ input:focus, textarea:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* slate-300 */
-  border-radius: 10px;
-  transition: background 0.3s ease;
+  background: var(--color-rule-strong);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8; /* slate-400 */
+  background: var(--color-ink-4);
+  background-clip: padding-box;
 }
 
-/* 선택 텍스트 색상 */
-::selection {
-  background-color: #4f46e5; /* indigo-600 */
-  color: white;
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
-::-moz-selection {
-  background-color: #4f46e5; /* indigo-600 */
-  color: white;
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* 스핀 애니메이션 */
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+/* 터치 디바이스: 누름 피드백만 아주 약하게 */
+@media (hover: none) and (pointer: coarse) {
+  button:active {
+    opacity: 0.8;
   }
 }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* 느린 스핀 애니메이션 */
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin-slow {
-  animation: spin-slow 2s linear infinite;
-}
-
-/* 펄스 애니메이션 */
-@keyframes pulse-opacity {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse {
-  animation: pulse-opacity 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* 바운스 애니메이션 - 로딩 점 */
-@keyframes bounce {
-  0%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-10px);
-  }
-}
-
-.animate-bounce {
-  animation: bounce 1.4s ease-in-out infinite;
-}
-
-/* 스켈레톤 펄스 개선 */
-@keyframes skeleton-pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
-
-.skeleton-pulse {
-  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* 로딩 바 이동 애니메이션 */
-@keyframes loading-bar {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.loading-bar {
-  animation: loading-bar 1.5s ease-in-out infinite;
-}
-
-/* 스켈레톤 로딩 애니메이션 */
-@keyframes shimmer {
-  0% {
-    background-position: -468px 0;
-  }
-  100% {
-    background-position: 468px 0;
-  }
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite linear;
-}
-
-.animate-pulse {
-  animation: pulse-opacity 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse-opacity {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
+/* 모션 최소화 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
   }
 }

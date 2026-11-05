@@ -648,6 +648,7 @@ function HomePage({ project, setProjects, triggerRefetch, onOpenQuickAdd }) {
     },
     {
       label: '삭제',
+      danger: true,
       onClick: () => {
         handleDeleteItem(contextMenu.itemId);
         handleCloseContextMenu();
@@ -656,12 +657,12 @@ function HomePage({ project, setProjects, triggerRefetch, onOpenQuickAdd }) {
   ] : [];
 
   if (!currentProject) {
-    return <div className="p-8 text-center text-slate-500">프로젝트를 불러오는 중...</div>;
+    return <div className="mx-auto max-w-3xl px-4 py-10 text-ink-3 sm:px-8">프로젝트를 불러오는 중…</div>;
   }
 
   return (
-    // <!-- [수정] 모바일 화면 답답함 해소 - 패딩 줄이고 여백 최적화 -->
-    <div className="container p-2 sm:p-4 md:p-8 max-w-5xl mx-auto" style={{ textAlign: 'left' }}>
+    // 읽기 좋은 폭(약 760px)의 단일 열
+    <div className="mx-auto w-full max-w-3xl px-3 pb-24 pt-6 text-left sm:px-8 sm:pt-10">
       {contextMenu && (() => {
         /* [수정] 컨텍스트 메뉴가 열려있을 때 실시간으로 최신 항목 데이터를 조회 */
         /* 이를 통해 우선순위나 마감일 변경 시 메뉴 내에서도 즉시 반영됨 */
@@ -703,7 +704,7 @@ function HomePage({ project, setProjects, triggerRefetch, onOpenQuickAdd }) {
 
 
       <div>
-        <div className="mb-6">
+        <div>
           <ToDoListDisplay
             todoList={currentProject}
             moveItem={moveItem}

@@ -17,7 +17,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { getParserExamples, parseNaturalLanguage } from '../utils/nlpParser';
 import CustomDatePicker from './CustomDatePicker';
 import ProjectSelector from './ProjectSelector';
-import { RiCalendarLine, RiFlag2Fill } from 'react-icons/ri';
+import { RiCalendarLine, RiFlag2Fill, RiFlag2Line } from 'react-icons/ri';
 import "react-datepicker/dist/react-datepicker.css";
 import "../datepicker.css";
 import { ko } from 'date-fns/locale';
@@ -280,27 +280,32 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
   const finalPriority = manualPriority !== 'none' ? manualPriority : parsedData?.priority;
 
   const priorities = [
-    { value: 'high', label: '높음', color: 'text-red-600', icon: <RiFlag2Fill /> },
-    { value: 'medium', label: '보통', color: 'text-orange-600', icon: <RiFlag2Fill /> },
-    { value: 'low', label: '낮음', color: 'text-indigo-600', icon: <RiFlag2Fill /> },
-    { value: 'none', label: '없음', color: 'text-slate-500', icon: <RiFlag2Fill /> }
+    { value: 'high', label: '높음', color: 'text-accent-ink', icon: <RiFlag2Fill /> },
+    { value: 'medium', label: '보통', color: 'text-ochre', icon: <RiFlag2Fill /> },
+    { value: 'low', label: '낮음', color: 'text-blueink', icon: <RiFlag2Fill /> },
+    { value: 'none', label: '없음', color: 'text-ink-3', icon: <RiFlag2Line /> }
   ];
 
   const currentPriority = priorities.find(p => p.value === (finalPriority || 'none'));
 
   if (!isOpen) return null;
 
+  const chipBase = 'inline-flex h-8 items-center gap-1.5 rounded border px-2.5 text-xs transition-colors';
+
   return (
     <div
-      className="fixed inset-0 flex items-start justify-center z-60 p-4 pt-32"
-      style={{ backgroundColor: 'rgba(15, 23, 42, 0.1)' }}
+      className="fixed inset-0 z-[60] flex items-start justify-center bg-ink/30 p-3 pt-[10vh] animate-fade-in sm:p-4 sm:pt-[14vh]"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full animate-scaleIn border border-slate-100">
-        {/* 내용 */}
-        <form onSubmit={handleSubmit} className="p-4">
-          {/* 제목 입력 */}
-          <div className="mb-3">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="할 일 추가"
+        className="w-full max-w-lg rounded-md border border-rule bg-sheet shadow-pop animate-pop-in"
+      >
+        <form onSubmit={handleSubmit}>
+          {/* 입력 — 문장으로 적으면 날짜/우선순위를 읽음 */}
+          <div className="border-b border-rule px-4 pb-3 pt-4">
             <input
               ref={inputRef}
               type="text"
@@ -311,36 +316,37 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
               }}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
-              className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 ${
-                error 
-                  ? 'border-red-500 focus:ring-red-200' 
-                  : 'border-slate-300 focus:ring-indigo-400'
-              } text-slate-800 placeholder-slate-400`}
+              aria-label="할 일 내용"
+              aria-invalid={Boolean(error)}
+              className="w-full bg-transparent text-base text-ink focus:outline-none"
             />
-            {error && (
-              <p className="text-red-500 text-xs mt-1">{error}</p>
+            {error ? (
+              <p className="mt-1.5 text-xs text-accent-ink">{error}</p>
+            ) : (
+              <p className="mt-1.5 text-xs text-ink-4">‘내일 오후 3시’, ‘#긴급’ 같은 말을 넣으면 알아서 읽습니다.</p>
             )}
           </div>
 
-          {/* 인라인 컨트롤 */}
-          <div className="mb-3 flex items-center gap-2 flex-wrap">
-              {/* DatePicker 라이브러리 사용 */}
+          <div className="space-y-3 px-4 py-3">
+            {/* 날짜 / 우선순위 */}
+            <div className="flex flex-wrap items-center gap-2">
               <div className="relative" ref={datePickerContainerRef}>
                 <button
                   type="button"
                   onClick={() => setShowDatePicker(!showDatePicker)}
-                  className={`px-3 py-1.5 text-xs border rounded-md transition-all flex items-center gap-1.5 ${
-                    showDatePicker 
-                      ? 'bg-indigo-50 border-indigo-300 ring-2 ring-indigo-100 text-indigo-700' 
-                      : finalDueDate 
-                        ? 'text-indigo-600 font-medium bg-indigo-50 border-indigo-200' 
-                        : 'border-slate-300 hover:bg-slate-50 text-slate-600'
+                  className={`${chipBase} ${
+                    showDatePicker
+                      ? 'border-ink bg-paper text-ink'
+                      : finalDueDate
+                        ? 'border-ink-3 bg-paper font-medium text-ink'
+                        : 'border-rule text-ink-2 hover:border-ink-3'
                   }`}
+                  aria-expanded={showDatePicker}
                 >
-                  <RiCalendarLine />
+                  <RiCalendarLine aria-hidden="true" />
                   {finalDueDate ? formatDueDate(finalDueDate) : '날짜'}
                 </button>
-                
+
                 {showDatePicker && (
                   <div className={`absolute left-0 z-50 ${openUpwards ? 'bottom-full mb-2' : 'top-full mt-1'}`}>
                     <CustomDatePicker
@@ -377,57 +383,55 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
                 )}
               </div>
 
-            {/* 우선순위 버튼 */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowPriorityPicker(!showPriorityPicker)}
-                className={`px-3 py-1.5 text-xs border rounded-md transition-colors flex items-center gap-1.5 ${
-                  showPriorityPicker 
-                    ? 'bg-slate-100 border-slate-300' 
-                    : 'border-slate-300 hover:bg-slate-50'
-                } ${currentPriority.color}`}
-              >
-                <span>{currentPriority.icon}</span>
-                <span>{currentPriority.label}</span>
-              </button>
+              {/* 우선순위 */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowPriorityPicker(!showPriorityPicker)}
+                  className={`${chipBase} ${
+                    showPriorityPicker ? 'border-ink bg-paper' : 'border-rule hover:border-ink-3'
+                  } ${currentPriority.color}`}
+                  aria-expanded={showPriorityPicker}
+                >
+                  <span aria-hidden="true">{currentPriority.icon}</span>
+                  <span>{currentPriority.value === 'none' ? '우선순위' : currentPriority.label}</span>
+                </button>
 
-              {showPriorityPicker && (
-                <div className="absolute left-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-slate-100 py-1 z-50 animate-scaleIn origin-top-left">
-                  {priorities.map((p) => (
-                    <button
-                      key={p.value}
-                      type="button"
-                      onClick={() => {
-                        setManualPriority(p.value);
-                        setShowPriorityPicker(false);
-                        
-                        // 텍스트 필드에도 우선순위 추가
-                        if (p.value !== 'none') {
-                          const priorityText = `#${p.label}`;
-                          const withoutPriority = text.replace(/#(높음|보통|낮음|긴급|중요)/g, '').trim();
-                          setText(withoutPriority ? `${withoutPriority} ${priorityText}` : priorityText);
-                        } else {
-                           // 없음 선택 시 태그 제거
-                           const withoutPriority = text.replace(/#(높음|보통|낮음|긴급|중요)/g, '').trim();
-                           setText(withoutPriority);
-                        }
-                      }}
-                      className={`w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2 ${
-                        (finalPriority || 'none') === p.value ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700'
-                      }`}
-                    >
-                      <span className={p.color}>{p.icon}</span>
-                      <span>{p.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+                {showPriorityPicker && (
+                  <div className="absolute left-0 top-full z-50 mt-1 w-32 rounded-md border border-rule bg-sheet py-1 shadow-pop animate-pop-in">
+                    {priorities.map((p) => (
+                      <button
+                        key={p.value}
+                        type="button"
+                        onClick={() => {
+                          setManualPriority(p.value);
+                          setShowPriorityPicker(false);
+
+                          // 텍스트 필드에도 우선순위 반영
+                          if (p.value !== 'none') {
+                            const priorityText = `#${p.label}`;
+                            const withoutPriority = text.replace(/#(높음|보통|낮음|긴급|중요)/g, '').trim();
+                            setText(withoutPriority ? `${withoutPriority} ${priorityText}` : priorityText);
+                          } else {
+                            // 없음 선택 시 태그 제거
+                            const withoutPriority = text.replace(/#(높음|보통|낮음|긴급|중요)/g, '').trim();
+                            setText(withoutPriority);
+                          }
+                        }}
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-paper-2 ${
+                          (finalPriority || 'none') === p.value ? 'font-semibold text-ink' : 'text-ink-2'
+                        }`}
+                      >
+                        <span className={p.color} aria-hidden="true">{p.icon}</span>
+                        <span>{p.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* 프로젝트 선택 */}
-          <div className="mb-4">
+            {/* 프로젝트 / 상위 작업 */}
             <ProjectSelector
               projects={projects}
               selectedProjectId={selectedProjectId}
@@ -437,39 +441,38 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
                 setSelectedParentId(parentId);
               }}
             />
-          </div>
 
-          {/* <!-- [추가] AI 하위 항목 자동 생성 체크박스 --> */}
-          <div className="mb-4">
-            <label className="flex items-center gap-2 cursor-pointer group">
+            {/* AI 하위 항목 자동 생성 */}
+            <label className="flex cursor-pointer items-center gap-2 py-1 text-sm text-ink-2 hover:text-ink">
               <input
                 type="checkbox"
                 checked={generateSubtasksEnabled}
                 onChange={(e) => setGenerateSubtasksEnabled(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
+                className="h-4 w-4 cursor-pointer rounded-sm accent-[var(--color-ink)]"
               />
-              <span className="text-sm text-slate-600 group-hover:text-slate-800 transition-colors">
-                AI로 하위 항목 생성
-              </span>
+              추가하면서 AI로 하위 항목도 만들기
             </label>
           </div>
 
-          {/* 버튼 */}
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
-            >
-              취소
-            </button>
-            <button
-              type="submit"
-              disabled={!text.trim() || !selectedProjectId}
-              className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
-            >
-              작업 추가
-            </button>
+          {/* 하단 */}
+          <div className="flex items-center justify-between gap-2 border-t border-rule px-4 py-3">
+            <p className="hidden font-mono text-[11px] text-ink-3 sm:block">Enter 추가 · Esc 닫기</p>
+            <div className="ml-auto flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded px-3.5 py-2 text-sm text-ink-2 transition-colors hover:bg-paper-2"
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                disabled={!text.trim() || !selectedProjectId}
+                className="rounded bg-ink px-4 py-2 text-sm font-medium text-paper transition-colors hover:bg-ink-2 disabled:bg-ink-4"
+              >
+                추가
+              </button>
+            </div>
           </div>
         </form>
       </div>
