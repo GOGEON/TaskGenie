@@ -31,22 +31,24 @@ import SkeletonToDoItem from './SkeletonToDoItem';
 const ItemType = 'TODO_ITEM';
 
 /**
- * 우선순위별 체크박스 스타일.
- * border/bg: 미완료 원, completed: 완료 시 채움, hoverCheck: 미완료 상태에서 hover 시 체크 아이콘 색
+ * 우선순위별 체크박스 스타일 (우선순위 = 체크박스 테두리 색. 완료되면 모두 먹색으로 채움).
+ * box: 미완료 상자, hoverCheck: 미완료 상태에서 hover 시 체크 아이콘 색
  */
 const PRIORITY_STYLES = {
-  none: { border: 'border-slate-300', bg: 'bg-transparent', completed: 'bg-slate-400 border-slate-400', hoverCheck: 'text-slate-400' },
-  low: { border: 'border-indigo-500', bg: 'bg-indigo-50', completed: 'bg-indigo-400 border-indigo-400', hoverCheck: 'text-indigo-500' },
-  medium: { border: 'border-orange-500', bg: 'bg-orange-50', completed: 'bg-orange-400 border-orange-400', hoverCheck: 'text-orange-500' },
-  high: { border: 'border-red-600', bg: 'bg-red-50', completed: 'bg-red-400 border-red-400', hoverCheck: 'text-red-600' },
+  none: { box: 'border-ink-4 bg-sheet', hoverCheck: 'group-hover/checkbox:text-ink-4' },
+  low: { box: 'border-blueink bg-blueink-wash/60', hoverCheck: 'group-hover/checkbox:text-blueink' },
+  medium: { box: 'border-ochre bg-ochre-wash/60', hoverCheck: 'group-hover/checkbox:text-ochre' },
+  high: { box: 'border-accent bg-accent-wash/70', hoverCheck: 'group-hover/checkbox:text-accent' },
 };
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
+const pad = (n) => String(n).padStart(2, '0');
+
 
 /**
  * 마감일 배지.
- * 지남(빨강) / 24시간 이내(주황) / 그 외·완료(인디고)로 색상 구분하고,
+ * 지남 / 24시간 이내 / 그 외·완료로 색상 구분하고,
  * 자정(00:00:00)이면 날짜만, 아니면 시간까지 표시한다.
  *
  * @param {string} props.dueDate - ISO 마감일
@@ -57,17 +59,29 @@ const DueDateBadge = ({ dueDate, isCompleted }) => {
   const now = Date.now();
 
   const isDateOnly = date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0;
-  const format = isDateOnly
-    ? { month: 'short', day: 'numeric' }
-    : { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+  const label = isDateOnly
+    ? `${date.getMonth() + 1}.${date.getDate()}`
+    : `${date.getMonth() + 1}.${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
-  let colorClass = 'bg-indigo-50 text-indigo-700';
-  if (!isCompleted && date < now) colorClass = 'bg-red-50 text-red-700';
-  else if (!isCompleted && date < now + ONE_DAY_MS) colorClass = 'bg-orange-50 text-orange-700';
+  let tone = 'bg-paper-2 text-ink-3';
+  let title = '마감일';
+  if (isCompleted) {
+    tone = 'text-ink-4';
+  } else if (date < now) {
+    tone = 'bg-accent-wash text-accent-ink';
+    title = '마감일 지남';
+  } else if (date < now + ONE_DAY_MS) {
+    tone = 'bg-ochre-wash text-ochre';
+    title = '마감 임박';
+  }
 
   return (
-    <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex items-center gap-1 ${colorClass}`}>
-      <RiCalendarLine /> {date.toLocaleDateString('ko-KR', format)}
+    <span
+      className={`mt-[3px] inline-flex flex-shrink-0 items-center gap-1 whitespace-nowrap rounded-sm px-1.5 py-0.5 font-mono text-[11px] leading-4 tabular ${tone}`}
+      title={title}
+    >
+      <RiCalendarLine aria-hidden="true" className="text-[11px]" />
+      {label}
     </span>
   );
 };
@@ -181,39 +195,45 @@ const ToDoItem = ({
     <>
       <li
         ref={ref}
-        style={{ 
-          opacity: isDragging ? 0 : 1,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          transform: isDragging ? 'scale(1.02)' : 'scale(1)',
-        }}
+        style={{ opacity: isDragging ? 0 : 1 }}
         className={`
-          flex items-center justify-between py-1.5 sm:py-2 border-b border-slate-100 
-          group bg-white touch-manipulation item-fade-in
+          group flex items-start justify-between border-b border-rule/70 py-1.5 pr-1 touch-manipulation
+          transition-colors animate-row-in
+          ${isPreview ? 'max-w-2xl rounded-md border border-rule bg-sheet shadow-pop' : 'hover:bg-paper-2/50'}
         `}
       >
-        <div className="flex items-center flex-grow min-w-0">
+        <div className="flex min-w-0 flex-grow items-start">
           {/* 드래그 핸들 */}
-          <div ref={drag} className="p-1 sm:invisible sm:group-hover:visible flex-shrink-0 text-slate-400 cursor-grab hover:text-slate-600">
-            <RiDraggable className="text-lg" />
+          <div
+            ref={drag}
+            className="mt-[3px] hidden flex-shrink-0 cursor-grab p-1 text-ink-4 hover:text-ink-2 sm:invisible sm:block sm:group-hover:visible"
+            aria-label="끌어서 순서 바꾸기"
+          >
+            <RiDraggable className="text-base" />
           </div>
 
-          <div className="w-8 sm:w-8 text-center flex-shrink-0">
+          {/* 펼치기/접기 */}
+          <div className="w-7 flex-shrink-0 text-center">
             {hasChildren && (
-              <button 
+              <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsChildrenVisible(!isChildrenVisible);
                 }}
-                className="text-slate-500 hover:text-slate-800 active:text-slate-900 p-1.5 sm:p-1 rounded-full min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                className="flex h-8 w-7 items-center justify-center rounded text-ink-3 hover:bg-paper-3/70 hover:text-ink"
+                aria-label={isChildrenVisible ? '하위 항목 접기' : '하위 항목 펼치기'}
+                aria-expanded={isChildrenVisible}
               >
                 {isChildrenVisible ? <RiArrowDownSLine className="text-lg" /> : <RiArrowRightSLine className="text-lg" />}
               </button>
             )}
           </div>
 
-          {/* 우선순위 체크박스 */}
-          <button 
-            className="relative flex items-center justify-center p-1 cursor-pointer group/checkbox focus:outline-none"
+          {/* 체크박스 (테두리 색 = 우선순위) */}
+          <button
+            type="button"
+            className="group/checkbox relative flex h-8 flex-shrink-0 items-center justify-center px-1 focus:outline-none"
             onClick={handleToggleComplete}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -221,42 +241,41 @@ const ToDoItem = ({
                 handleToggleComplete(e);
               }
             }}
-            aria-label={item.is_completed ? "할 일 완료 취소" : "할 일 완료"}
+            aria-label={item.is_completed ? '완료 취소' : '완료로 표시'}
             role="checkbox"
             aria-checked={item.is_completed}
           >
-            <div className={`
-              w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
-              ${item.is_completed 
-                ? priorityStyle.completed
-                : `${priorityStyle.border} ${priorityStyle.bg} hover:bg-opacity-80`
-              }
-              group-focus/checkbox:ring-2 group-focus/checkbox:ring-offset-2 group-focus/checkbox:ring-indigo-500
-            `}>
-              <RiCheckLine
-                className={`
-                  w-3.5 h-3.5 text-white transition-opacity duration-200
-                  ${item.is_completed ? 'opacity-100' : `opacity-0 group-hover/checkbox:opacity-100 ${priorityStyle.hoverCheck}`}
-                `}
-              />
-            </div>
+            <span
+              className={`
+                flex h-[18px] w-[18px] items-center justify-center rounded-[4px] border-[1.5px] transition-colors
+                group-focus-visible/checkbox:outline-2 group-focus-visible/checkbox:outline-offset-2 group-focus-visible/checkbox:outline-ink
+                ${item.is_completed ? 'border-ink-3 bg-ink-3 text-paper' : `${priorityStyle.box} text-transparent ${priorityStyle.hoverCheck}`}
+              `}
+            >
+              <RiCheckLine className="h-3.5 w-3.5" />
+            </span>
           </button>
 
-          {/* <!-- [수정] 모바일에서 더 컴팩트한 폰트 --> */}
-          <span className={`flex-grow p-1 pr-2 ml-1.5 sm:ml-2 break-words ${item.is_completed ? 'text-slate-400 line-through' : 'text-slate-800'} text-xs sm:text-sm md:text-base`}>
+          {/* 내용 */}
+          <span
+            className={`ml-1.5 min-w-0 flex-grow break-words py-[5px] pr-2 text-[15px] leading-[22px] ${
+              item.is_completed ? 'strike-pen text-ink-4' : 'text-ink'
+            }`}
+          >
             {item.description}
           </span>
-          
-          {/* 마감일 배지 */}
+
           {item.due_date && <DueDateBadge dueDate={item.due_date} isCompleted={item.is_completed} />}
         </div>
 
-        {/* 케밥 메뉴 */}
-        <div className="flex-shrink-0 ml-2 sm:invisible sm:group-hover:visible">
-          <button 
+        {/* 더보기 메뉴 */}
+        <div className="ml-1 flex-shrink-0 sm:invisible sm:group-hover:visible sm:group-focus-within:visible">
+          <button
+            type="button"
             onClick={handleMenuClick}
             disabled={isPreview}
-            className="p-2 sm:p-1 rounded-full hover:bg-slate-100 active:bg-slate-200 disabled:cursor-default min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center touch-manipulation text-slate-500"
+            className="flex h-8 w-8 items-center justify-center rounded text-ink-3 hover:bg-paper-3/70 hover:text-ink disabled:cursor-default touch-manipulation"
+            aria-label="항목 메뉴"
           >
             <RiMore2Fill />
           </button>
@@ -282,7 +301,7 @@ const ToDoItem = ({
       )}
       
       {generatingItemId === item.id && (
-        <ul className="list-none p-0 pl-6 sm:pl-8">
+        <ul className="list-none p-0 pl-6 sm:pl-8" aria-label="하위 항목 생성 중">
           {[...Array(3)].map((_, i) => (
             <SkeletonToDoItem key={`skeleton-${i}`} />
           ))}

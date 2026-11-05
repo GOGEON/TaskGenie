@@ -65,6 +65,21 @@ export const replaceItem = (items, updatedItem) =>
   mapItem(items, updatedItem.id, () => updatedItem);
 
 /**
+ * 특정 항목의 모든 상위 항목을 미완료로 설정.
+ * 완료된 항목 아래에 하위 항목이 생기면 서버가 조상들의 완료 상태를 해제하므로 로컬 상태도 맞춘다.
+ *
+ * @param {Array} items - 전체 항목 배열
+ * @param {string} itemId - 기준 항목 ID
+ * @returns {Array} 상위 항목들이 미완료로 변경된 배열
+ */
+export const markAncestorsIncomplete = (items, itemId) =>
+  items.map(item =>
+    item.children?.length && findItem(item.children, itemId)
+      ? { ...item, is_completed: false, children: markAncestorsIncomplete(item.children, itemId) }
+      : item
+  );
+
+/**
  * 트리 구조에서 특정 항목 삭제 (자식 포함).
  *
  * @param {Array} items - 전체 항목 배열

@@ -95,3 +95,73 @@ def test_delete_list(client: TestClient, auth_headers, fake_db):
     assert client.delete(f"/todos/{todo_list['id']}", headers=auth_headers).status_code == 204
     assert fake_db.data["todo_items"] == {}
     assert client.get(f"/todos/{todo_list['id']}", headers=auth_headers).status_code == 404
+
+
+# ==================== 완료된 부모에 하위 항목 추가 ====================
+
+def _find_item(items, item_id):
+    for item in items:
+        if item["id"] == item_id:
+            return item
+        found = _find_item(item["children"], item_id)
+        if found:
+            return found
+    return None
+
+
+def _create_completed_project(client, headers):
+    """루트 "계획" > 하위 "세부 1", 루트 "실행"을 모두 완료 처리한 프로젝트."""
+    project = _generate(client, headers)
+    root, other_root = project["items"]
+    child = root["children"][0]
+    for item_id in (root["id"], child["id"], other_root["id"]):
+        response = client.put(f"/todos/items/{item_id}", headers=headers, json={"is_completed": True})
+        assert response.status_code == 200
+    return project["id"], root["id"], child["id"], other_root["id"]
+
+
+def test_quick_add_child_reopens_completed_ancestors(client: TestClient, auth_headers):
+    list_id, root_id, child_id, other_root_id = _create_completed_project(client, auth_headers)
+
+    response = client.post("/todos/items", headers=auth_headers, json={
+        "description": "새 작업", "list_id": list_id, "parent_id": child_id,
+    })
+    assert response.status_code == 200
+    new_id = response.json()["id"]
+    assert response.json()["is_completed"] is False
+
+    # 새로고침처럼 프로젝트를 다시 조회
+    items = client.get(f"/todos/{list_id}", headers=auth_headers).json()["items"]
+    assert _find_item(items, root_id)["is_completed"] is False
+    assert _find_item(items, child_id)["is_completed"] is False
+    assert [c["id"] for c in _find_item(items, child_id)["children"]] == [new_id]
+    # 새 작업의 조상이 아닌 항목은 상태 유지
+    assert _find_item(items, other_root_id)["is_completed"] is True
+
+
+def test_generate_subtasks_reopens_completed_ancestors(client: TestClient, auth_headers):
+    list_id, root_id, child_id, other_root_id = _create_completed_project(client, auth_headers)
+
+    response = client.post(f"/todos/items/{child_id}/generate-subtasks", headers=auth_headers)
+    assert response.status_code == 200
+    assert response.json()["is_completed"] is False
+    assert len(response.json()["children"]) == 1
+
+    items = client.get(f"/todos/{list_id}", headers=auth_headers).json()["items"]
+    assert _find_item(items, root_id)["is_completed"] is False
+    assert _find_item(items, child_id)["is_completed"] is False
+    assert _find_item(items, other_root_id)["is_completed"] is True
+
+
+def test_quick_add_does_not_reopen_items_in_another_list(client: TestClient, auth_headers):
+    list_id, root_id, child_id, _ = _create_completed_project(client, auth_headers)
+
+    other = register_and_login(client, "other")
+    other_list_id = _generate(client, other, keyword="공부")["id"]
+    client.post("/todos/items", headers=other, json={
+        "description": "새 작업", "list_id": other_list_id, "parent_id": child_id,
+    })
+
+    items = client.get(f"/todos/{list_id}", headers=auth_headers).json()["items"]
+    assert _find_item(items, root_id)["is_completed"] is True
+    assert _find_item(items, child_id)["is_completed"] is True

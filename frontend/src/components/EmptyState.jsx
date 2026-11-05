@@ -1,105 +1,87 @@
 /**
  * 빈 상태 표시 컴포넌트
- * 
- * 데이터가 없을 때 사용자에게 표시되는 안내 UI.
- * 프로젝트 목록이 비었거나, 할 일 목록이 비었을 때 사용됨.
- * 
+ *
+ * 프로젝트 목록이나 할 일 목록이 비었을 때 표시되는 안내.
+ * 빈 종이(괘선 몇 줄)를 그리고, 무엇을 하면 되는지 한 문장으로 말한다.
+ *
  * @module EmptyState
  */
 import React from 'react';
-import { RiRocketLine, RiTaskLine, RiLightbulbLine, RiArrowRightLine } from 'react-icons/ri';
+import { RiAddLine } from 'react-icons/ri';
 
+/** 빈 괘선 — 빈 목록을 그대로 보여 주는 그림 */
+const BlankLines = () => (
+  <div className="w-full max-w-xs" aria-hidden="true">
+    {[72, 54, 64].map((w, i) => (
+      <div key={i} className="flex items-center gap-3 border-b border-rule py-2.5">
+        <span className="h-[18px] w-[18px] flex-shrink-0 rounded-[4px] border-[1.5px] border-rule-strong" />
+        <span className="h-2 rounded-sm bg-paper-3/70" style={{ width: `${w}%` }} />
+      </div>
+    ))}
+  </div>
+);
 
 /**
  * EmptyState 컴포넌트.
- * 
+ *
  * @param {Object} props - 컴포넌트 속성
  * @param {string} [props.type='projects'] - 빈 상태 유형 ('projects' | 'tasks')
  * @param {Function} props.onAction - 액션 버튼 클릭 핸들러
  * @param {string} props.actionLabel - 액션 버튼 텍스트
- * @param {JSX.Element} props.icon - 사용자 정의 아이콘
  * @param {string} props.title - 사용자 정의 제목
  * @param {string} props.description - 사용자 정의 설명
  * @param {boolean} [props.showAction=true] - 액션 버튼 표시 여부
  * @returns {JSX.Element} 빈 상태 뷰
  */
-const EmptyState = ({ 
-  type = 'projects', // 'projects' | 'tasks'
+const EmptyState = ({
+  type = 'projects',
   onAction,
   actionLabel,
-  icon,
   title,
   description,
-  showAction = true
+  showAction = true,
 }) => {
-  // 기본 메시지 설정
   const defaultMessages = {
     projects: {
-      icon: <RiRocketLine className="w-16 h-16 text-indigo-400" />,
-      title: '첫 프로젝트를 만들어보세요!',
-      description: '키워드를 입력하면 AI가 자동으로 할 일을 생성해드립니다.',
-      actionLabel: '새 프로젝트 만들기'
+      title: '아직 프로젝트가 없습니다',
+      description:
+        '하고 싶은 일을 한 단어로 적어 보세요. ‘이사 준비’, ‘기말고사’, ‘제주도 여행’ 같은 키워드면 AI가 할 일 목록으로 나눠 적어 둡니다.',
+      actionLabel: '새 프로젝트',
     },
     tasks: {
-      icon: <RiTaskLine className="w-16 h-16 text-indigo-400" />,
-      title: 'AI에게 세부 작업을 요청해보세요',
-      description: '할 일 항목을 선택하고 하위 작업을 자동으로 생성할 수 있습니다.',
-      actionLabel: 'AI로 작업 생성하기'
-    }
+      title: '이 프로젝트는 비어 있습니다',
+      description: '첫 항목을 적어 보세요.',
+      actionLabel: '할 일 추가',
+    },
   };
 
-  const message = defaultMessages[type];
-  const displayIcon = icon || message.icon;
+  const message = defaultMessages[type] || defaultMessages.projects;
   const displayTitle = title || message.title;
   const displayDescription = description || message.description;
   const displayActionLabel = actionLabel || message.actionLabel;
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4 text-center">
-      {/* 아이콘 */}
-      <div className="mb-6 animate-bounce-slow">
-        {displayIcon}
-      </div>
+    <div
+      className={`flex flex-col items-start ${
+        type === 'projects' ? 'mx-auto w-full max-w-3xl px-4 pb-16 pt-10 sm:px-8 sm:pt-16' : 'py-6'
+      }`}
+    >
+      <BlankLines />
 
-      {/* 제목 */}
-      <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-3">
+      <h2 className="mt-8 break-keep font-serif text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
         {displayTitle}
-      </h3>
+      </h2>
+      <p className="mt-3 max-w-md break-keep text-[15px] leading-relaxed text-ink-2">{displayDescription}</p>
 
-      {/* 설명 */}
-      <p className="text-sm sm:text-base text-slate-600 mb-8 max-w-md leading-relaxed">
-        {displayDescription}
-      </p>
-
-      {/* 액션 버튼 */}
       {showAction && onAction && (
         <button
+          type="button"
           onClick={onAction}
-          className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+          className="mt-7 inline-flex items-center gap-2 rounded bg-ink px-4 py-2.5 text-sm font-medium text-paper transition-colors hover:bg-ink-2"
         >
-          <span>{displayActionLabel}</span>
-          <RiArrowRightLine className="w-5 h-5" />
+          <RiAddLine aria-hidden="true" />
+          {displayActionLabel}
         </button>
-      )}
-
-      {/* 힌트 */}
-      {type === 'projects' && (
-        <div className="mt-8 p-4 bg-indigo-50 rounded-lg max-w-md border border-indigo-100">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 text-xl text-indigo-500">
-              <RiLightbulbLine />
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-medium text-indigo-900 mb-1">
-                빠른 시작 팁
-              </p>
-              <p className="text-xs text-indigo-700">
-                "운동하기", "프로젝트 기획", "여행 준비" 같은 키워드를 입력하면 
-                AI가 체계적인 할 일 목록을 자동으로 만들어드립니다.
-              </p>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

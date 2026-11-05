@@ -1,45 +1,27 @@
 /**
  * 스켈레톤 할 일 아이템 컴포넌트
- * 
- * 데이터 로딩 중에 표시되는 할 일 아이템의 로딩 플레이스홀더.
- * 실제 아이템과 유사한 레이아웃을 가지며 펄스 애니메이션 적용.
- * 
+ *
+ * AI가 하위 항목을 만드는 동안 표시되는 자리 표시자.
+ * 실제 행(ToDoItem)과 같은 간격·높이를 갖는다.
+ *
  * @module SkeletonToDoItem
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 
-{/* <!-- [수정] 스켈레톤 UI가 실제 UI와 일치하도록 구조 및 스타일 수정 --> */}
 const SkeletonToDoItem = () => {
+  const width = useMemo(() => `${Math.round(Math.random() * 35 + 30)}%`, []);
+
   return (
-    <li 
-      className="flex items-center justify-between py-2 sm:py-1 border-t border-b border-l-4 border-slate-100 bg-white animate-pulse"
-    >
-      <div className="flex items-center flex-grow min-w-0">
-        {/* 드래그 핸들 스페이서 */}
-        <div className="p-1 flex-shrink-0">
-            <div className="w-5 h-5"></div>
-        </div>
-        
-        {/* 화살표 영역 */}
-        <div className="w-8 sm:w-8 text-center flex-shrink-0">
-            {/* 이 영역은 비워두거나, 필요 시 스켈레톤 아이콘 추가 */}
-        </div>
-        
-        {/* 체크박스 스켈레톤 */}
-        <div className="w-5 h-5 bg-slate-200 rounded-full mx-2 flex-shrink-0"></div>
-        
-        {/* 텍스트 스켈레톤 */}
-        <div className="p-1 flex-grow">
-            <div 
-              className="h-4 bg-slate-200 rounded"
-              style={{ width: `${Math.random() * 40 + 30}%` }}
-            ></div>
-        </div>
+    <li className="flex items-center border-b border-rule/70 py-1.5 pr-1" aria-hidden="true">
+      {/* 드래그 핸들 + 펼치기 영역 자리 */}
+      <div className="w-7 flex-shrink-0 sm:w-[52px]" />
+      {/* 체크박스 */}
+      <div className="flex h-8 items-center px-1">
+        <div className="skeleton h-[18px] w-[18px] rounded-[4px]" />
       </div>
-      
-      {/* 케밥 메뉴 스페이서 */}
-      <div className="flex-shrink-0 ml-2">
-        <div className="w-5 h-5"></div>
+      {/* 텍스트 */}
+      <div className="ml-1.5 flex-grow py-[5px]">
+        <div className="skeleton h-3.5 rounded-sm" style={{ width }} />
       </div>
     </li>
   );

@@ -1,10 +1,7 @@
-<svg width="256" height="256" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100" height="100" rx="20" fill="#F2F2F2" />
-  <!-- Calendar Body -->
-  <rect x="20" y="25" width="60" height="55" rx="5" fill="white" stroke="#CCCCCC" stroke-width="2"/>
-  <!-- Calendar Rings -->
-  <line x1="35" y1="15" x2="35" y2="30" stroke="#4A4A4A" stroke-width="4" stroke-linecap="round"/>
-  <line x1="65" y1="15" x2="65" y2="30" stroke="#4A4A4A" stroke-width="4" stroke-linecap="round"/>
-  <!-- Checkmark -->
-  <path d="M35 55 L47 67 L70 42" stroke="#32CD32" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<svg width="256" height="256" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="6" fill="#1B1A17"/>
+  <rect x="7" y="9" width="12" height="2" rx="1" fill="#F4F1EA"/>
+  <rect x="7" y="15" width="18" height="2" rx="1" fill="#F4F1EA"/>
+  <rect x="7" y="21" width="9" height="2" rx="1" fill="#F4F1EA" opacity="0.45"/>
+  <path d="M5.5 22 L26 22" stroke="#D2462C" stroke-width="2.2" stroke-linecap="round"/>
 </svg>

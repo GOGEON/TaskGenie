@@ -65,6 +65,12 @@ class FakeBatch:
     def __init__(self):
         self._ops = []
 
+    def set(self, ref, data):
+        self._ops.append(lambda: ref.set(data))
+
+    def update(self, ref, data):
+        self._ops.append(lambda: ref.update(data))
+
     def delete(self, ref):
         self._ops.append(ref.delete)
 

@@ -16,6 +16,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PrioritySelector from './PrioritySelector';
 import CustomDatePicker from './CustomDatePicker';
+import { RiCalendarLine, RiCloseLine } from 'react-icons/ri';
 
 
 /**
@@ -78,16 +79,24 @@ function ContextMenu({ x, y, options, onClose, priorityConfig, dateConfig }) {
     }
   }, [x, y]);
 
+  const formatDue = (iso) => {
+    const d = new Date(iso);
+    const pad = (n) => String(n).padStart(2, '0');
+    const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+    return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}${hasTime ? ` ${pad(d.getHours())}:${pad(d.getMinutes())}` : ''}`;
+  };
+
   return (
     <div
       ref={menuRef}
-      className="absolute bg-white shadow-lg rounded-lg py-2 z-50 min-w-[200px] sm:min-w-[280px] border border-slate-200 animate-scaleIn"
+      role="menu"
+      className="absolute z-50 min-w-[240px] rounded-md border border-rule bg-sheet py-1 shadow-pop animate-pop-in sm:min-w-[288px]"
       style={{ top: y, left: x }}
     >
-      {/* [추가] 우선순위 선택 섹션 - 케밥 메뉴 내 통합 */}
+      {/* 우선순위 */}
       {priorityConfig && (
-        <div className="px-4 py-3 border-b border-slate-100">
-          <p className="text-xs text-slate-500 mb-2">우선순위</p>
+        <div className="border-b border-rule px-3 pb-3 pt-2">
+          <p className="mb-2 text-xs text-ink-3">우선순위</p>
           <PrioritySelector 
             value={priorityConfig.currentPriority}
             onChange={(newPriority) => {
@@ -97,41 +106,46 @@ function ContextMenu({ x, y, options, onClose, priorityConfig, dateConfig }) {
         </div>
       )}
       
-      {/* [추가] 마감일 설정 섹션 - 날짜/시간 선택기 통합 */}
-      {/* [수정] 시간 입력 선택 사항으로 변경 (showTime prop 제거) */}
+      {/* 마감일 */}
       {dateConfig && (
-        <div className="px-4 py-3 border-b border-slate-100">
-          <p className="text-xs text-slate-500 mb-2">마감일</p>
+        <div className="border-b border-rule px-3 pb-3 pt-2">
+          <p className="mb-2 text-xs text-ink-3">마감일</p>
           <div className="relative">
-            <button
-              onClick={() => setShowDatePicker(!showDatePicker)}
-              className={`w-full px-3 py-2 text-sm text-left border rounded-md flex items-center justify-between transition-colors ${
-                showDatePicker 
-                  ? 'bg-indigo-50 border-indigo-300 ring-2 ring-indigo-100 text-indigo-700' 
-                  : dateConfig.dueDate 
-                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-medium' 
-                    : 'border-slate-300 hover:bg-slate-50 text-slate-600'
+            <div
+              className={`flex w-full items-center rounded border text-sm transition-colors ${
+                showDatePicker ? 'border-ink bg-paper' : 'border-rule hover:border-ink-3'
               }`}
             >
-              <span className="flex items-center gap-2">
-                <i className="ri-calendar-line"></i>
-                {dateConfig.dueDate ? new Date(dateConfig.dueDate).toLocaleDateString() : '마감일 설정'}
-              </span>
+              <button
+                type="button"
+                onClick={() => setShowDatePicker(!showDatePicker)}
+                className="flex flex-1 items-center gap-2 px-2.5 py-2 text-left"
+                aria-expanded={showDatePicker}
+              >
+                <RiCalendarLine className="text-ink-3" aria-hidden="true" />
+                {dateConfig.dueDate ? (
+                  <span className="font-mono text-[13px] text-ink tabular">{formatDue(dateConfig.dueDate)}</span>
+                ) : (
+                  <span className="text-ink-3">마감일 설정</span>
+                )}
+              </button>
               {dateConfig.dueDate && (
-                <span 
+                <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     dateConfig.onDueDateChange(null);
                   }}
-                  className="hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors"
+                  className="mr-1 rounded p-1 text-ink-3 transition-colors hover:bg-accent-wash hover:text-accent-ink"
+                  aria-label="마감일 지우기"
                 >
-                  <i className="ri-close-line"></i>
-                </span>
+                  <RiCloseLine />
+                </button>
               )}
-            </button>
+            </div>
 
             {showDatePicker && (
-              <div className="absolute left-0 top-full mt-2 z-50">
+              <div className="absolute left-0 top-full z-50 mt-2">
                 <CustomDatePicker
                   selectedDate={dateConfig.dueDate ? new Date(dateConfig.dueDate) : null}
                   onChange={(date) => {
@@ -148,22 +162,29 @@ function ContextMenu({ x, y, options, onClose, priorityConfig, dateConfig }) {
         </div>
       )}
       
-      {/* 메뉴 옵션들 */}
-      <ul>
+      {/* 메뉴 항목 */}
+      <ul className="py-1">
         {options.map((option, index) => (
-          <li
-            key={index}
-            className="px-4 py-2.5 sm:py-2 hover:bg-slate-50 active:bg-slate-100 cursor-pointer text-sm sm:text-base touch-manipulation transition-all hover:pl-5 text-slate-700"
-            onClick={() => {
-              if (option.onClick) {
-                option.onClick();
-              } else if (option.action) {
-                option.action();
-              }
-              onClose();
-            }}
-          >
-            {option.label}
+          <li key={index} role="none">
+            <button
+              type="button"
+              role="menuitem"
+              className={`w-full px-3 py-2 text-left text-sm transition-colors touch-manipulation ${
+                option.danger
+                  ? 'text-accent-ink hover:bg-accent-wash'
+                  : 'text-ink-2 hover:bg-paper-2 hover:text-ink'
+              }`}
+              onClick={() => {
+                if (option.onClick) {
+                  option.onClick();
+                } else if (option.action) {
+                  option.action();
+                }
+                onClose();
+              }}
+            >
+              {option.label}
+            </button>
           </li>
         ))}
       </ul>

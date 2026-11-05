@@ -40,36 +40,46 @@ function EditModal({ item, onSave, onClose }) {
   };
 
   return (
-    <div 
-      className="fixed inset-0 flex items-center justify-center z-[60] p-4"
-      style={{ backgroundColor: 'rgba(15, 23, 42, 0.1)' }}
+    <div
+      className="fixed inset-0 z-[60] flex items-start justify-center bg-ink/30 p-4 pt-[12vh] animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
-      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-md mx-4 animate-scaleIn">
-        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-slate-800">항목 수정</h3>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-modal-title"
+        className="w-full max-w-md rounded-md border border-rule bg-sheet p-5 shadow-pop animate-pop-in sm:p-6"
+      >
+        <h3 id="edit-modal-title" className="font-serif text-xl font-semibold tracking-tight text-ink">항목 수정</h3>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full p-3 sm:p-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base resize-none transition-all"
+          className="mt-4 w-full resize-none rounded border border-rule-strong bg-paper p-3 text-[15px] leading-relaxed text-ink focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink"
           rows="4"
           autoFocus
+          aria-label="항목 내용"
         />
-        <div className="text-xs sm:text-sm text-slate-500 mt-2">
-          Ctrl+Enter로 저장, Esc로 취소
-        </div>
-        <div className="flex justify-end gap-2 sm:gap-4 mt-4">
-          <button 
-            onClick={onClose} 
-            className="px-4 sm:px-5 py-2.5 sm:py-2 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 active:bg-slate-300 text-sm sm:text-base min-h-[44px] sm:min-h-0 touch-manipulation transition-all hover-lift"
-          >
-            취소
-          </button>
-          <button 
-            onClick={handleSave} 
-            className="px-4 sm:px-5 py-2.5 sm:py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 active:bg-indigo-800 text-sm sm:text-base min-h-[44px] sm:min-h-0 touch-manipulation transition-all hover-lift btn-ripple"
-          >
-            저장
-          </button>
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <p className="hidden font-mono text-[11px] text-ink-3 sm:block">Ctrl+Enter 저장 · Esc 취소</p>
+          <div className="ml-auto flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-[40px] rounded px-4 text-sm text-ink-2 transition-colors hover:bg-paper-2 touch-manipulation"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="min-h-[40px] rounded bg-ink px-4 text-sm font-medium text-paper transition-colors hover:bg-ink-2 touch-manipulation"
+            >
+              저장
+            </button>
+          </div>
         </div>
       </div>
     </div>

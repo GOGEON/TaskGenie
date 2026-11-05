@@ -88,23 +88,25 @@ const KeywordInputModal = ({ isOpen, onClose, onSubmit, title = "새 프로젝�
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-[60] p-4"
-      style={{ backgroundColor: 'rgba(15, 23, 42, 0.1)' }}
+      className="fixed inset-0 z-[60] flex items-start justify-center bg-ink/30 p-4 pt-[12vh] animate-fade-in"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full animate-scaleIn">
-        {/* 헤더 */}
-        <div className="px-6 py-4 border-b border-slate-100">
-          <h2 className="text-lg font-semibold text-slate-800">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="keyword-modal-title"
+        className="w-full max-w-md rounded-md border border-rule bg-sheet shadow-pop animate-pop-in"
+      >
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6">
+          <h2 id="keyword-modal-title" className="font-serif text-xl font-semibold tracking-tight text-ink">
             {title}
           </h2>
-        </div>
+          <p className="mt-1.5 break-keep text-sm text-ink-3">
+            키워드를 적으면 AI가 단계별 할 일 목록으로 나눠 적습니다.
+          </p>
 
-        {/* 내용 */}
-        <form onSubmit={handleSubmit} className="p-6">
-          {/* 입력창 */}
-          <div className="mb-4">
-            <label htmlFor="keyword-input" className="block text-sm font-medium text-slate-700 mb-2">
+          <div className="mt-5">
+            <label htmlFor="keyword-input" className="sr-only">
               프로젝트 키워드
             </label>
             <input
@@ -117,35 +119,32 @@ const KeywordInputModal = ({ isOpen, onClose, onSubmit, title = "새 프로젝�
                 setError('');
               }}
               onKeyDown={handleKeyDown}
-              placeholder="예: 운동하기"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
-                error 
-                  ? 'border-red-500 focus:ring-red-200' 
-                  : 'border-slate-300 focus:ring-indigo-200'
+              placeholder="예: 이사 준비"
+              className={`w-full rounded border bg-paper px-3.5 py-2.5 text-[15px] text-ink focus:outline-none focus:ring-1 ${
+                error
+                  ? 'border-accent focus:ring-accent'
+                  : 'border-rule-strong focus:border-ink focus:ring-ink'
               }`}
               maxLength={50}
+              aria-invalid={Boolean(error)}
             />
-            
-            {/* [추가] 에러 메시지 및 문자 수 카운터 */}
-            <div className="flex items-center justify-between mt-2">
-              {error && (
-                <p className="text-red-500 text-xs">{error}</p>
-              )}
-              <p className="text-slate-400 text-xs ml-auto">{keyword.length}/50</p>
+
+            <div className="mt-1.5 flex items-center justify-between gap-2 text-xs">
+              {error && <p className="text-accent-ink">{error}</p>}
+              <p className="ml-auto font-mono text-ink-4 tabular">{keyword.length}/50</p>
             </div>
           </div>
 
-          {/* [추가] 추천 키워드 버튼 - 빠른 입력 지원 */}
-          {/* [수정] 단순화된 디자인 (이전: 이모지, 설명 포함) */}
-          <div className="mb-6">
-            <p className="text-xs text-slate-500 mb-2">추천 키워드</p>
-            <div className="flex flex-wrap gap-2">
+          {/* 예시 키워드 */}
+          <div className="mt-4">
+            <p className="mb-2 text-xs text-ink-3">이런 것도 됩니다</p>
+            <div className="flex flex-wrap gap-1.5">
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
                   type="button"
                   onClick={() => setKeyword(suggestion.text)}
-                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-sm text-slate-700 transition-colors"
+                  className="rounded-sm border border-rule px-2.5 py-1 text-sm text-ink-2 transition-colors hover:border-ink-3 hover:text-ink"
                 >
                   {suggestion.text}
                 </button>
@@ -153,21 +152,20 @@ const KeywordInputModal = ({ isOpen, onClose, onSubmit, title = "새 프로젝�
             </div>
           </div>
 
-          {/* [수정] 단순화된 버튼 디자인 (이전: 그라데이션 배경) */}
-          <div className="flex space-x-3">
+          <div className="mt-7 flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              className="rounded px-4 py-2 text-sm text-ink-2 transition-colors hover:bg-paper-2"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={!keyword.trim()}
-              className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
+              className="rounded bg-ink px-4 py-2 text-sm font-medium text-paper transition-colors hover:bg-ink-2 disabled:bg-ink-4"
             >
-              생성하기
+              만들기
             </button>
           </div>
         </form>
