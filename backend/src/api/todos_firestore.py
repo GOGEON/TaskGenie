@@ -112,7 +112,10 @@ def create_todo_item_fast(
     }
     
     db.collection('todo_items').document(item_id).set(new_item_doc)
-    
+
+    # 완료된 부모 아래에 작업이 추가되면 부모와 조상들의 완료 상태 해제
+    todo_service.reopen_completed_ancestors(db, parent_id, list_id)
+
     # Return created item
     return todo_service.get_todo_item_by_id(item_id)
 

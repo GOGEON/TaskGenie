@@ -1,51 +1,59 @@
-import sys
 import os
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+import sys
+
 import pytest
+from fastapi.testclient import TestClient
 
-# Add the project root to the Python path
+# Add the backend directory to the Python path so `src` is importable
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.dirname(__file__))
 
-from src.main import app
-from src.database import Base, get_db
+# The app reads USE_FIRESTORE at import time; run it against an in-memory Firestore
+os.environ["USE_FIRESTORE"] = "true"
 
-# Use an in-memory SQLite database for testing
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+from fake_firestore import FakeFirestore  # noqa: E402
+from src import firestore_db  # noqa: E402
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+firestore_db.initialize_firestore = lambda: firestore_db.get_firestore_db()
+firestore_db.db = FakeFirestore()
 
-# Create the database tables before running tests
-Base.metadata.create_all(bind=engine)
+from src.main import app  # noqa: E402
+from src.services import todo_service_firestore  # noqa: E402
 
-def override_get_db():
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
 
-app.dependency_overrides[get_db] = override_get_db
+@pytest.fixture(autouse=True)
+def fake_db():
+    """Give every test a fresh, empty in-memory Firestore."""
+    db = FakeFirestore()
+    firestore_db.db = db
+    yield db
 
-@pytest.fixture(scope="module")
+
+@pytest.fixture(autouse=True)
+def fake_ai(monkeypatch):
+    """Replace the Gemini calls with deterministic output."""
+    monkeypatch.setattr(
+        todo_service_firestore,
+        "generate_todo_items_from_keyword",
+        lambda keyword: [
+            {"description": f"{keyword} 1", "children": [{"description": f"{keyword} 1-1"}]},
+            {"description": f"{keyword} 2"},
+        ],
+    )
+    monkeypatch.setattr(
+        todo_service_firestore,
+        "generate_sub_tasks_from_main_task",
+        lambda main_task_description, project_keyword, context_path: [
+            f"{main_task_description} - 하위 1",
+            f"{main_task_description} - 하위 2",
+        ],
+    )
+
+
+@pytest.fixture
 def client():
     """
     Test client for the FastAPI application.
     """
     with TestClient(app) as c:
         yield c
-
-@pytest.fixture(scope="module", autouse=True)
-def setup_and_teardown_database():
-    """
-    Fixture to set up and tear down the database for each test session.
-    """
-    # Create all tables
-    Base.metadata.create_all(bind=engine)
-    yield
-    # Drop all tables
-    Base.metadata.drop_all(bind=engine)

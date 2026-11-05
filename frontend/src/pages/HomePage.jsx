@@ -100,6 +100,24 @@ const updateItemInArray = (items, updatedItem) => {
 
 
 /**
+ * 특정 항목의 모든 상위 항목을 미완료로 설정.
+ * 완료된 항목 아래에 하위 항목이 생기면 서버가 조상들의 완료 상태를 해제하므로 로컬 상태도 맞춤.
+ *
+ * @param {Array} items - 전체 항목 배열
+ * @param {string} itemId - 기준 항목 ID
+ * @returns {Array} 상위 항목들이 미완료로 변경된 배열
+ */
+const markAncestorsIncomplete = (items, itemId) => {
+  return items.map(item => {
+    if (item.children?.length && findItemRecursive(item.children, itemId)) {
+      return { ...item, is_completed: false, children: markAncestorsIncomplete(item.children, itemId) };
+    }
+    return item;
+  });
+};
+
+
+/**
  * 트리 구조에서 특정 항목의 설명 수정.
  * 
  * @param {Array} items - 전체 항목 배열
@@ -302,7 +320,10 @@ function HomePage({ project, setProjects, triggerRefetch, onOpenQuickAdd }) {
         success: '세부 항목이 성공적으로 생성되었습니다!',
         error: '세부 항목 생성에 실패했습니다.',
       });
-      const updatedItems = updateItemInArray(currentProject.items, updatedParentItem);
+      let updatedItems = updateItemInArray(currentProject.items, updatedParentItem);
+      if (!updatedParentItem.is_completed) {
+        updatedItems = markAncestorsIncomplete(updatedItems, updatedParentItem.id);
+      }
       const updatedProject = { ...currentProject, items: updatedItems };
       setCurrentProject(updatedProject);
       updateGlobalProjectState(updatedProject);
