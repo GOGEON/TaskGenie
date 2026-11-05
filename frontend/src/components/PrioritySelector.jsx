@@ -10,8 +10,6 @@ const PrioritySelector = ({ value = 'none', onChange, disabled = false }) => {
     { value: 'high', label: '높음', text: 'text-red-600', bg: 'bg-red-50', hover: 'hover:bg-red-50', icon: <RiFlag2Fill /> }
   ];
 
-  const currentPriority = priorities.find(p => p.value === value) || priorities[0];
-
   return (
     /* [개선] 가로 배치 버튼 그룹 */
     <div className="flex flex-row rounded-lg border border-slate-200 overflow-hidden">

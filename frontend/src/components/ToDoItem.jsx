@@ -30,6 +30,48 @@ import SkeletonToDoItem from './SkeletonToDoItem';
 // 드래그 앤 드롭 아이템 타입 상수
 const ItemType = 'TODO_ITEM';
 
+/**
+ * 우선순위별 체크박스 스타일.
+ * border/bg: 미완료 원, completed: 완료 시 채움, hoverCheck: 미완료 상태에서 hover 시 체크 아이콘 색
+ */
+const PRIORITY_STYLES = {
+  none: { border: 'border-slate-300', bg: 'bg-transparent', completed: 'bg-slate-400 border-slate-400', hoverCheck: 'text-slate-400' },
+  low: { border: 'border-indigo-500', bg: 'bg-indigo-50', completed: 'bg-indigo-400 border-indigo-400', hoverCheck: 'text-indigo-500' },
+  medium: { border: 'border-orange-500', bg: 'bg-orange-50', completed: 'bg-orange-400 border-orange-400', hoverCheck: 'text-orange-500' },
+  high: { border: 'border-red-600', bg: 'bg-red-50', completed: 'bg-red-400 border-red-400', hoverCheck: 'text-red-600' },
+};
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+
+/**
+ * 마감일 배지.
+ * 지남(빨강) / 24시간 이내(주황) / 그 외·완료(인디고)로 색상 구분하고,
+ * 자정(00:00:00)이면 날짜만, 아니면 시간까지 표시한다.
+ *
+ * @param {string} props.dueDate - ISO 마감일
+ * @param {boolean} props.isCompleted - 완료 여부
+ */
+const DueDateBadge = ({ dueDate, isCompleted }) => {
+  const date = new Date(dueDate);
+  const now = Date.now();
+
+  const isDateOnly = date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0;
+  const format = isDateOnly
+    ? { month: 'short', day: 'numeric' }
+    : { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+
+  let colorClass = 'bg-indigo-50 text-indigo-700';
+  if (!isCompleted && date < now) colorClass = 'bg-red-50 text-red-700';
+  else if (!isCompleted && date < now + ONE_DAY_MS) colorClass = 'bg-orange-50 text-orange-700';
+
+  return (
+    <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex items-center gap-1 ${colorClass}`}>
+      <RiCalendarLine /> {date.toLocaleDateString('ko-KR', format)}
+    </span>
+  );
+};
+
 
 /**
  * 할 일 아이템 컴포넌트.
@@ -41,14 +83,9 @@ const ItemType = 'TODO_ITEM';
  * @param {Function} props.onDropItem - 드래그 완료 후 저장 콜백
  * @param {Function} props.onToggleItemComplete - 완료 상태 토글 콜백
  * @param {Function} props.onOpenContextMenu - 컨텍스트 메뉴 열기 콜백
- * @param {Function} props.onGenerateSubtasks - AI 서브태스크 생성 콜백
- * @param {Function} props.onEditItem - 항목 수정 콜백
- * @param {Function} props.onDeleteItem - 항목 삭제 콜백
- * @param {Function} props.onUpdatePriority - 우선순위 변경 콜백
  * @param {boolean} props.isPreview - 드래그 미리보기 여부
  * @param {string} props.parentId - 부모 항목 ID (null이면 루트)
- * @param {boolean} props.isGenerating - AI 생성 중 여부
- * @param {string} props.generatingItemId - AI 생성 중인 항목 ID
+ * @param {string} props.generatingItemId - AI 하위 작업 생성 중인 항목 ID (스켈레톤 표시)
  * @returns {JSX.Element} 할 일 아이템 요소
  */
 const ToDoItem = ({
@@ -58,20 +95,14 @@ const ToDoItem = ({
   onDropItem,
   onToggleItemComplete,
   onOpenContextMenu,
-  onGenerateSubtasks,
-  onEditItem,
-  onDeleteItem,
-  onUpdatePriority,
   isPreview = false,
   parentId = null,
-  isGenerating = false,
   generatingItemId = null,
 }) => {
   // ==================== 컴포넌트 상태 ====================
   const ref = useRef(null);
   const [isChildrenVisible, setIsChildrenVisible] = useState(true);   // 자식 표시 여부
   const wasChildrenVisibleBeforeDrag = useRef(false);                 // 드래그 전 자식 표시 상태
-  const [isDeleting, setIsDeleting] = useState(false);                // 삭제 애니메이션 중
 
   const hasChildren = item.children && item.children.length > 0;
 
@@ -129,8 +160,6 @@ const ToDoItem = ({
     dragPreview(getEmptyImage(), { captureDraggingState: true });
   }, [dragPreview]);
 
-  const opacity = isDragging ? 0 : 1;
-  
   drop(ref);
 
   const handleMenuClick = (event) => {
@@ -146,34 +175,20 @@ const ToDoItem = ({
     onToggleItemComplete(item.id, !item.is_completed);
   };
 
-  const handlePriorityChange = (newPriority) => {
-    if (onUpdatePriority) {
-      onUpdatePriority(item.id, newPriority);
-    }
-  };
-
-  /* [수정] Indigo 테마 적용 */
-  const priorityConfig = {
-    none: { border: 'border-slate-300', bg: 'bg-transparent', completed: 'bg-slate-400 border-slate-400' },
-    low: { border: 'border-indigo-500', bg: 'bg-indigo-50', completed: 'bg-indigo-400 border-indigo-400' },
-    medium: { border: 'border-orange-500', bg: 'bg-orange-50', completed: 'bg-orange-400 border-orange-400' },
-    high: { border: 'border-red-600', bg: 'bg-red-50', completed: 'bg-red-400 border-red-400' }
-  };
-  const currentPriorityConfig = priorityConfig[item.priority || 'none'];
+  const priorityStyle = PRIORITY_STYLES[item.priority] || PRIORITY_STYLES.none;
 
   return (
     <>
       <li
         ref={ref}
         style={{ 
-          opacity: isDeleting ? 0 : (isDragging ? 0 : 1),
+          opacity: isDragging ? 0 : 1,
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           transform: isDragging ? 'scale(1.02)' : 'scale(1)',
         }}
         className={`
           flex items-center justify-between py-1.5 sm:py-2 border-b border-slate-100 
           group bg-white touch-manipulation item-fade-in
-          ${isDeleting ? 'item-slide-out' : ''}
         `}
       >
         <div className="flex items-center flex-grow min-w-0">
@@ -213,20 +228,16 @@ const ToDoItem = ({
             <div className={`
               w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
               ${item.is_completed 
-                ? currentPriorityConfig.completed 
-                : `${currentPriorityConfig.border} ${currentPriorityConfig.bg} hover:bg-opacity-80`
+                ? priorityStyle.completed
+                : `${priorityStyle.border} ${priorityStyle.bg} hover:bg-opacity-80`
               }
               group-focus/checkbox:ring-2 group-focus/checkbox:ring-offset-2 group-focus/checkbox:ring-indigo-500
             `}>
-              <RiCheckLine 
+              <RiCheckLine
                 className={`
                   w-3.5 h-3.5 text-white transition-opacity duration-200
-                  ${item.is_completed ? 'opacity-100' : 'opacity-0 group-hover/checkbox:opacity-100'}
-                  ${!item.is_completed && currentPriorityConfig.border.includes('red') ? 'text-red-600' : ''}
-                  ${!item.is_completed && currentPriorityConfig.border.includes('orange') ? 'text-orange-500' : ''}
-                  ${!item.is_completed && currentPriorityConfig.border.includes('indigo') ? 'text-indigo-500' : ''}
-                  ${!item.is_completed && currentPriorityConfig.border.includes('slate') ? 'text-slate-400' : ''}
-                `} 
+                  ${item.is_completed ? 'opacity-100' : `opacity-0 group-hover/checkbox:opacity-100 ${priorityStyle.hoverCheck}`}
+                `}
               />
             </div>
           </button>
@@ -237,29 +248,7 @@ const ToDoItem = ({
           </span>
           
           {/* 마감일 배지 */}
-          {item.due_date && (() => {
-            const dueDate = new Date(item.due_date);
-            const now = new Date();
-            const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-            
-            const isDateOnly = dueDate.getHours() === 0 && dueDate.getMinutes() === 0 && dueDate.getSeconds() === 0;
-            
-            const dateFormat = isDateOnly
-              ? { month: 'short', day: 'numeric' }
-              : { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            
-            const colorClass = dueDate < now && !item.is_completed
-              ? 'bg-red-50 text-red-700'
-              : dueDate < tomorrow && !item.is_completed
-              ? 'bg-orange-50 text-orange-700'
-              : 'bg-indigo-50 text-indigo-700';
-            
-            return (
-              <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex items-center gap-1 ${colorClass}`}>
-                <RiCalendarLine /> {dueDate.toLocaleDateString('ko-KR', dateFormat)}
-              </span>
-            );
-          })()}
+          {item.due_date && <DueDateBadge dueDate={item.due_date} isCompleted={item.is_completed} />}
         </div>
 
         {/* 케밥 메뉴 */}
@@ -286,18 +275,13 @@ const ToDoItem = ({
               onDropItem={onDropItem}
               onToggleItemComplete={onToggleItemComplete}
               onOpenContextMenu={onOpenContextMenu}
-              onGenerateSubtasks={onGenerateSubtasks}
-              onEditItem={onEditItem}
-              onDeleteItem={onDeleteItem}
-              onUpdatePriority={onUpdatePriority}
-              isGenerating={isGenerating}
               generatingItemId={generatingItemId}
             />
           ))}
         </ul>
       )}
       
-      {isGenerating && generatingItemId === item.id && (
+      {generatingItemId === item.id && (
         <ul className="list-none p-0 pl-6 sm:pl-8">
           {[...Array(3)].map((_, i) => (
             <SkeletonToDoItem key={`skeleton-${i}`} />

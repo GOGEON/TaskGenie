@@ -50,9 +50,6 @@ const CustomDragLayer = () => {
             moveItem={() => {}}
             onToggleItemComplete={() => {}}
             onOpenContextMenu={() => {}}
-            onGenerateSubtasks={() => {}}
-            onEditItem={() => {}}
-            onDeleteItem={() => {}}
           />
         );
       default:

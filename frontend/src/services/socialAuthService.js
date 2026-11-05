@@ -13,7 +13,6 @@
  */
 import { 
   signInWithPopup, 
-  signInWithRedirect,
   getRedirectResult,
   signOut as firebaseSignOut 
 } from 'firebase/auth';

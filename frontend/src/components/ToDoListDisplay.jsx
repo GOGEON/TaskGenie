@@ -13,68 +13,11 @@
  * @module ToDoListDisplay
  */
 import React, { useState } from 'react';
-import { useDragLayer } from 'react-dnd';
 import ToDoItem from './ToDoItem';
 import ProgressBar from './ProgressBar';
 import SkeletonToDoItem from './SkeletonToDoItem';
 import EmptyState from './EmptyState';
-
-
-/**
- * 가중치 기반 재귀적 진행률 계산 함수.
- * 각 계층(Level)의 항목들이 동등한 가중치를 갖도록 계산.
- * 
- * @param {Array} items - 할 일 항목 배열
- * @returns {number} 계산된 진행률 (0~100)
- */
-const calculateRecursiveProgress = (items) => {
-  if (!items || items.length === 0) {
-    return 100;
-  }
-
-  let totalProgress = 0;
-  const weightPerItem = 100 / items.length;
-
-  items.forEach(item => {
-    if (item.children && item.children.length > 0) {
-      // 자식의 진행률을 재귀적으로 계산하여 반영
-      totalProgress += (calculateRecursiveProgress(item.children) / 100) * weightPerItem;
-    } else if (item.is_completed) {
-      totalProgress += weightPerItem;
-    }
-  });
-
-  return totalProgress;
-};
-
-
-/**
- * 전체 항목 수 카운트 (재귀).
- * 
- * @param {Array} items - 할 일 항목 배열
- * @returns {number} 전체 항목 수
- */
-export const countAllItems = (items) => {
-  if (!items || items.length === 0) return 0;
-  return items.reduce((total, item) => {
-    return total + 1 + countAllItems(item.children);
-  }, 0);
-};
-
-
-/**
- * 완료된 항목 수 카운트 (재귀).
- * 
- * @param {Array} items - 할 일 항목 배열
- * @returns {number} 완료된 항목 수
- */
-export const countCompletedItems = (items) => {
-  if (!items || items.length === 0) return 0;
-  return items.reduce((total, item) => {
-    const isCompleted = item.is_completed ? 1 : 0;
-    return total + isCompleted + countCompletedItems(item.children);
-  }, 0);
-};
+import { calculateProgress } from '../utils/treeUtils';
 
 
 /**
@@ -85,12 +28,7 @@ export const countCompletedItems = (items) => {
  * @param {Function} props.moveItem - 아이템 이동 핸들러 (DnD)
  * @param {Function} props.onDropItem - 아이템 드롭 핸들러
  * @param {Function} props.onToggleItemComplete - 완료 상태 토글 핸들러
- * @param {Function} props.onGenerateSubtasks - 서브태스크 생성 핸들러
  * @param {Function} props.onOpenContextMenu - 컨텍스트 메뉴 오픈 핸들러
- * @param {Function} props.onEditItem - 아이템 수정 핸들러
- * @param {Function} props.onDeleteItem - 아이템 삭제 핸들러
- * @param {Function} props.onUpdatePriority - 우선순위 업데이트 핸들러
- * @param {boolean} props.isGenerating - AI 생성 중 여부
  * @param {string} props.generatingItemId - 생성 중인 아이템 ID
  * @param {Function} props.onUpdateKeyword - 프로젝트 제목 수정 핸들러
  * @param {Function} props.onOpenQuickAdd - 빠른 추가 모달 오픈 핸들러
@@ -101,12 +39,7 @@ function ToDoListDisplay({
   moveItem,
   onDropItem,
   onToggleItemComplete,
-  onGenerateSubtasks,
   onOpenContextMenu,
-  onEditItem,
-  onDeleteItem,
-  onUpdatePriority, /* [추가] 우선순위 업데이트 핸들러 */
-  isGenerating,
   generatingItemId,
   onUpdateKeyword, /* [추가] 프로젝트 키워드 수정 핸들러 */
   onOpenQuickAdd, /* [추가] 빠른 추가 모달 열기 핸들러 */
@@ -115,9 +48,6 @@ function ToDoListDisplay({
   const [isEditingKeyword, setIsEditingKeyword] = useState(false);
   const [editedKeyword, setEditedKeyword] = useState(todoList.keyword);
 
-  const { isDragging } = useDragLayer((monitor) => ({
-    isDragging: monitor.isDragging(),
-  }));
 
   /* [추가] 키워드 수정 모드 진입 */
   const handleKeywordClick = () => {
@@ -161,7 +91,7 @@ function ToDoListDisplay({
   }
 
   /* [개선] 가중치 기반 진행률 계산 */
-  const progress = calculateRecursiveProgress(todoList.items);
+  const progress = calculateProgress(todoList.items);
 
   return (
     // <!-- [수정] 모바일 패딩 줄이기 -->
@@ -205,12 +135,7 @@ function ToDoListDisplay({
             moveItem={moveItem}
             onDropItem={onDropItem}
             onToggleItemComplete={onToggleItemComplete}
-            onGenerateSubtasks={onGenerateSubtasks}
             onOpenContextMenu={onOpenContextMenu}
-            onEditItem={onEditItem}
-            onDeleteItem={onDeleteItem}
-            onUpdatePriority={onUpdatePriority}
-            isGenerating={isGenerating}
             generatingItemId={generatingItemId}
           />
         ))}

@@ -7,7 +7,7 @@
  * @module AuthPage
  */
 import React, { useState } from 'react';
-import api from '../services/api';
+import { register, login } from '../services/authApiService';
 import { saveToken } from '../services/localStorageService';
 import { signInWithGoogle, signInWithKakao } from '../services/socialAuthService';
 import toast from 'react-hot-toast';
@@ -28,17 +28,13 @@ function AuthPage({ onLoginSuccess }) {
 
     try {
       if (isRegister) {
-        const username = email.split('@')[0];
-        await api.post('/auth/register', { username, password, email });
+        await register(email, password);
         toast.success('회원가입에 성공했습니다! 로그인 해주세요.');
         setIsRegister(false);
       } else {
-        const username = email.split('@')[0];
-        const response = await api.post('/auth/login', `username=${username}&password=${password}`, {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        });
-        saveToken(response.data.access_token);
-        onLoginSuccess(response.data.access_token);
+        const token = await login(email, password);
+        saveToken(token);
+        onLoginSuccess(token);
       }
     } catch (err) {
       console.error('인증 오류:', err);

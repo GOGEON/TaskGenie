@@ -7,7 +7,6 @@
  * - 프로젝트(Todo List) CRUD
  * - 할 일 아이템(Todo Item) CRUD
  * - AI 기반 목록/서브태스크 생성
- * - 자연어 파싱 기반 아이템 생성
  * 
  * @module todoApiService
  */
@@ -100,14 +99,12 @@ export const deleteToDoList = async (listId) => {
 
 
 /**
- * 자연어 파싱 기반 아이템 생성.
- * 백엔드 AI가 텍스트를 분석하여 구조화된 작업으로 변환.
- * 
- * @param {string} text - 자연어 텍스트 (예: "내일까지 보고서 제출")
- * @param {string} listId - 추가할 프로젝트 ID
+ * 아이템 생성 (AI 없이 즉시 생성).
+ *
+ * @param {Object} item - { description, list_id, parent_id?, priority?, due_date? }
  * @returns {Promise<Object>} 생성된 아이템
  */
-export const createTodoItemFromNaturalLanguage = async (text, listId) => {
-  const response = await api.post('/todos/parse-and-create-item', { text, list_id: listId });
+export const createToDoItem = async (item) => {
+  const response = await api.post('/todos/items', item);
   return response.data;
 };
