@@ -1,63 +1,66 @@
-/* [추가] Quick Add 버튼을 위한 onOpenQuickAdd prop 추가 */
+/**
+ * 상단 바 컴포넌트
+ *
+ * 현재 프로젝트 위치 표시, 할 일 추가(Ctrl/⌘ K), 프로젝트 삭제.
+ * 동작하지 않는 장식용 아이콘은 두지 않는다.
+ *
+ * @module Header
+ */
 import React from 'react';
+import { RiMenuLine, RiAddLine, RiDeleteBinLine } from 'react-icons/ri';
+
+const isMac =
+  typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent || '');
 
 const Header = ({ activeProject, onDeleteProject, onToggleSidebar, onOpenQuickAdd }) => {
-  const projectName = activeProject ? activeProject.keyword : '프로젝트를 선택하세요';
+  const projectName = activeProject ? activeProject.keyword : null;
 
   return (
-    <div className="h-[72px] bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center flex-shrink-0">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center space-x-2 min-w-0 flex-1">
-          {/* Mobile Menu Button */}
+    <div className="flex h-14 flex-shrink-0 items-center border-b border-rule bg-paper px-3 sm:px-6">
+      <div className="flex w-full items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {/* 모바일 메뉴 버튼 */}
           <button
+            type="button"
             onClick={onToggleSidebar}
-            className="lg:hidden w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded transition-colors flex-shrink-0"
+            className="-ml-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded text-ink-2 hover:bg-paper-2 lg:hidden"
             aria-label="메뉴 열기"
           >
-            <i className="ri-menu-line text-slate-600 text-xl"></i>
+            <RiMenuLine className="text-xl" />
           </button>
-          
-          <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 hidden sm:flex">
-            <i className="ri-book-line text-slate-400"></i>
-          </div>
-          <span className="text-sm text-slate-500 hidden sm:inline">프로젝트 /</span>
-          <div className="flex items-center space-x-2 min-w-0">
-            <span className="text-base sm:text-lg font-medium text-slate-900 truncate">{projectName}</span>
-          </div>
+
+          <nav aria-label="현재 위치" className="flex min-w-0 items-center gap-2 text-sm">
+            <span className="hidden flex-shrink-0 text-ink-3 sm:inline">프로젝트</span>
+            <span className="hidden flex-shrink-0 text-ink-4 sm:inline" aria-hidden="true">/</span>
+            <span className="truncate font-medium text-ink">{projectName || '프로젝트를 선택하세요'}</span>
+          </nav>
         </div>
-        
-        <div className="flex items-center space-x-1 sm:space-x-3 flex-shrink-0">
-          {/* [추가] Quick Add 버튼 - 주요 CTA */}
+
+        <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
           {onOpenQuickAdd && (
             <button
+              type="button"
               onClick={onOpenQuickAdd}
-              className="quick-add-btn bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center space-x-1.5 sm:space-x-2 transition-all hover-lift shadow-md hover:shadow-lg min-h-[36px]"
-              title="빠른 추가 (Ctrl/Cmd + K)"
+              className="flex h-9 items-center gap-2 rounded bg-ink px-3 text-sm font-medium text-paper transition-colors hover:bg-ink-2"
+              title={`할 일 추가 (${isMac ? '⌘' : 'Ctrl'} K)`}
             >
-              <i className="ri-add-line text-lg sm:text-base"></i>
-              <span className="hidden sm:inline text-sm font-medium">빠른 추가</span>
-              <span className="hidden lg:inline text-xs opacity-75 ml-1">⌘K</span>
+              <RiAddLine className="text-base" aria-hidden="true" />
+              <span className="hidden sm:inline">할 일 추가</span>
+              <span className="kbd hidden text-paper/70 lg:inline-flex">{isMac ? '⌘K' : 'Ctrl K'}</span>
             </button>
           )}
-          
+
           {activeProject && onDeleteProject && (
             <button
+              type="button"
               onClick={() => onDeleteProject(activeProject.id)}
-              className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-red-50 rounded transition-all hover-lift"
+              className="flex h-9 w-9 items-center justify-center rounded text-ink-3 transition-colors hover:bg-accent-wash hover:text-accent-ink"
               title="프로젝트 삭제"
+              aria-label="프로젝트 삭제"
             >
-              <i className="ri-delete-bin-line text-red-400 hover:text-red-600 text-lg sm:text-xl transition-colors"></i>
+              <RiDeleteBinLine className="text-lg" />
             </button>
           )}
-          <div className="hidden md:flex w-8 h-8 items-center justify-center hover:bg-slate-100 rounded cursor-pointer transition-all hover-lift">
-            <i className="ri-notification-line text-slate-400 hover:text-slate-600 transition-colors"></i>
-          </div>
-          <div className="hidden md:flex w-8 h-8 items-center justify-center hover:bg-slate-100 rounded cursor-pointer transition-all hover-lift">
-            <i className="ri-share-line text-slate-400 hover:text-slate-600 transition-colors"></i>
-          </div>
-          <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-slate-100 rounded cursor-pointer transition-all hover-lift">
-            <i className="ri-more-line text-slate-400 hover:text-slate-600 text-lg sm:text-xl transition-colors"></i>
-          </div>
         </div>
       </div>
     </div>

@@ -17,7 +17,7 @@ import ToDoItem from './ToDoItem';
 import ProgressBar from './ProgressBar';
 import SkeletonToDoItem from './SkeletonToDoItem';
 import EmptyState from './EmptyState';
-import { calculateProgress } from '../utils/treeUtils';
+import { calculateProgress, countAllItems, countCompletedItems } from '../utils/treeUtils';
 
 
 /**
@@ -82,23 +82,23 @@ function ToDoListDisplay({
     return (
       <EmptyState 
         type="tasks"
-        title="할 일이 아직 없습니다"
-        description="새로운 작업을 추가하고 생산성을 높여보세요! '빠른 추가'를 클릭하거나 Ctrl+K를 눌러보세요."
-        actionLabel="새 작업 추가하기"
+        title="이 프로젝트는 비어 있습니다"
+        description="‘할 일 추가’를 누르거나 Ctrl/⌘ K로 첫 항목을 적어 보세요."
+        actionLabel="할 일 추가"
         onAction={onOpenQuickAdd}
       />
     );
   }
 
-  /* [개선] 가중치 기반 진행률 계산 */
+  /* 가중치 기반 진행률 */
   const progress = calculateProgress(todoList.items);
+  const total = countAllItems(todoList.items);
+  const completed = countCompletedItems(todoList.items);
 
   return (
-    // <!-- [수정] 모바일 패딩 줄이기 -->
-    <div className="bg-white rounded-lg p-2 sm:p-4 md:p-6 text-left w-full">
-      {/* [수정] 프로젝트 제목 드롭다운 아이콘 제거 (이전: 제목 옆에 ▼ 아이콘 표시) */}
-      {/* [추가] 클릭 시 인라인 수정 가능한 제목 입력 필드 */}
-      <div className="flex justify-between items-center">
+    <div className="w-full text-left">
+      {/* 프로젝트 제목 — 클릭하면 바로 수정 */}
+      <div className="-mx-2">
         {isEditingKeyword ? (
           <input
             type="text"
@@ -107,25 +107,25 @@ function ToDoListDisplay({
             onKeyDown={handleKeywordKeyDown}
             onBlur={handleKeywordSave}
             autoFocus
-            style={{ fontWeight: 700 }}
-            className="flex-1 text-xl sm:text-2xl md:text-3xl border border-slate-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 px-2 py-1 rounded-lg transition-all text-slate-800"
+            aria-label="프로젝트 이름"
+            className="w-full rounded border border-ink bg-sheet px-2 py-1 font-serif text-[1.75rem] font-semibold leading-tight tracking-tight text-ink focus:outline-none sm:text-4xl"
           />
         ) : (
-          <h2 
-            style={{ fontWeight: 700 }}
-            className="text-lg sm:text-xl md:text-2xl lg:text-3xl truncate cursor-pointer hover:bg-slate-50 px-2 py-1 rounded-lg transition-all text-slate-800"
+          <h1
+            className="cursor-text break-keep rounded border border-transparent px-2 py-1 font-serif text-[1.75rem] font-semibold leading-tight tracking-tight text-ink transition-colors hover:border-rule sm:text-4xl"
             onClick={handleKeywordClick}
-            title="클릭하여 수정"
+            title="클릭해서 이름 바꾸기"
           >
             {todoList.keyword}
-          </h2>
+          </h1>
         )}
       </div>
 
-      <div className="mt-2 sm:mt-3 mb-2 sm:mb-3">
-        <ProgressBar progress={progress} />
+      <div className="mb-4 mt-4 sm:mb-6">
+        <ProgressBar progress={progress} completed={completed} total={total} />
       </div>
-      <ul className="list-none p-0">
+
+      <ul className="list-none border-t border-rule p-0">
         {todoList.items.map((item, index) => (
           <ToDoItem
             key={item.id}

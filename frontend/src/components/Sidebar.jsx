@@ -14,6 +14,8 @@
  * @module Sidebar
  */
 import React, { useState, useEffect, useRef } from 'react';
+import { RiAddLine, RiCloseLine, RiQuestionLine } from 'react-icons/ri';
+import Wordmark from './Wordmark';
 import { calculateProgress, countAllItems, countCompletedItems } from '../utils/treeUtils';
 import { deleteAccount } from '../services/authApiService';
 import { getDisplayName, getInitial } from '../utils/displayName';
@@ -33,48 +35,44 @@ const ProjectListItem = ({ project, isActive, onSelect }) => {
   const progress = calculateProgress(project.items);
   const totalItems = countAllItems(project.items);
   const completedItems = countCompletedItems(project.items);
-  const complete = isFullyComplete(progress);
-
-  // 완료 > 선택됨 > 기본 순으로 색상 결정
-  const tone = (completeClass, activeClass, defaultClass) =>
-    complete ? completeClass : isActive ? activeClass : defaultClass;
+  const isDone = totalItems > 0 && isFullyComplete(progress);
 
   return (
-    <div
-      onClick={() => onSelect(project.id)}
-      className={`py-2.5 sm:py-2 px-3 rounded-lg cursor-pointer transition-all min-h-[44px] sm:min-h-0 touch-manipulation ${
-        isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-      }`}
-    >
-      {/* 프로젝트 이름 및 아이콘 */}
-      <div className="flex items-center space-x-3 mb-1.5">
-        <span className={`text-sm sm:text-base ${isActive ? 'text-indigo-500' : 'text-slate-400'} flex-shrink-0`}>#</span>
-        <span className={`text-sm sm:text-base font-medium flex-1 truncate ${isActive ? 'text-indigo-700' : 'text-slate-700'}`}>
-          {project.keyword}
-        </span>
-        {complete && <span className="text-emerald-500 flex-shrink-0">✓</span>}
-      </div>
-
-      {/* 진행률 바 및 통계 */}
-      {totalItems > 0 && (
-        <div className="pl-6 space-y-1">
-          <div className="flex items-center space-x-2">
-            <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-500 rounded-full ${tone('bg-emerald-500', 'bg-indigo-500', 'bg-slate-400')}`}
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <span className={`text-xs font-medium flex-shrink-0 min-w-[32px] text-right ${tone('text-emerald-600', 'text-indigo-600', 'text-slate-500')}`}>
-              {Math.round(progress)}%
+    <li>
+      <button
+        type="button"
+        onClick={() => onSelect(project.id)}
+        aria-current={isActive ? 'page' : undefined}
+        className={`relative block w-full rounded px-3 py-2.5 text-left transition-colors touch-manipulation ${
+          isActive ? 'bg-sheet shadow-sheet' : 'hover:bg-paper-3/60'
+        }`}
+      >
+        {isActive && (
+          <span className="absolute inset-y-2 left-0 w-[2px] bg-accent" aria-hidden="true" />
+        )}
+        <span className="flex items-baseline gap-3">
+          <span className={`flex-1 truncate text-sm ${isActive ? 'font-semibold text-ink' : 'text-ink-2'}`}>
+            {project.keyword}
+          </span>
+          {totalItems > 0 && (
+            <span className={`flex-shrink-0 font-mono text-[11px] tabular ${isDone ? 'text-moss' : 'text-ink-3'}`}>
+              {isDone ? '완료' : `${completedItems}/${totalItems}`}
             </span>
-          </div>
-          <div className="text-xs text-slate-500">
-            {completedItems}/{totalItems} 항목
-          </div>
-        </div>
-      )}
-    </div>
+          )}
+        </span>
+
+        {totalItems > 0 && (
+          <span className="mt-2 block h-[2px] w-full bg-rule" aria-hidden="true">
+            <span
+              className={`block h-full transition-[width] duration-500 ${
+                isDone ? 'bg-moss' : isActive ? 'bg-ink' : 'bg-ink-4'
+              }`}
+              style={{ width: `${progress}%` }}
+            />
+          </span>
+        )}
+      </button>
+    </li>
   );
 };
 
@@ -89,11 +87,13 @@ const ProjectListItem = ({ project, isActive, onSelect }) => {
  * @param {Function} props.onSelectProject - 프로젝트 선택 콜백
  * @param {Function} props.onAddNewProject - 새 프로젝트 추가 콜백
  * @param {Function} props.onLogout - 로그아웃 콜백
+ * @param {Function} props.onOpenHelp - 사용법 안내 열기 콜백
+ * @param {Function} props.onCloseMobile - 모바일 사이드바 닫기 콜백
  * @returns {JSX.Element} 사이드바 요소
  */
-const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewProject, onLogout }) => {
+const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewProject, onLogout, onOpenHelp, onCloseMobile }) => {
   // ==================== 컴포넌트 상태 ====================
-  const [width, setWidth] = useState(320);        // 사이드바 너비 (픽셀)
+  const [width, setWidth] = useState(288);        // 사이드바 너비 (픽셀)
   const [isResizing, setIsResizing] = useState(false);  // 리사이즈 중 여부
   const sidebarRef = useRef(null);
 
@@ -128,10 +128,20 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
   }, [isResizing]);
 
 
-  /** 회원탈퇴 (두 번 확인 후 계정 삭제 → 로그아웃) */
+  /** 리사이즈 시작 핸들러 */
+  const handleMouseDown = (e) => {
+    e.preventDefault();
+    setIsResizing(true);
+    document.body.style.cursor = 'col-resize';
+  };
+
+  /** 회원탈퇴 (2단계 확인) */
   const handleDeleteAccount = async () => {
-    if (!window.confirm('정말로 회원탈퇴를 하시겠습니까?\n\n모든 프로젝트와 할 일 데이터가 영구적으로 삭제됩니다.')) return;
-    if (!window.confirm('⚠️ 최종 확인\n\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?')) return;
+    const confirmFirst = window.confirm('정말로 회원탈퇴를 하시겠습니까?\n\n모든 프로젝트와 할 일 데이터가 영구적으로 삭제됩니다.');
+    if (!confirmFirst) return;
+
+    const confirmSecond = window.confirm('최종 확인\n\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?');
+    if (!confirmSecond) return;
 
     try {
       await deleteAccount();
@@ -143,57 +153,47 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
     }
   };
 
-  /** 리사이즈 시작 핸들러 */
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    setIsResizing(true);
-    document.body.style.cursor = 'col-resize';
-  };
-
   return (
     <div
       ref={sidebarRef}
-      style={{ width: width >= 240 ? `${width}px` : '100vw' }}
-      className="relative bg-white border-r border-slate-200 flex flex-col h-screen w-full lg:w-auto"
+      style={{ width: `${width}px` }}
+      className="relative flex h-screen max-w-[85vw] flex-col border-r border-rule bg-paper-2 lg:max-w-none"
     >
-      {/* User Area */}
-      <div className="h-[72px] px-4 border-b border-slate-200 flex items-center flex-shrink-0">
-        <div className="flex items-center space-x-3 w-full">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 bg-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm flex-shrink-0">
-            {userInitial}
-          </div>
-          <div className="flex items-center text-sm text-slate-600 min-w-0 flex-1">
-            <span className="truncate font-medium text-slate-700">{userName}</span>
-            <button onClick={onLogout} className="ml-auto text-xs text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0 px-2 py-1 hover:bg-slate-100 rounded">로그아웃</button>
-          </div>
-        </div>
+      {/* 로고 */}
+      <div className="flex h-14 flex-shrink-0 items-center justify-between border-b border-rule px-4">
+        <Wordmark size="sm" />
+        {onCloseMobile && (
+          <button
+            type="button"
+            onClick={onCloseMobile}
+            className="flex h-8 w-8 items-center justify-center rounded text-ink-3 hover:bg-paper-3 hover:text-ink lg:hidden"
+            aria-label="메뉴 닫기"
+          >
+            <RiCloseLine className="text-lg" />
+          </button>
+        )}
       </div>
 
-      {/* [추가] 사이드바 '새 프로젝트' 버튼 추가 (이전: 메인 화면 상단 키워드 입력창) */}
-      {/* Add Task Button */}
-      <div className="p-3 sm:p-4">
+      {/* 새 프로젝트 */}
+      <div className="px-3 pt-4">
         <button
+          type="button"
           onClick={onAddNewProject}
-          className="w-full bg-white text-slate-600 border border-dashed border-slate-300 py-2.5 sm:py-3 px-4 rounded-lg flex items-center justify-center space-x-2 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200 whitespace-nowrap min-h-[44px] sm:min-h-0 touch-manipulation group"
+          className="flex min-h-[40px] w-full items-center gap-2 rounded border border-rule-strong bg-sheet px-3 text-sm font-medium text-ink transition-colors hover:border-ink"
         >
-          <div className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded-full group-hover:bg-indigo-100 transition-colors">
-            <i className="ri-add-line text-slate-500 group-hover:text-indigo-600 text-sm"></i>
-          </div>
-          <span className="text-sm font-medium">새 프로젝트</span>
+          <RiAddLine className="text-base" aria-hidden="true" />
+          새 프로젝트
         </button>
       </div>
 
-      {/* Menu List */}
-      <div className="flex-1 px-3 sm:px-4 space-y-1 overflow-y-auto">
-        {/* Projects Section */}
-        <div className="pt-4 sm:pt-6">
-          <div className="flex items-center space-x-2 mb-3">
-            <span className="text-sm font-medium text-slate-900">프로젝트</span>
-            <div className="w-4 h-4 flex items-center justify-center">
-              <i className="ri-arrow-down-s-line text-xs text-slate-400"></i>
-            </div>
-          </div>
+      {/* 프로젝트 목록 */}
+      <div className="flex-1 overflow-y-auto px-3 pb-4 pt-6">
+        <div className="mb-2 flex items-baseline justify-between px-2">
+          <span className="text-xs font-medium text-ink-3">프로젝트</span>
+          <span className="font-mono text-[11px] text-ink-4 tabular">{projects.length}</span>
+        </div>
 
+        <ul className="space-y-px">
           {projects.map(project => (
             <ProjectListItem
               key={project.id}
@@ -202,33 +202,48 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
               onSelect={onSelectProject}
             />
           ))}
+        </ul>
+      </div>
+
+      {/* 하단: 사용자 / 도움말 / 탈퇴 */}
+      <div className="border-t border-rule px-3 py-3">
+        <div className="flex items-center gap-2.5 px-2 py-1.5">
+          <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-ink font-mono text-xs font-medium text-paper">
+            {userInitial}
+          </span>
+          <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{userName}</span>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="flex-shrink-0 rounded px-2 py-1 text-xs text-ink-3 hover:bg-paper-3 hover:text-ink"
+          >
+            로그아웃
+          </button>
+        </div>
+        <div className="mt-1 flex items-center gap-1 px-1">
+          <button
+            type="button"
+            onClick={onOpenHelp}
+            className="inline-flex items-center gap-1.5 rounded px-2 py-1.5 text-xs text-ink-3 hover:bg-paper-3 hover:text-ink"
+          >
+            <RiQuestionLine aria-hidden="true" />
+            도움말
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            className="ml-auto inline-flex items-center gap-1.5 rounded px-2 py-1.5 text-xs text-ink-4 hover:bg-accent-wash hover:text-accent-ink"
+          >
+            회원탈퇴
+          </button>
         </div>
       </div>
 
-      {/* Bottom Menu */}
-      <div className="p-3 sm:p-4 border-t border-slate-100 space-y-2">
-        <div className="flex items-center space-x-3 py-2.5 sm:py-2 px-3 rounded hover:bg-slate-100 active:bg-slate-200 cursor-pointer min-h-[44px] sm:min-h-0 touch-manipulation">
-          <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-            <i className="ri-question-line text-slate-600 text-lg sm:text-base"></i>
-          </div>
-          <span className="text-sm sm:text-base text-slate-700">도움말 & 리소스</span>
-        </div>
-        {/* [추가] 회원탈퇴 버튼 */}
-        <div 
-          onClick={handleDeleteAccount}
-          className="flex items-center space-x-3 py-2.5 sm:py-2 px-3 rounded hover:bg-red-50 active:bg-red-100 cursor-pointer min-h-[44px] sm:min-h-0 touch-manipulation group"
-        >
-          <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-            <i className="ri-user-unfollow-line text-slate-400 group-hover:text-red-500 text-lg sm:text-base"></i>
-          </div>
-          <span className="text-sm sm:text-base text-slate-500 group-hover:text-red-600">회원탈퇴</span>
-        </div>
-      </div>
-      
-      {/* Resize Handle - 데스크톱에서만 표시 */}
+      {/* 너비 조절 핸들 — 데스크톱 */}
       <div
         onMouseDown={handleMouseDown}
-        className="hidden lg:block absolute top-0 right-0 w-2 h-full cursor-col-resize hover:bg-slate-300 transition-colors"
+        className="absolute right-0 top-0 hidden h-full w-1.5 cursor-col-resize transition-colors hover:bg-rule-strong lg:block"
+        aria-hidden="true"
       />
     </div>
   );

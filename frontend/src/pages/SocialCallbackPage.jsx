@@ -80,11 +80,11 @@ function SocialCallbackPage({ onLoginSuccess }) {
   }, []); // 의존성 배열 비우기 - 한 번만 실행
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50">
-      <div className="bg-white p-8 rounded-lg shadow-xl border border-slate-100">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-          <p className="text-slate-600">로그인 처리 중...</p>
+    <div className="flex min-h-screen items-center justify-center bg-paper px-4">
+      <div className="w-full max-w-[240px]" role="status" aria-live="polite">
+        <p className="font-mono text-xs text-ink-3">로그인 처리 중…</p>
+        <div className="mt-3 h-[2px] w-full overflow-hidden bg-rule">
+          <div className="h-full w-1/3 animate-pulse bg-ink" />
         </div>
       </div>
     </div>

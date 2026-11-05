@@ -277,8 +277,9 @@ function HomePage({ project, setProjects, onOpenQuickAdd }) {
   };
 
   /** 메뉴 항목 클릭 시 동작 실행 후 메뉴 닫기 */
-  const menuAction = (label, action) => ({
+  const menuAction = (label, action, extra = {}) => ({
     label,
+    ...extra,
     onClick: () => {
       action(contextMenu.itemId);
       handleCloseContextMenu();
@@ -297,7 +298,7 @@ function HomePage({ project, setProjects, onOpenQuickAdd }) {
         options={[
           menuAction('하위 작업 생성', handleGenerateSubtasks),
           menuAction('수정', setEditingItem),
-          menuAction('삭제', handleDeleteItem),
+          menuAction('삭제', handleDeleteItem, { danger: true }),
         ]}
         onClose={handleCloseContextMenu}
         priorityConfig={{
@@ -321,15 +322,16 @@ function HomePage({ project, setProjects, onOpenQuickAdd }) {
   // ==================== 렌더링 ====================
 
   if (!currentProject) {
-    return <div className="p-8 text-center text-slate-500">프로젝트를 불러오는 중...</div>;
+    return <div className="mx-auto max-w-3xl px-4 py-10 text-ink-3 sm:px-8">프로젝트를 불러오는 중…</div>;
   }
 
   return (
-    <div className="container p-2 sm:p-4 md:p-8 max-w-5xl mx-auto" style={{ textAlign: 'left' }}>
+    // 읽기 좋은 폭(약 760px)의 단일 열
+    <div className="mx-auto w-full max-w-3xl px-3 pb-24 pt-6 text-left sm:px-8 sm:pt-10">
       {contextMenu && renderContextMenu()}
       {editingItem && renderEditModal()}
 
-      <div className="mb-6">
+      <div>
         <ToDoListDisplay
           todoList={currentProject}
           moveItem={moveItem}

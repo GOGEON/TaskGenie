@@ -28,6 +28,7 @@ import CustomDragLayer from './CustomDragLayer';
  * @param {Function} props.onLogout - 로그아웃 핸들러
  * @param {Function} props.onDeleteProject - 프로젝트 삭제 핸들러
  * @param {Function} props.onOpenQuickAdd - 빠른 추가 모달 열기 핸들러
+ * @param {Function} props.onOpenHelp - 사용법 안내(온보딩) 다시 열기 핸들러
  * @param {React.ReactNode} props.children - 자식 컴포넌트 (페이지 내용)
  * @returns {JSX.Element} 앱 레이아웃
  */
@@ -40,6 +41,7 @@ const MainLayout = ({
   onLogout,
   onDeleteProject,
   onOpenQuickAdd,
+  onOpenHelp,
   children 
 }) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
@@ -47,11 +49,11 @@ const MainLayout = ({
   return (
     // <!-- [수정] react-dnd 라이브러리 적용을 위한 Provider 추가 -->
     <DndProvider backend={HTML5Backend}>
-      <div className="flex h-screen bg-white font-sans overflow-hidden">
+      <div className="flex h-screen overflow-hidden bg-paper font-sans text-ink">
         {/* Mobile Sidebar Overlay */}
         {isMobileSidebarOpen && (
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            className="fixed inset-0 z-40 bg-ink/40 animate-fade-in lg:hidden"
             onClick={() => setIsMobileSidebarOpen(false)}
           />
         )}
@@ -59,7 +61,7 @@ const MainLayout = ({
         {/* Sidebar - 모바일에서는 절대 위치, 데스크톱에서는 일반 플로우 */}
         <div className={`
           fixed lg:relative inset-y-0 left-0 z-50 lg:z-0
-          transform transition-transform duration-300 ease-in-out
+          transform transition-transform duration-200 ease-out
           ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
           <Sidebar 
@@ -70,8 +72,16 @@ const MainLayout = ({
               onSelectProject(id);
               setIsMobileSidebarOpen(false);
             }}
-            onAddNewProject={onAddNewProject}
+            onAddNewProject={() => {
+              onAddNewProject();
+              setIsMobileSidebarOpen(false);
+            }}
             onLogout={onLogout}
+            onOpenHelp={() => {
+              onOpenHelp?.();
+              setIsMobileSidebarOpen(false);
+            }}
+            onCloseMobile={() => setIsMobileSidebarOpen(false)}
           />
         </div>
         

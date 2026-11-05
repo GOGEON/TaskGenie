@@ -21,7 +21,7 @@ describe('QuickAddModal', () => {
   it('selecting a priority writes the tag into the text', () => {
     const { input } = setup();
     fireEvent.change(input, { target: { value: '보고서 작성' } });
-    fireEvent.click(screen.getByRole('button', { name: '없음' }));
+    fireEvent.click(screen.getByRole('button', { name: '우선순위' }));
     fireEvent.click(screen.getByRole('button', { name: '높음' }));
     expect(input).toHaveValue('보고서 작성 #높음');
   });
@@ -30,7 +30,7 @@ describe('QuickAddModal', () => {
     const { onSubmit, input } = setup();
     fireEvent.change(input, { target: { value: '  운동하기  ' } });
     fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: '작업 추가' }));
+    fireEvent.click(screen.getByRole('button', { name: '추가' }));
     expect(onSubmit).toHaveBeenCalledWith('운동하기', 'p1', null, true);
     expect(input).toHaveValue('');
     expect(screen.getByRole('checkbox')).not.toBeChecked();
