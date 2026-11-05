@@ -13,6 +13,7 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { RiSearchLine, RiHashtag, RiCheckLine, RiArrowDownSLine, RiCornerDownRightLine } from 'react-icons/ri';
+import { findItem } from '../utils/treeUtils';
 
 
 /**
@@ -61,17 +62,7 @@ const ProjectSelector = ({ projects, selectedProjectId, selectedParentId, onSele
 
     // 2. 하위 작업(ParentId)이 선택된 경우 해당 작업 찾기
     if (selectedParentId) {
-      const findItem = (items) => {
-        for (const item of items) {
-          if (item.id === selectedParentId) return item;
-          if (item.children?.length) {
-            const found = findItem(item.children);
-            if (found) return found;
-          }
-        }
-        return null;
-      };
-      const parentItem = findItem(project.items || []);
+      const parentItem = findItem(project.items || [], selectedParentId);
       if (parentItem) {
         return (
           <span className="flex items-center gap-1 truncate">

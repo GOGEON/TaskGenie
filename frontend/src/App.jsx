@@ -260,7 +260,6 @@ function App() {
                       key={activeProject.id}
                       project={activeProject} 
                       setProjects={setProjects} 
-                      triggerRefetch={triggerRefetch}
                       onOpenQuickAdd={handleOpenQuickAdd}
                     />
                   ) : projects.length === 0 ? (
