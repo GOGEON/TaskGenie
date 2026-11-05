@@ -71,7 +71,6 @@ const ToDoItem = ({
   const ref = useRef(null);
   const [isChildrenVisible, setIsChildrenVisible] = useState(true);   // 자식 표시 여부
   const wasChildrenVisibleBeforeDrag = useRef(false);                 // 드래그 전 자식 표시 상태
-  const [isDeleting, setIsDeleting] = useState(false);                // 삭제 애니메이션 중
 
   const hasChildren = item.children && item.children.length > 0;
 
@@ -129,8 +128,6 @@ const ToDoItem = ({
     dragPreview(getEmptyImage(), { captureDraggingState: true });
   }, [dragPreview]);
 
-  const opacity = isDragging ? 0 : 1;
-  
   drop(ref);
 
   const handleMenuClick = (event) => {
@@ -144,12 +141,6 @@ const ToDoItem = ({
   const handleToggleComplete = (e) => {
     e.stopPropagation();
     onToggleItemComplete(item.id, !item.is_completed);
-  };
-
-  const handlePriorityChange = (newPriority) => {
-    if (onUpdatePriority) {
-      onUpdatePriority(item.id, newPriority);
-    }
   };
 
   /* [수정] Indigo 테마 적용 */
@@ -166,14 +157,13 @@ const ToDoItem = ({
       <li
         ref={ref}
         style={{ 
-          opacity: isDeleting ? 0 : (isDragging ? 0 : 1),
+          opacity: isDragging ? 0 : 1,
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           transform: isDragging ? 'scale(1.02)' : 'scale(1)',
         }}
         className={`
           flex items-center justify-between py-1.5 sm:py-2 border-b border-slate-100 
           group bg-white touch-manipulation item-fade-in
-          ${isDeleting ? 'item-slide-out' : ''}
         `}
       >
         <div className="flex items-center flex-grow min-w-0">

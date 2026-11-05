@@ -14,6 +14,7 @@
  * @module Sidebar
  */
 import React, { useState, useEffect, useRef } from 'react';
+import { countAllItems, countCompletedItems } from '../utils/treeUtils';
 
 
 /**
@@ -63,37 +64,6 @@ const Sidebar = ({ user, projects, activeProjectId, onSelectProject, onAddNewPro
     });
 
     return totalProgress;
-  };
-
-
-  /**
-   * 모든 항목 수 재귀 카운트.
-   * 자식 항목까지 포함한 전체 항목 수 계산.
-   * 
-   * @param {Array} items - 할 일 항목 목록
-   * @returns {number} 전체 항목 수
-   */
-  const countAllItems = (items) => {
-    if (!items || items.length === 0) return 0;
-    return items.reduce((total, item) => {
-      return total + 1 + countAllItems(item.children);
-    }, 0);
-  };
-
-
-  /**
-   * 완료된 항목 수 재귀 카운트.
-   * 자식 항목까지 포함한 완료 항목 수 계산.
-   * 
-   * @param {Array} items - 할 일 항목 목록
-   * @returns {number} 완료된 항목 수
-   */
-  const countCompletedItems = (items) => {
-    if (!items || items.length === 0) return 0;
-    return items.reduce((total, item) => {
-      const isCompleted = item.is_completed ? 1 : 0;
-      return total + isCompleted + countCompletedItems(item.children);
-    }, 0);
   };
 
 

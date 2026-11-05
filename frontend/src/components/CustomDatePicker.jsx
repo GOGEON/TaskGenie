@@ -12,10 +12,10 @@
  * 
  * @module CustomDatePicker
  */
-import React, { useState } from 'react';
+import React from 'react';
 import DatePicker from 'react-datepicker';
 import { ko } from 'date-fns/locale';
-import { addDays, nextSaturday, nextMonday, format } from 'date-fns';
+import { addDays, nextSaturday, format } from 'date-fns';
 import { 
   RiCalendarLine, 
   RiSunLine, 

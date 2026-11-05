@@ -189,3 +189,37 @@ export const diffCompletion = (before, after) => {
     .filter(item => previous.get(item.id) !== item.is_completed)
     .map(({ id, is_completed }) => ({ id, is_completed }));
 };
+
+/**
+ * 전체 항목 수 (하위 항목 포함).
+ *
+ * @param {Array} items - 항목 배열
+ * @returns {number} 전체 항목 수
+ */
+export const countAllItems = (items = []) => flattenItems(items).length;
+
+/**
+ * 완료된 항목 수 (하위 항목 포함).
+ *
+ * @param {Array} items - 항목 배열
+ * @returns {number} 완료된 항목 수
+ */
+export const countCompletedItems = (items = []) =>
+  flattenItems(items).filter(item => item.is_completed).length;
+
+/**
+ * 계층별 가중치 진행률 (0~100).
+ * 각 단계의 형제 항목들이 동등한 가중치를 가지며,
+ * 하위 항목이 있는 항목은 하위 진행률로 대체된다. 항목이 없으면 100.
+ *
+ * @param {Array} items - 항목 배열
+ * @returns {number} 진행률
+ */
+export const calculateProgress = (items) => {
+  if (!items?.length) return 100;
+  const total = items.reduce((sum, item) => {
+    if (item.children?.length) return sum + calculateProgress(item.children) / 100;
+    return sum + (item.is_completed ? 1 : 0);
+  }, 0);
+  return (total / items.length) * 100;
+};

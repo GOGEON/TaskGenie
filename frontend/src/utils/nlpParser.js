@@ -252,7 +252,6 @@ export const parseNaturalLanguage = (text) => {
     '심야': 23
   };
 
-  let timeKeywordMatched = false;
   for (const [keyword, hour] of Object.entries(timeKeywords)) {
     // 한글은 단어 경계가 작동하지 않으므로 includes 사용
     if (description.includes(keyword)) {
@@ -263,7 +262,6 @@ export const parseNaturalLanguage = (text) => {
         dueDate.setHours(hour, 0, 0);
       }
       description = description.replace(new RegExp(keyword, 'g'), '').trim();
-      timeKeywordMatched = true;
       break;
     }
   }

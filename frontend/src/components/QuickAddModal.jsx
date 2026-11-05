@@ -13,89 +13,26 @@
  * 
  * @module QuickAddModal
  */
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { getParserExamples, parseNaturalLanguage } from '../utils/nlpParser';
 import CustomDatePicker from './CustomDatePicker';
 import ProjectSelector from './ProjectSelector';
 import { RiCalendarLine, RiFlag2Fill } from 'react-icons/ri';
 import "react-datepicker/dist/react-datepicker.css";
 import "../datepicker.css";
-import { ko } from 'date-fns/locale';
+import { formatDueDate, replaceDateText, stripDateText, replacePriorityTag } from '../utils/taskTextUtils';
 
 
-// ==================== 헬퍼 함수 ====================
+/** 날짜 선택기 예상 높이 (px) - 아래 공간이 이보다 작으면 위로 연다 */
+const DATE_PICKER_HEIGHT = 600;
 
-/**
- * ISO 날짜 문자열을 사용자 친화적 형식으로 변환.
- * 
- * @param {string} isoDateString - ISO 8601 형식 날짜 문자열
- * @returns {string|null} 포맷된 날짜 (예: "오늘", "내일", "3월 15일 오후 2시")
- */
-const formatDueDate = (isoDateString) => {
-  if (!isoDateString) return null;
-  
-  const date = new Date(isoDateString);
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  
-  // 날짜 부분
-  let dateStr = '';
-  if (date.toDateString() === now.toDateString()) {
-    dateStr = '오늘';
-  } else if (date.toDateString() === tomorrow.toDateString()) {
-    dateStr = '내일';
-  } else {
-    dateStr = `${month}월 ${day}일`;
-  }
-  
-  // 시간 부분 (00:00이 아닐 때만 표시)
-  if (hours !== 0 || minutes !== 0) {
-    const period = hours < 12 ? '오전' : '오후';
-    const displayHours = hours % 12 || 12;
-    const displayMinutes = minutes > 0 ? ` ${minutes}분` : '';
-    dateStr += ` ${period} ${displayHours}시${displayMinutes}`;
-  }
-  
-  return dateStr;
-};
-
-
-/**
- * ISO 문자열을 input[type="datetime-local"] 형식으로 변환.
- * 
- * @param {string} isoString - ISO 8601 형식 문자열
- * @returns {string} datetime-local 입력 형식 문자열
- */
-const formatDateForInput = (isoString) => {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  const offset = date.getTimezoneOffset() * 60000;
-  const localDate = new Date(date.getTime() - offset);
-  const hasTime = !(date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0);
-  return localDate.toISOString().slice(0, hasTime ? 16 : 10);
-};
-
-
-/**
- * 로컬 날짜 문자열을 ISO 8601 형식으로 변환.
- * 
- * @param {string} localString - 로컬 날짜/시간 문자열
- * @returns {string|null} ISO 8601 형식 문자열
- */
-const toISOString = (localString) => {
-  if (!localString) return null;
-  if (localString.length === 10) {
-    const dateWithTime = new Date(localString + 'T00:00:00');
-    return dateWithTime.toISOString();
-  }
-  return new Date(localString).toISOString();
-};
+/** 우선순위 선택지 */
+const PRIORITIES = [
+  { value: 'high', label: '높음', color: 'text-red-600' },
+  { value: 'medium', label: '보통', color: 'text-orange-600' },
+  { value: 'low', label: '낮음', color: 'text-indigo-600' },
+  { value: 'none', label: '없음', color: 'text-slate-500' },
+];
 
 
 /**
@@ -104,7 +41,7 @@ const toISOString = (localString) => {
  * @param {Object} props - 컴포넌트 속성
  * @param {boolean} props.isOpen - 모달 열림 상태
  * @param {Function} props.onClose - 모달 닫기 콜백
- * @param {Function} props.onSubmit - 작업 제출 콜백 (text, projectId, parentId)
+ * @param {Function} props.onSubmit - 작업 제출 콜백 (text, projectId, parentId, generateSubtasks)
  * @param {Array} props.projects - 프로젝트 목록
  * @param {string} props.activeProjectId - 현재 활성 프로젝트 ID
  * @returns {JSX.Element|null} 빠른 추가 모달
@@ -115,56 +52,46 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
   const [selectedParentId, setSelectedParentId] = useState(null);
   const [error, setError] = useState('');
   const [placeholder, setPlaceholder] = useState('무엇을 해야 하나요?');
-  const [parsedData, setParsedData] = useState(null);
   
-  /* [추가] 수동 선택 state */
-  // manualDueDate 제거 - 텍스트 파싱 결과(parsedData)를 진실의 원천으로 사용
+  // 수동 우선순위 선택 (날짜는 텍스트 파싱 결과를 사용)
   const [manualPriority, setManualPriority] = useState('none');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showPriorityPicker, setShowPriorityPicker] = useState(false);
   const [openUpwards, setOpenUpwards] = useState(false);
-  // <!-- [추가] AI 하위 항목 자동 생성 체크박스 기능 추가 -->
   const [generateSubtasksEnabled, setGenerateSubtasksEnabled] = useState(false);
   
   const inputRef = useRef(null);
   const datePickerContainerRef = useRef(null);
 
-  /* [추가] 스마트 포지셔닝: 화면 아래 공간이 부족하면 위로 열림 */
-  /* <!-- [수정] 모바일에서는 항상 하단으로만 열림 --> */
+  /** 입력값 초기화 */
+  const resetForm = () => {
+    setText('');
+    setError('');
+    setManualPriority('none');
+    setSelectedParentId(null);
+    setGenerateSubtasksEnabled(false);
+  };
+
+  // 스마트 포지셔닝: 화면 아래 공간이 부족하면 위로 열림 (모바일(<640px)은 항상 아래로)
   useEffect(() => {
     if (showDatePicker && datePickerContainerRef.current) {
-      // 모바일(640px 이하)에서는 항상 하단으로 열림
-      const isMobile = window.innerWidth < 640;
-      if (isMobile) {
+      if (window.innerWidth < 640) {
         setOpenUpwards(false);
         return;
       }
-      
       const rect = datePickerContainerRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const datePickerHeight = 600;
-      
-      if (spaceBelow < datePickerHeight) {
-        setOpenUpwards(true);
-      } else {
-        setOpenUpwards(false);
-      }
+      setOpenUpwards(window.innerHeight - rect.bottom < DATE_PICKER_HEIGHT);
     }
   }, [showDatePicker]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
-      setText('');
-      setError('');
-      setParsedData(null);
-      setManualPriority('none');
-      setSelectedParentId(null); // 초기화
+      resetForm();
       setShowDatePicker(false);
       setShowTimePicker(false);
       setShowPriorityPicker(false);
-      setGenerateSubtasksEnabled(false); // <!-- [추가] 체크박스 초기화 -->
       setPlaceholder(getParserExamples('ko'));
       
       if (activeProjectId) {
@@ -173,14 +100,8 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
     }
   }, [isOpen, activeProjectId]);
 
-  useEffect(() => {
-    if (text.trim()) {
-      const parsed = parseNaturalLanguage(text);
-      setParsedData(parsed);
-    } else {
-      setParsedData(null);
-    }
-  }, [text]);
+  // 입력 텍스트를 실시간 파싱 (날짜/우선순위의 진실의 원천)
+  const parsedData = useMemo(() => (text.trim() ? parseNaturalLanguage(text) : null), [text]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -197,15 +118,9 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
       return;
     }
     
-    // <!-- [수정] AI 하위 항목 생성 체크박스 상태 전달 -->
     onSubmit(trimmedText, selectedProjectId, selectedParentId, generateSubtasksEnabled);
     
-    setText('');
-    setError('');
-    setParsedData(null);
-    setManualPriority('none');
-    setSelectedParentId(null);
-    setGenerateSubtasksEnabled(false); // <!-- [추가] 체크박스 초기화 -->
+    resetForm();
   };
 
   const handleKeyDown = (e) => {
@@ -222,71 +137,32 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
     }
   };
 
-  const handleDateChange = (e) => {
-    const localValue = e.target.value;
-    const isoDate = toISOString(localValue);
-    // setManualDueDate(isoDate); // 제거
-    
-    /* [수정] 텍스트 필드에 날짜 추가 시 기존 날짜 표현 제거 */
-    if (isoDate) {
-      const formattedDate = formatDueDate(isoDate);
-      setText(prev => {
-        // 기존 날짜 표현 제거 (오늘, 내일, X월 X일 패턴 등)
-        const withoutDate = prev
-          .replace(/오늘(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
-          .replace(/내일(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
-          .replace(/모레(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
-          .replace(/(이번|다음|지난)\s*주(\s*말)?/g, '')
-          .replace(/(이번|다음|지난)\s*달(\s*말)?/g, '')
-          .replace(/\d{1,2}월\s+\d{1,2}일(\s+(오전|오후)\s+\d{1,2}시(\s+\d{1,2}분)?)?/g, '')
-          .trim();
-        return withoutDate ? `${withoutDate} ${formattedDate}` : formattedDate;
-      });
+  const handleDateSelect = (date) => {
+    if (!date) {
+      handleDateClear();
+      return;
     }
+    setText(prev => replaceDateText(prev, date));
+    // 시간 선택 모드가 아니면 닫기
+    if (!showTimePicker) setShowDatePicker(false);
   };
 
   const handleDateClear = () => {
-    // setManualDueDate(null); // 제거
-    
-    // 텍스트에서 날짜 표현 제거
-    setText(prev => {
-      return prev
-        .replace(/오늘(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
-        .replace(/내일(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
-        .replace(/\d{1,2}월\s+\d{1,2}일(\s+(오전|오후)\s+\d{1,2}시(\s+\d{1,2}분)?)?/g, '')
-        .trim();
-    });
-    
+    setText(prev => stripDateText(prev));
     setShowDatePicker(false);
     setShowTimePicker(false);
   };
 
-  const handlePriorityChange = () => {
-    const currentIndex = priorities.findIndex(p => p.value === (finalPriority || 'none'));
-    const nextIndex = (currentIndex + 1) % priorities.length;
-    const nextPriority = priorities[nextIndex];
-    setManualPriority(nextPriority.value);
-    
-    // 텍스트 필드에도 우선순위 추가
-    if (nextPriority.value !== 'none') {
-      const priorityText = `#${nextPriority.label}`;
-      // 기존 우선순위 태그 제거
-      const withoutPriority = text.replace(/#(높음|보통|낮음|긴급|중요)/g, '').trim();
-      setText(withoutPriority ? `${withoutPriority} ${priorityText}` : priorityText);
-    }
+  const handlePrioritySelect = (priority) => {
+    setManualPriority(priority);
+    setShowPriorityPicker(false);
+    setText(prev => replacePriorityTag(prev, priority));
   };
 
-  const finalDueDate = parsedData?.due_date; // manualDueDate 제거됨
+  const finalDueDate = parsedData?.due_date;
   const finalPriority = manualPriority !== 'none' ? manualPriority : parsedData?.priority;
 
-  const priorities = [
-    { value: 'high', label: '높음', color: 'text-red-600', icon: <RiFlag2Fill /> },
-    { value: 'medium', label: '보통', color: 'text-orange-600', icon: <RiFlag2Fill /> },
-    { value: 'low', label: '낮음', color: 'text-indigo-600', icon: <RiFlag2Fill /> },
-    { value: 'none', label: '없음', color: 'text-slate-500', icon: <RiFlag2Fill /> }
-  ];
-
-  const currentPriority = priorities.find(p => p.value === (finalPriority || 'none'));
+  const currentPriority = PRIORITIES.find(p => p.value === (finalPriority || 'none'));
 
   if (!isOpen) return null;
 
@@ -345,30 +221,7 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
                   <div className={`absolute left-0 z-50 ${openUpwards ? 'bottom-full mb-2' : 'top-full mt-1'}`}>
                     <CustomDatePicker
                       selectedDate={finalDueDate ? new Date(finalDueDate) : null}
-                      onChange={(date) => {
-                        if (!date) {
-                          handleDateClear();
-                          return;
-                        }
-                        const isoDate = toISOString(date);
-                        // 텍스트 필드 업데이트 로직 재사용
-                        if (isoDate) {
-                          const formattedDate = formatDueDate(isoDate);
-                          setText(prev => {
-                            const withoutDate = prev
-                              .replace(/오늘(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
-                              .replace(/내일(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
-                              .replace(/모레(\s+(오전|오후)\s+\d{1,2}(:\d{2})?시(\s+\d{1,2}분)?)?/g, '')
-                              .replace(/(이번|다음|지난)\s*주(\s*말)?/g, '')
-                              .replace(/(이번|다음|지난)\s*달(\s*말)?/g, '')
-                              .replace(/\d{1,2}월\s+\d{1,2}일(\s+(오전|오후)\s+\d{1,2}시(\s+\d{1,2}분)?)?/g, '')
-                              .trim();
-                            return withoutDate ? `${withoutDate} ${formattedDate}` : formattedDate;
-                          });
-                        }
-                        // 시간 선택 모드가 아니면 닫기
-                        if (!showTimePicker) setShowDatePicker(false);
-                      }}
+                      onChange={handleDateSelect}
                       onClose={() => setShowDatePicker(false)}
                       showTime={showTimePicker}
                       onToggleTime={() => setShowTimePicker(!showTimePicker)}
@@ -388,36 +241,22 @@ const QuickAddModal = ({ isOpen, onClose, onSubmit, projects = [], activeProject
                     : 'border-slate-300 hover:bg-slate-50'
                 } ${currentPriority.color}`}
               >
-                <span>{currentPriority.icon}</span>
+                <RiFlag2Fill />
                 <span>{currentPriority.label}</span>
               </button>
 
               {showPriorityPicker && (
                 <div className="absolute left-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-slate-100 py-1 z-50 animate-scaleIn origin-top-left">
-                  {priorities.map((p) => (
+                  {PRIORITIES.map((p) => (
                     <button
                       key={p.value}
                       type="button"
-                      onClick={() => {
-                        setManualPriority(p.value);
-                        setShowPriorityPicker(false);
-                        
-                        // 텍스트 필드에도 우선순위 추가
-                        if (p.value !== 'none') {
-                          const priorityText = `#${p.label}`;
-                          const withoutPriority = text.replace(/#(높음|보통|낮음|긴급|중요)/g, '').trim();
-                          setText(withoutPriority ? `${withoutPriority} ${priorityText}` : priorityText);
-                        } else {
-                           // 없음 선택 시 태그 제거
-                           const withoutPriority = text.replace(/#(높음|보통|낮음|긴급|중요)/g, '').trim();
-                           setText(withoutPriority);
-                        }
-                      }}
+                      onClick={() => handlePrioritySelect(p.value)}
                       className={`w-full px-3 py-2 text-left text-xs hover:bg-slate-50 flex items-center gap-2 ${
                         (finalPriority || 'none') === p.value ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700'
                       }`}
                     >
-                      <span className={p.color}>{p.icon}</span>
+                      <RiFlag2Fill className={p.color} />
                       <span>{p.label}</span>
                     </button>
                   ))}

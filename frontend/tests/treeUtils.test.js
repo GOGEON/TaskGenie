@@ -11,6 +11,9 @@ import {
   reassignOrder,
   flattenItems,
   diffCompletion,
+  countAllItems,
+  countCompletedItems,
+  calculateProgress,
 } from '../src/utils/treeUtils';
 
 const tree = () => [
@@ -92,5 +95,21 @@ describe('treeUtils', () => {
     const before = tree();
     const after = syncParentCompletion(setItemCompletion(setItemCompletion(before, 'a1', true), 'a2', true));
     expect(diffCompletion(before, after).map(i => i.id).sort()).toEqual(['a', 'a1', 'a2']);
+  });
+});
+
+describe('progress helpers', () => {
+  it('counts all and completed items recursively', () => {
+    const items = setItemCompletion(tree(), 'a1', true);
+    expect(countAllItems(items)).toBe(4);
+    expect(countCompletedItems(items)).toBe(1);
+    expect(countAllItems(undefined)).toBe(0);
+  });
+
+  it('calculateProgress weights each level equally', () => {
+    expect(calculateProgress([])).toBe(100);
+    // a: 자식 1/2 완료 → 0.5, b: 미완료 → 0  => (0.5 + 0) / 2 = 25%
+    expect(calculateProgress(setItemCompletion(tree(), 'a1', true))).toBe(25);
+    expect(calculateProgress(setItemCompletion(tree(), 'b', true))).toBe(50);
   });
 });
