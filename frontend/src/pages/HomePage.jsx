@@ -119,18 +119,21 @@ function HomePage({ project, setProjects, onOpenQuickAdd }) {
 
   // ==================== 드래그 앤 드롭 ====================
 
+  // 드래그 중 순서 변경. 드롭 직전 마지막 이동이 아직 렌더링되지 않았더라도
+  // handleDropAndSave가 최신 순서를 저장하도록 projectRef도 즉시 갱신한다.
   const moveItem = useCallback((dragIndex, hoverIndex, parentId = null) => {
-    setCurrentProject(prev => ({
-      ...prev,
-      items: moveSibling(prev.items, parentId, dragIndex, hoverIndex),
-    }));
+    const prev = projectRef.current;
+    const updated = { ...prev, items: moveSibling(prev.items, parentId, dragIndex, hoverIndex) };
+    projectRef.current = updated;
+    setCurrentProject(updated);
   }, []);
 
   const handleDropAndSave = async () => {
-    const reorderedItems = reassignOrder(currentProject.items);
+    const latest = projectRef.current;
+    const reorderedItems = reassignOrder(latest.items);
     try {
       await saveOrder(reorderedItems);
-      updateGlobalProjectState({ ...currentProject, items: reorderedItems });
+      updateGlobalProjectState({ ...latest, items: reorderedItems });
       toast.success('순서가 저장되었습니다.');
     } catch (err) {
       console.error('항목 순서 변경 중 오류 발생:', err);

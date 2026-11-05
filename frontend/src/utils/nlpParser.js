@@ -18,6 +18,14 @@
  */
 
 
+/** 우선순위 키워드 (위에서부터 우선 적용) */
+const PRIORITY_PATTERNS = [
+  ['high', '#?(긴급|중요|높음)|!!|🔴'],
+  ['medium', '#?보통'],
+  ['low', '#?낮음'],
+];
+
+
 /**
  * 자연어 텍스트를 파싱하여 작업 정보 추출.
  * 
@@ -35,16 +43,13 @@ export const parseNaturalLanguage = (text) => {
   
   const now = new Date();
 
-  // 1. 우선순위 파싱
-  if (/(긴급|중요|!!|🔴|#긴급|#중요)/i.test(text)) {
-    priority = 'high';
-    description = description.replace(/(긴급|중요|!!|🔴|#긴급|#중요)/gi, '').trim();
-  } else if (/(보통|#보통)/i.test(text)) {
-    priority = 'medium';
-    description = description.replace(/(보통|#보통)/gi, '').trim();
-  } else if (/(낮음|#낮음)/i.test(text)) {
-    priority = 'low';
-    description = description.replace(/(낮음|#낮음)/gi, '').trim();
+  // 1. 우선순위 파싱 (빠른 추가 모달이 넣는 #높음/#보통/#낮음 태그 포함)
+  for (const [level, pattern] of PRIORITY_PATTERNS) {
+    if (new RegExp(pattern).test(text)) {
+      priority = level;
+      description = description.replace(new RegExp(pattern, 'g'), '').trim();
+      break;
+    }
   }
 
   // 2. 반복 작업 파싱
