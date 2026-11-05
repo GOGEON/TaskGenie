@@ -11,7 +11,7 @@
 """
 import os
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from jose import jwt, JWTError
@@ -73,10 +73,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         인코딩된 JWT 토큰 문자열
     """
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -105,12 +102,24 @@ def create_user(username: str, email: str, hashed_password: str):
         "username": username,
         "email": email,
         "hashed_password": hashed_password,
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow(),
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
     }
     
     db.collection('users').document(user_id).set(user_doc)
     return user_doc
+
+
+class UserObject:
+    """속성 접근(user.id 등)이 가능한 사용자 객체."""
+
+    def __init__(self, data: dict):
+        self.id = data['id']
+        self.username = data['username']
+        self.email = data.get('email')
+        self.hashed_password = data['hashed_password']
+        self.created_at = data.get('created_at')
+        self.updated_at = data.get('updated_at')
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -131,16 +140,6 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     user = get_user_by_username(username)
     if user is None:
         raise credentials_exception
-    
-    # User 객체처럼 사용할 수 있도록 클래스로 변환
-    class UserObject:
-        def __init__(self, data):
-            self.id = data['id']
-            self.username = data['username']
-            self.email = data.get('email')
-            self.hashed_password = data['hashed_password']
-            self.created_at = data.get('created_at')
-            self.updated_at = data.get('updated_at')
     
     return UserObject(user)
 

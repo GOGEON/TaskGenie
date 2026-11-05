@@ -3,7 +3,7 @@ TaskGenie Backend 메인 모듈
 
 FastAPI 애플리케이션의 진입점으로, 다음 기능을 담당:
 - 앱 초기화 및 환경 설정
-- 데이터베이스 연결 (Firestore/SQLite)
+- 데이터베이스 연결 (Firestore)
 - CORS 미들웨어 설정
 - API 라우터 등록
 - 전역 예외 처리
@@ -22,20 +22,11 @@ if os.getenv("RENDER") is None:
     load_dotenv()
 
 # ==================== 데이터베이스 초기화 ====================
-# 환경 변수에 따라 Firestore 또는 SQLite 사용
-USE_FIRESTORE = os.getenv("USE_FIRESTORE", "false").lower() == "true"
+from .firestore_db import get_firestore_db
+from .api import auth_firestore as auth
+from .api import todos_firestore as todos
 
-if USE_FIRESTORE:
-    # Firestore (클라우드 DB) 초기화
-    from .firestore_db import initialize_firestore
-    initialize_firestore()
-    from .api import auth_firestore as auth
-    from .api import todos_firestore as todos
-else:
-    # SQLite (로컬 DB) 초기화
-    from .database import Base, engine
-    Base.metadata.create_all(bind=engine)
-    from .api import auth, todos
+get_firestore_db()  # 시작 시 Firestore 연결을 초기화하여 설정 오류를 즉시 감지
 
 # ==================== FastAPI 앱 생성 ====================
 app = FastAPI()

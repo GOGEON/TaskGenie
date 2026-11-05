@@ -89,3 +89,14 @@ def test_login_non_existent_user(client: TestClient):
     )
     assert response.status_code == 401
     assert response.json() == {"detail": "Incorrect username or password"}
+def test_delete_account_removes_user_data(client: TestClient, fake_db):
+    from conftest import register_and_login
+    headers = register_and_login(client, "leaver")
+    client.post("/todos/generate", headers=headers, json={"keyword": "운동"})
+    assert fake_db.data["todo_items"]
+
+    response = client.delete("/auth/me", headers=headers)
+    assert response.status_code == 200
+    assert fake_db.data["todo_lists"] == {}
+    assert fake_db.data["todo_items"] == {}
+    assert client.get("/todos", headers=headers).status_code == 401
